@@ -12,10 +12,10 @@ import data.data_preprocessing as dp
 from asyncio import create_subprocess_exec
 import sys,os
 from torch.utils.tensorboard import SummaryWriter
-
+import config
 
 #currentPath = os.path.dirname(sys.argv[0]) # does not work in Jupyter notebooks and linux shell, use os.getcwd() there instead
-currentPath = os.getcwd()
+""" currentPath = os.getcwd()
 dataPath = (currentPath+'/../data')
 # Alternative is: os.path.dirname(__file__)
 
@@ -26,6 +26,18 @@ SignalsPath = (dataPath + '/external/signed_predictors_all_wide.csv')
 ProcessedDataPath = (dataPath + '/processed')
 ForcePreProcessing = True
 ForceTraining = True
+ """
+currentPath = config.currentPath
+dataPath = config.dataPath
+# Alternative is: os.path.dirname(__file__)
+
+CRSPretPath = config.paths['CRSPretPath']
+CRSPinfoPath= config.paths['CRSPinfoPath']
+FFPath = config.paths['FFPath']
+SignalsPath = config.paths['SignalsPath']
+ProcessedDataPath = config.paths['ProcessedDataPath']
+ForcePreProcessing = config.ForcePreProcessing
+ForceTraining = config.ForceTraining
 batch_size_train = 64
 batch_size_validation = 128
 n_epochs = 200

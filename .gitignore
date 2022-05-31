@@ -1,5 +1,11 @@
+# WRDS scripts folder
+wrdsJobScript/
+
 # Data folder
 /data
+
+# Idea folder
+.idea/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

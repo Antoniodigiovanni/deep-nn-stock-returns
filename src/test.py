@@ -6,6 +6,7 @@ from data.custom_dataset import TestDataset
 from data.data_preprocessing import sep_target_idx, split_data
 import model.metric as metric
 from torch.utils.data import DataLoader
+import config
 
 
 def prediction_loop(model, data_loader, pct):
@@ -37,9 +38,9 @@ def prediction_loop(model, data_loader, pct):
 
 
 currentPath = os.getcwd()#os.path.dirname(sys.argv[0])
-modelsPath = currentPath + '/../saved/models'
-dataPath = (currentPath+'/../data')
-ProcessedDataPath = (dataPath + '/processed')
+modelsPath = config.paths['modelsPath'] #currentPath + '/../saved/models'
+dataPath = config.dataPath
+ProcessedDataPath = config.paths['ProcessedDataPath']
 if os.path.exists(ProcessedDataPath + '/dataset.csv'):
     crsp = pd.read_csv(ProcessedDataPath+'/dataset.csv', index_col=0)
     print(crsp.shape)
