@@ -1,11 +1,11 @@
 import pandas as pd
 import os, sys
-from portfolio_functions import *
+from portfolios.portfolio_functions import *
+from config import config
 
-
-currentPath = os.getcwd()#os.path.dirname(sys.argv[0])
-dataPath = (currentPath+'/../../data')
-ProcessedDataPath = (dataPath + '/processed')
+currentPath = config.currentPath #os.getcwd()#os.path.dirname(sys.argv[0])
+dataPath = config.dataPath
+ProcessedDataPath = config.paths['ProcessedDataPath']
 
 pred_df = pd.read_csv(ProcessedDataPath+'/predicted_ret.csv', index_col=0)
 crsp = pd.read_csv(ProcessedDataPath+'/../external/crspmret.csv')
@@ -24,5 +24,6 @@ del [crsp, pred_df]
 df = calculate_portfolio_weights(df)
 df = calculate_portfolio_monthly_return(df)
 
-df.to_csv(currentPath+'/portfolioReturns.csv')
-print(currentPath)
+df.to_csv(dataPath+'/processed/portfolioReturns.csv')
+print('Portfolio Creation Completed')
+
