@@ -8,6 +8,8 @@ dataPath = config.dataPath
 ProcessedDataPath = config.paths['ProcessedDataPath']
 
 pred_df = pd.read_csv(ProcessedDataPath+'/predicted_ret.csv', index_col=0)
+
+# Returns are not excess returns in this case
 crsp = pd.read_csv(ProcessedDataPath+'/../external/crspmret.csv')
 
 n_cuts = 3

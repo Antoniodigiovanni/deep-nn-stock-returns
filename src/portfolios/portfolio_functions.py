@@ -31,3 +31,6 @@ def calculate_portfolio_weights(df, weighting = 'VW'):
         df = df.drop('count', axis=1)
     
     return df
+
+def calculate_information_ratio():
+    pass

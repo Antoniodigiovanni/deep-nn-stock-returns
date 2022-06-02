@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from data.custom_dataset import TestDataset
 from data.data_preprocessing import sep_target_idx, split_data
-import model.metric as metric
+import models.nn.metric as metric
 from torch.utils.data import DataLoader
 import config
 
