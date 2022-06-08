@@ -10,9 +10,9 @@ from portfolios.portfolio import Portfolio
 #                                                                                               #
 #################################################################################################
 
-portfolio = Portfolio().information_ratio()
+portfolio = Portfolio()
 print('Portfolio:')
-print(portfolio)
+print(portfolio.alpha)
 #import train
 
 ### MODEL TUNING ###

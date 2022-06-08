@@ -2,6 +2,7 @@ import config
 import pandas as pd
 import os
 import datetime as dt
+import statsmodels.api as sm
 from portfolios.FF5FM_Mom import FF5FM_Mom
 
 # Making pred_df private could be done, like __pred_df
@@ -20,31 +21,17 @@ class Portfolio():
             #crsp.drop(['prc','exchcd','siccd','shrcd','me_nyse10','me_nyse20'], axis=1, inplace=True)     
             assert os.path.exists(config.paths['PredictedRetPath']), 'The predicted returns df does not exist, perform the prediction!'
             
-            self.pred_df = pd.read_csv(config.paths['PredictedRetPath'], index_col=0)
+            self.__pred_df = pd.read_csv(config.paths['PredictedRetPath'], index_col=0)
             
             # Dropping returns from pred_df, as they are winsorized there.
-            self.pred_df.drop('ret', axis=1, inplace=True)
-            self.pred_df['permno'] = self.pred_df.permno.astype(int)
+            self.__pred_df.drop('ret', axis=1, inplace=True)
+            self.__pred_df['permno'] = self.__pred_df.permno.astype(int)
 
-            self.pred_df = self.pred_df.merge(
+            self.__pred_df = self.__pred_df.merge(
                 crsp[['permno','yyyymm','melag', 'ret']], 
                 on=['permno','yyyymm'], 
                 how='left'
             )
-
-            print('Pred_df Head:')
-            print(self.pred_df.head())
-
-            # Still have to check cut vs. qcut
-            # Cutting in bins is done only in rebalancing dates.
-            # pred_df = pred_df.set_index(['yyyymm', 'permno'])\
-            #     .groupby('yyyymm')['predicted_ret']\
-            #         .apply(lambda x: pd.cut(x, bins=n_cuts, labels=False))\
-            #             .reset_index(name='bin')
-            
-            # self.returns = pred_df.merge(crsp, on=['permno', 'yyyymm'], how='left')
-            # print('Merged df Head:')
-            # print(self.df.head())
 
             
             self.calculate_portfolio_weights()
@@ -59,9 +46,29 @@ class Portfolio():
         FFMom = FF5FM_Mom().returns
         """
             Finish implementing the information ratio calculation.
+            Regress the long and long-short
 
         """
+        columns_to_keep = [self.returns.columns[0]]
+        columns_to_keep.extend(self.returns.columns[-2:])
         
+        df = self.returns[columns_to_keep]
+        
+        df = df.merge(FFMom, on=['yyyymm'], how='left')
+
+        # On long-short returns        
+        X = df.iloc[:, 3:]
+        
+        # Column 1 is long returns on max quantile, 
+        # Column 2 is long-short returns
+        y = df.iloc[:,2]
+
+        X = sm.add_constant(X)
+        lm = sm.OLS(y, X).fit()
+
+        self.alpha = lm.params[0]
+        self.t_value_alpha = lm.tvalues[0]
+
 
     def list_rebalancing_dates(self):
         """
@@ -76,7 +83,7 @@ class Portfolio():
 
         rebalancing_months = list(
             (pd.period_range(dt.datetime.strptime(
-                str(self.pred_df['yyyymm'].min()),'%Y%m'),
+                str(self.__pred_df['yyyymm'].min()),'%Y%m'),
                 periods=rebalancing_map[self.rebalancing_frequency][1],
                 freq=rebalancing_map[self.rebalancing_frequency][0]))
                 .strftime('%Y%m')
@@ -90,7 +97,7 @@ class Portfolio():
         rebalancing_months = self.list_rebalancing_dates()
 
         # Select rows of the rebalancing date (yearly, monthly or quarterly)
-        df_rebalancing_months = self.pred_df.loc[self.pred_df['yyyymm'].isin(rebalancing_months)].copy()
+        df_rebalancing_months = self.__pred_df.loc[self.__pred_df['yyyymm'].isin(rebalancing_months)].copy()
 
         # Calculating bins..
         # Still have to check cut vs. qcut
@@ -121,7 +128,7 @@ class Portfolio():
                 ['yyyymm','bin'])['melag']\
                 .transform('count'))
         
-        self.pred_df = self.pred_df.merge(
+        self.__pred_df = self.__pred_df.merge(
             df_rebalancing_months[['permno', 'yyyymm', 'bin','pweight']],
             on=['permno','yyyymm'],
             how='left')
@@ -129,20 +136,19 @@ class Portfolio():
         # Idea could be to add a column which contains the split between rebalancing dates
         # such that if some - Chen and Zimmermann do not do that in their code (maybe because I have dropped
         # rows with NaN as return)
-        self.pred_df.sort_values(['permno', 'yyyymm'], ascending=[True, True]) 
-        self.pred_df['bin'] = self.pred_df.groupby(['permno'])[['bin']].ffill()
-        self.pred_df['pweight'] = self.pred_df.groupby(['permno','bin'])[['pweight']].ffill()
+        self.__pred_df.sort_values(['permno', 'yyyymm'], ascending=[True, True]) 
+        self.__pred_df['bin'] = self.__pred_df.groupby(['permno'])[['bin']].ffill()
+        self.__pred_df['pweight'] = self.__pred_df.groupby(['permno','bin'])[['pweight']].ffill()
 
         # Drop NaN in pweight filled, they are related to stocks that started 
         # trading before the rebalancing period, before being included 
         # in the rebalanced portfolio
-        self.pred_df.dropna(subset=['pweight'], inplace=True)
+        self.__pred_df.dropna(subset=['pweight'], inplace=True)
 
 
     def calculate_portfolio_monthly_returns(self):
-        print('Pred df head again:')
-        print(self.pred_df.head())
-        portfolio_returns = self.pred_df.groupby(
+        
+        portfolio_returns = self.__pred_df.groupby(
             ['yyyymm','bin']).apply(
                 lambda x: sum(x['ret']*x['pweight']))\
                 .reset_index(name='portfolio_ret')
@@ -165,6 +171,3 @@ class Portfolio():
             portfolio_returns.iloc[:,1]
         
         self.returns = portfolio_returns
-
-        print('Port returns head:')
-        print(portfolio_returns.head())
