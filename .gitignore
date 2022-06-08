@@ -1,9 +1,7 @@
-#nni-experiments folder
-nni-experiments/
-
 # Notebooks
 *.ipynb
 /notebooks
+
 
 
 # WRDS scripts folder
