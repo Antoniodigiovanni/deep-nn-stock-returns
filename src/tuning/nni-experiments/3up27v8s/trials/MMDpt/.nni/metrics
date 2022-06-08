@@ -1,0 +1,11 @@
+ME000114{"parameter_id": 16, "trial_job_id": "MMDpt", "type": "PERIODICAL", "sequence": 0, "value": "2.1707589285714284"}
+ME000114{"parameter_id": 16, "trial_job_id": "MMDpt", "type": "PERIODICAL", "sequence": 1, "value": "15.492640904017858"}
+ME000111{"parameter_id": 16, "trial_job_id": "MMDpt", "type": "PERIODICAL", "sequence": 2, "value": "23.050537109375"}
+ME000114{"parameter_id": 16, "trial_job_id": "MMDpt", "type": "PERIODICAL", "sequence": 3, "value": "29.349365234375004"}
+ME000105{"parameter_id": 16, "trial_job_id": "MMDpt", "type": "PERIODICAL", "sequence": 4, "value": "32.578125"}
+ME000113{"parameter_id": 16, "trial_job_id": "MMDpt", "type": "PERIODICAL", "sequence": 5, "value": "33.72349330357143"}
+ME000113{"parameter_id": 16, "trial_job_id": "MMDpt", "type": "PERIODICAL", "sequence": 6, "value": "33.66036551339286"}
+ME000113{"parameter_id": 16, "trial_job_id": "MMDpt", "type": "PERIODICAL", "sequence": 7, "value": "35.94308035714286"}
+ME000114{"parameter_id": 16, "trial_job_id": "MMDpt", "type": "PERIODICAL", "sequence": 8, "value": "26.885463169642858"}
+ME000114{"parameter_id": 16, "trial_job_id": "MMDpt", "type": "PERIODICAL", "sequence": 9, "value": "35.739571707589285"}
+ME000109{"parameter_id": 16, "trial_job_id": "MMDpt", "type": "FINAL", "sequence": 0, "value": "35.739571707589285"}

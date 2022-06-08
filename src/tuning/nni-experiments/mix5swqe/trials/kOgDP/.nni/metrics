@@ -1,0 +1,11 @@
+ME000112{"parameter_id": 0, "trial_job_id": "kOgDP", "type": "PERIODICAL", "sequence": 0, "value": "5.330287388392857"}
+ME000109{"parameter_id": 0, "trial_job_id": "kOgDP", "type": "PERIODICAL", "sequence": 1, "value": "3.546142578125"}
+ME000106{"parameter_id": 0, "trial_job_id": "kOgDP", "type": "PERIODICAL", "sequence": 2, "value": "2.783203125"}
+ME000113{"parameter_id": 0, "trial_job_id": "kOgDP", "type": "PERIODICAL", "sequence": 3, "value": "2.4210030691964284"}
+ME000113{"parameter_id": 0, "trial_job_id": "kOgDP", "type": "PERIODICAL", "sequence": 4, "value": "2.3416573660714284"}
+ME000109{"parameter_id": 0, "trial_job_id": "kOgDP", "type": "PERIODICAL", "sequence": 5, "value": "1.849365234375"}
+ME000109{"parameter_id": 0, "trial_job_id": "kOgDP", "type": "PERIODICAL", "sequence": 6, "value": "1.666259765625"}
+ME000113{"parameter_id": 0, "trial_job_id": "kOgDP", "type": "PERIODICAL", "sequence": 7, "value": "1.6153390066964284"}
+ME000113{"parameter_id": 0, "trial_job_id": "kOgDP", "type": "PERIODICAL", "sequence": 8, "value": "1.5359933035714284"}
+ME000113{"parameter_id": 0, "trial_job_id": "kOgDP", "type": "PERIODICAL", "sequence": 9, "value": "1.5543038504464284"}
+ME000108{"parameter_id": 0, "trial_job_id": "kOgDP", "type": "FINAL", "sequence": 0, "value": "1.5543038504464284"}

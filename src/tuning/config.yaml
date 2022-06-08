@@ -10,15 +10,15 @@ experimentName: TestExperiment1
 searchSpace:
   hidden_size_1: 
     _type: choice
-    _value: [4, 8, 16, 32, 64, 128]
+    _value: [4, 8, 16, 32, 64, 128, 256]
 
   hidden_size_2: 
     _type: choice
-    _value: [0, 4, 8, 16, 32]
+    _value: [0, 4, 8, 16, 32, 64, 128]
 
   hidden_size_3: 
     _type: choice
-    _value: [0, 4, 8, 16, 32]
+    _value: [0, 4, 8, 16, 32, 64, 128]
   
   act_func: 
     _type: choice
@@ -41,25 +41,37 @@ searchSpace:
   momentum:
     _type: uniform
     _value: [ 0, 1 ]
+  
+  epochs:
+    _type: quniform
+    _value: [1, 200, 50] #Uniform distribution from lower bound to upper bound with steps of 50
+  
+  batch_size:
+    _type: choice
+    _value: [4, 8, 16, 32, 64, 128, 256]
+    #_type: quniform
+    #_value: [16, 256, 16]
+
 
 
 trial_command: python3 tune.py
 trial_code_directory: ../ #The path is relative to the config file (in this case, where is tune.py compared to config.yaml)
 #trialGpuNumber: 1
 experimentWorkingDirectory: ./nni-experiments
-max_trial_number: 1 #With TPE, 20 trials are needed only to warm up. The max trial number should be way higher
-trial_concurrency: 1
-maxExperimentDuration: 24h #use 10m for example if using minutes.
+max_trial_number: 30 #With TPE, 20 trials are needed only to warm up. The max trial number should be way higher
+trial_concurrency: 2
+maxExperimentDuration: 20m #24h #use 10m for example if using minutes.
 tuner:
-  name: TPE
-  class_args:
+  #name: TPE
+  #class_args:
+  #  optimize_mode: maximize
+  name: Evolution # Evolutionary (genetic) algorithm
+  classArgs:
     optimize_mode: maximize
+    population_size: 10
 
 training_service:
   platform: local
-  #useActiveGpu: True  # NOTE: Use "true" if you are using an OS with graphical interface (e.g. Windows 10, Ubuntu desktop)
-                       # Check the doc for details: https://nni.readthedocs.io/en/latest/reference/experiment_config.html#useactivegpu
-
-maxTrialNumberPerGpu: 2
-  useActiveGpu: false  # NOTE: Use "true" if you are using an OS with graphical interface (e.g. Windows 10, Ubuntu desktop)
+  #maxTrialNumberPerGpu: 2
+  useActiveGpu: True  # NOTE: Use "true" if you are using an OS with graphical interface (e.g. Windows 10, Ubuntu desktop)
                        # Check the doc for details: https://nni.readthedocs.io/en/latest/reference/experiment_config.html#useactivegpu

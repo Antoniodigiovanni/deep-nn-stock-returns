@@ -1,39 +1,73 @@
 import torch
 import config
-from datetime import datetime as dt
 from models.neural_net import metric
 import nni
+import json
+from json.decoder import JSONDecodeError
+from pathlib import Path
 
 class NeuralNetTrainer():
-    def __init__(self, model, train_loader, val_loader, optimizer, nni_experiment=False):
+    def __init__(self, model, train_loader, val_loader, optimizer, params, nni_experiment=False):
         self.model = model
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.optimizer = optimizer
         self.loss_fn = config.loss_fn
         self.device = config.device
+        self.nni_experiment = nni_experiment
+        self.params = params
 
     def train(self):
-        fileName = dt.now().strftime('/TrainRun-%Y_%m_%d-%H_%M.log')
-        
-        for epoch in range(config.n_epochs):
+       
+        for epoch in range(self.params['epochs']):
             epoch_loss = self.train_one_epoch()
             validation_loss, validation_acc = self.validate_one_epoch()
-            nni.report_intermediate_result(validation_acc)
+            if self.nni_experiment:
+                nni.report_intermediate_result(validation_acc)
+            with open(config.paths['logsPath'] + config.logFileName, 'a') as fh:
+                fh.write('Network parameters:')
+                fh.write(self.params)
             if epoch % config.ep_log_interval == 0:
-                with open(config.paths['logsPath'] +fileName, 'a') as fh:
-                    fh.write(f'Epoch n.{epoch} | Loss: {epoch_loss}\nValidation Loss: {validation_loss} | Validation Accuracy: {validation_acc}%\n')
+                with open(config.paths['logsPath'] + config.logFileName, 'a') as fh:
+                    fh.write(f'\nEpoch n.{epoch} | Loss: {epoch_loss}\nValidation Loss: {validation_loss} | Validation Accuracy: {validation_acc}%\n')
                 print(f'Epoch n.{epoch} | Loss: {epoch_loss}\nValidation Loss: {validation_loss} | Validation Accuracy: {round(validation_acc,4)}%')
             #tb.add_scalar("Training Loss", epoch_loss, epoch)
             #tb.add_scalar("Validation Loss", validation_loss, epoch)
             #tb.flush()
         
-        with open(config.paths['logsPath'] +fileName, 'a') as fh:
+        with open(config.paths['logsPath'] +config.logFileName, 'a') as fh:
             fh.write('\n\nTraining complete\n\n')
-            fh.write(f'\nFinal Training Loss: {epoch_loss} at epoch n. {epoch+1}')
-            fh.write(f'\nFinal Validation Loss: {validation_loss} at epoch n. {epoch+1}')
+            fh.write(f'Training epochs: {epoch+1}')
+            fh.write(f'\nFinal Training Loss: {epoch_loss}')
+            fh.write(f'\nFinal Validation Loss: {validation_loss}')
             fh.write(f'\nFinal Validation Accuracy: {round(validation_acc,2)}%\n')
-        nni.report_final_result(validation_acc)
+
+        if self.nni_experiment:
+            nni.report_final_result(validation_acc)
+            self.update_best_params(validation_acc)
+
+
+    def update_best_params(self, validation_acc):
+        
+        # Best parameters update is performed at the end of the trial only.
+        bestParamsFilepath = Path(config.paths['resultsPath']+config.bestParamsFileName)
+        bestParamsFilepath.touch(exist_ok=True)
+        
+        with open(config.paths['resultsPath']+config.bestParamsFileName, 'r') as pf:
+            try:
+                file_params = json.load(pf)
+            except JSONDecodeError:
+                file_params = {}
+                pass
+        if 'metric' in file_params.keys():
+            if validation_acc >= file_params['metric']:
+                with open(config.paths['resultsPath']+config.bestParamsFileName, 'w') as pf:
+                    self.params['metric'] = validation_acc
+                    json.dump(self.params, pf)
+        else:
+            with open(config.paths['resultsPath']+config.bestParamsFileName, 'w') as pf:
+                    self.params['metric'] = validation_acc
+                    json.dump(self.params, pf)
 
     def train_one_epoch(self):
         self.model.train()

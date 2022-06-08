@@ -116,7 +116,7 @@ del [X_train, Y_train]
 val = CustomDataset(X_val, Y_val)
 del[X_val, Y_val]
 
-train_loader = DataLoader(train, batch_size=config.batch_size_train, num_workers=2)
+train_loader = DataLoader(train, batch_size=params['batch_size'], num_workers=2)
 val_loader = DataLoader(val, batch_size=config.batch_size_validation, num_workers=2)
 
 
@@ -125,6 +125,5 @@ model = OptimizeNet(n_inputs, params).to(config.device)
 optimizer = map_optimizer(params['optimizer'], model.parameters(), params['learning_rate'])
 loss_func = map_loss_func(params['loss'])
 
-epochs = 250
 
-trainer = NeuralNetTrainer(model, train_loader, val_loader, optimizer).train()
+trainer = NeuralNetTrainer(model, train_loader, val_loader, optimizer, params, nni_experiment=True).train()

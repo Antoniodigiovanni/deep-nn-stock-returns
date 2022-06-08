@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/antonio/thesis/src/tune.py", line 129, in <module>
+    trainer = NeuralNetTrainer(model, train_loader, val_loader, optimizer, params, nni_experiment=True).train()
+  File "/home/antonio/thesis/src/trainer/trainer.py", line 44, in train
+    self.update_best_params(validation_acc)
+  File "/home/antonio/thesis/src/trainer/trainer.py", line 50, in update_best_params
+    self.bestParamsFile.touch(exist_ok=True)
+AttributeError: 'str' object has no attribute 'touch'

@@ -1,0 +1,24 @@
+/home/antonio/anaconda3/envs/thesis/lib/python3.9/site-packages/torch/nn/init.py:403: UserWarning: Initializing zero-element tensors is a no-op
+  warnings.warn("Initializing zero-element tensors is a no-op")
+Traceback (most recent call last):
+  File "/home/antonio/thesis/src/tune.py", line 129, in <module>
+    trainer = NeuralNetTrainer(model, train_loader, val_loader, optimizer, params, nni_experiment=True).train()
+  File "/home/antonio/thesis/src/trainer/trainer.py", line 26, in train
+    epoch_loss = self.train_one_epoch()
+  File "/home/antonio/thesis/src/trainer/trainer.py", line 76, in train_one_epoch
+    loss = self.train_one_step(data)
+  File "/home/antonio/thesis/src/trainer/trainer.py", line 91, in train_one_step
+    yhat = self.model(data['X'])
+  File "/home/antonio/anaconda3/envs/thesis/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1110, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/antonio/thesis/src/tune.py", line 94, in forward
+    x = self.fc3(x)
+  File "/home/antonio/anaconda3/envs/thesis/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1110, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/antonio/anaconda3/envs/thesis/lib/python3.9/site-packages/torch/nn/modules/container.py", line 141, in forward
+    input = module(input)
+  File "/home/antonio/anaconda3/envs/thesis/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1110, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/antonio/anaconda3/envs/thesis/lib/python3.9/site-packages/torch/nn/modules/linear.py", line 103, in forward
+    return F.linear(input, self.weight, self.bias)
+RuntimeError: mat1 and mat2 shapes cannot be multiplied (64x128 and 0x16)

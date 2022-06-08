@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/home/antonio/thesis/src/tune.py", line 129, in <module>
+    trainer = NeuralNetTrainer(model, train_loader, val_loader, optimizer, params, nni_experiment=True).train()
+  File "/home/antonio/thesis/src/trainer/trainer.py", line 45, in train
+    self.update_best_params(validation_acc)
+  File "/home/antonio/thesis/src/trainer/trainer.py", line 52, in update_best_params
+    bestParamsFilepath.touch(exist_ok=True)
+  File "/home/antonio/anaconda3/envs/thesis/lib/python3.9/pathlib.py", line 1315, in touch
+    fd = self._raw_open(flags, mode)
+  File "/home/antonio/anaconda3/envs/thesis/lib/python3.9/pathlib.py", line 1127, in _raw_open
+    return self._accessor.open(self, flags, mode)
+PermissionError: [Errno 13] Permission denied: '/BestNN-2022_06_03-10_20.log'

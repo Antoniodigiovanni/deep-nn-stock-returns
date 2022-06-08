@@ -1,7 +1,11 @@
-from importlib.resources import path
-from typing import final
 import pandas as pd
 import datetime as dt
+import numpy as np
+from urllib.request import urlopen
+from io import BytesIO
+from zipfile import ZipFile
+import os
+import config
 
 # Create a class for the df - this might be a good idea to be concise in Feature Engineering (?)
 
@@ -28,7 +32,7 @@ def load_crsp(CRSPretPath, CRSPinfoPath, StartYear=190001):
     # Merge CRSPret and CRSPinfo
     crsp = crspm.set_index(['permno', 'yyyymm']).join(
         crspinfo.set_index(['permno', 'yyyymm']), how='left').reset_index()\
-            .drop(['me_nyse10', 'me_nyse20'], axis=1)
+            .drop(['me_nyse10'], axis=1)
     
     # TODO
     # Select columns to keep
@@ -36,16 +40,25 @@ def load_crsp(CRSPretPath, CRSPinfoPath, StartYear=190001):
     #    'exchcd', 'shrcd', 'siccd']]
     
     return crsp
-
     
-def split_by_size(df):
-    # TODO
+def remove_microcap_stocks(df, method=1):
     
     """ 
         The function splits stocks in Big, Medium and Small caps according to their market cap.
         Multiple possitiblities:
-            - Follow Messmer 2017
-            - Follow ...
+            1 - Follow Benjamin's suggestion from previous thesis and Fama French 2008, microcap stocks are all the ones with me smaller
+                than NYSE 20th percentile market cap.
+
+            2 - Follow Messmer 2017
+            
+            3 - Follow Oezturk Cem thesis, keeping only Large Cap stocks with above than median market cap 
+                (I would do cross-sectionally, instead I think he does once for all the sample period)
+            
+            4 - Follow Gu et al. - which keep all stocks but present some analysis divided by size categories 
+              (e.g. a break out predictability for large stocks (the top-1,000 stocks by market equity each month) and small stocks 
+              (the bottom-1,000 stocks each month) based on the full estimated model (using all stocks), but with a focus on predicting
+              subsamples.
+              
 
         Messmer 2017:
             As in Fama and French (1996), stocks qualify as large if their market capitalization ranks among the top 1000, 
@@ -56,9 +69,38 @@ def split_by_size(df):
     
     """
 
-    df = df.drop(['me','melag'], axis=1)
-    return df
+    # Method 1
+    if method == 1:
+        print(f'N. rows before filtering: {df.shape[0]}')
+        df = df.loc[df['me'] >= df['me_nyse20']]
+        print(f'N. rows after filtering: {df.shape[0]}')
 
+    # Method 2
+    if method==2:
+        df['SizeRank'] = df.groupby('yyyymm')['melag'].rank(method='max', ascending=False)
+        
+        conditions = [
+            df['SizeRank'] <= 1000,
+            (df['SizeRank'] > 1000) & (df['SizeRank'] <= 2000),  
+            df['SizeRank'] > 2000 
+        ]
+        cons = ['Large', 'Medium', 'Small']
+
+        df['MarketCapGroup'] = np.select(conditions, cons)
+        df = df.loc[df['MarketCapGroup'].isin(['Large','Medium'])]
+        df = df.drop(['melag', 'SizeRank', 'MarketCapGroup'], axis=1)
+
+
+    # Method 3
+    if method==3:
+        df = df.set_index('yyyymm')
+        df['SizeMedian'] = df.groupby('yyyymm')['melag'].median()
+        df = df.reset_index()
+
+        df = df.loc[df['melag'] >= df['SizeMedian']]
+        df = df.drop(['melag','SizeMedian'], axis=1)
+
+    return df
 
 def SIC_dummies(df):
 
@@ -76,7 +118,6 @@ def SIC_dummies(df):
 
     return df, dummy_cols
 
-
 def calculate_excess_returns(FFpath, df):
     
     """ 
@@ -85,8 +126,14 @@ def calculate_excess_returns(FFpath, df):
         of risk-free rate, and uses it to calculate stock excess returns.
   
     """
+    FF5FMurl = 'https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_5_Factors_2x3_CSV.zip'
 
-    FF = pd.read_csv(FFpath, sep=',')
+    if os.path.isfile(FFpath) == False:
+        download_and_unzip(FF5FMurl, config.dataPath+'/external')    
+        print('Fama French 5 Factor Model returns downloaded from Kenneth French\'s library')
+
+
+    FF = pd.read_csv(FFpath, skiprows=3, skipfooter=60, engine='python')
     
     FF = FF.rename(columns={'Unnamed: 0':'yyyymm'})
     FF = FF[['yyyymm','RF']]
@@ -119,7 +166,6 @@ def filter_exchange_code(df, allowed_exchcd=[1,2,3]):
     """
 
     return df.loc[df['exchcd'].isin(allowed_exchcd)].drop('exchcd', axis=1)
-
 
 def scale_predictors(df): #,signal_columns)
 
@@ -188,13 +234,15 @@ def merge_crsp_with_signals(df, SingalsPath, chunksize=50000):
     crsp_columns = list(df.columns)
     final_df = pd.DataFrame()
     i = 0
-
+    colswithallnans = 0
     for chunk in pd.read_csv(SingalsPath, chunksize=chunksize):
 
+        colswithallnans += (chunk.iloc[:,3:][chunk.isnull().all(axis=1)].shape[0])
         chunk = scale_predictors(chunk)
+        
         # Evaluate whether to change the join type (does this work?)
         temp = df.merge(chunk, on=['permno','yyyymm'], how='inner')
-
+        
         if i == 0:
             final_df = final_df.reindex(columns = temp.columns.tolist())
         
@@ -206,18 +254,36 @@ def merge_crsp_with_signals(df, SingalsPath, chunksize=50000):
     final_df = final_df.astype({'yyyymm':int})
     final_df = final_df.reset_index(drop=True)
     signal_columns = list(set(list(final_df.columns)) - set(crsp_columns))
-
+    print(f'Columns with all NaNs: {colswithallnans}')
     return final_df, signal_columns
 
-
-def winsorize(df):
+def winsorize_returns(df):
 
     """ 
-        The function ... 
+        The function winsorizes returns at 1% and 99% levels. 
     
     """
+
+    ret_09 = df.groupby('yyyymm')['ret'].quantile(0.9).reset_index().rename(columns={'ret':'ret_09'})
+    ret_01 = df.groupby('yyyymm')['ret'].quantile(0.1).reset_index().rename(columns={'ret':'ret_01'})
+
+    df = df.merge(ret_01, on='yyyymm', how='left')
+    df = df.merge(ret_09, on='yyyymm', how='left')
+    
+    df['ret'] = df['ret'].clip(df['ret_01'], df['ret_09'])
+    df = df.drop(['ret_01','ret_09'], axis=1)
+
     return df
 
+def de_mean_returns(df):
+    """ 
+        The function cross-sectionally subtracts the avg. return to the stock
+        returns. This is done to keep cross-sectional information. 
+        (Should be alternative to scaling returns - check if correct)
+    
+    """
+    
+    pass
 
 def prepare_data(CRSPretpath, CRSPinfopath, FFPath, SignalsPath, ProcessedDataPath):
     
@@ -229,8 +295,8 @@ def prepare_data(CRSPretpath, CRSPinfopath, FFPath, SignalsPath, ProcessedDataPa
     crsp, dummy_cols = SIC_dummies(crsp)
     categorical_cols.extend(dummy_cols)
     print(f'Dummy columns for sectors created, n. of columns: {len(dummy_cols)}')
-    crsp = split_by_size(crsp)
-    print('Stocks split by size')
+    crsp = remove_microcap_stocks(crsp)
+    print('Microcap stocks removed')
     crsp = calculate_excess_returns(FFPath, crsp)
     print('Excess returns calculated.')
     crsp = filter_exchange_code(crsp)
@@ -239,15 +305,13 @@ def prepare_data(CRSPretpath, CRSPinfopath, FFPath, SignalsPath, ProcessedDataPa
     print('Beginning merge process between CRSP and OpenAssetPricing signals...')
     crsp, signal_columns = merge_crsp_with_signals(crsp, SignalsPath)
     print('Merge Complete.')
-    crsp = winsorize(crsp)
+    crsp = winsorize_returns(crsp)
     
 
     # Dropping remainging NAs, check this, in theory there should be just some rows.
     print(f'Dropping {crsp.shape[0] - crsp.dropna().shape[0]} rows as they still contain at least a NaN number (likely ret is missing)')
     crsp = crsp.dropna()
 
-    # Test to check if anything gets better
-    crsp = scale_returns(crsp)
     
     print('Data preparation complete, saving...')
     crsp.to_csv(ProcessedDataPath + '/dataset.csv')
@@ -256,7 +320,8 @@ def prepare_data(CRSPretpath, CRSPinfopath, FFPath, SignalsPath, ProcessedDataPa
     
     return crsp, categorical_cols
 
-
+# Should create two functions, one for training purposes(train+val) the other for testing purposes. To avoid unnecessary dfs being
+# loaded in memory
 def split_data(df, end_train='198512', end_val='199512'):
     
     """
@@ -305,3 +370,8 @@ def sep_target_idx(data):
     index = data[['permno', 'yyyymm']]
     
     return X, Y, index
+
+def download_and_unzip(url, extract_to='.'):
+    http_response = urlopen(url)
+    zipfile = ZipFile(BytesIO(http_response.read()))
+    zipfile.extractall(path=extract_to)

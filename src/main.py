@@ -2,20 +2,23 @@
 #from portfolios import portfolio_creation
 #from portfolios import fama_french_plus_momentum
 from base import set_random_seed
+from portfolios.portfolio import Portfolio
 
 #################################################################################################
 #                                                                                               #
 #                                      MODEL TRAINING                                           #
 #                                                                                               #
 #################################################################################################
-import train
+
+portfolio = Portfolio().information_ratio()
+print('Portfolio:')
+print(portfolio)
+#import train
 
 ### MODEL TUNING ###
 
 #import tuning.neural_architecture_search
 #print('Done')
-
-
 
 #################################################################################################
 #                                                                                               #
