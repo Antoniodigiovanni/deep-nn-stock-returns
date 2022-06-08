@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "/home/antonio/thesis/src/tune.py", line 129, in <module>
-    trainer = NeuralNetTrainer(model, train_loader, val_loader, optimizer, params, nni_experiment=True).train()
-  File "/home/antonio/thesis/src/trainer/trainer.py", line 44, in train
-    self.update_best_params(validation_acc)
-  File "/home/antonio/thesis/src/trainer/trainer.py", line 50, in update_best_params
-    with open(config.paths['resultsPath']+self.bestParamsFile, 'r') as pf:
-FileNotFoundError: [Errno 2] No such file or directory: '/home/antonio/thesis/src/config/../../saved/results/BestNN-2022_06_03-10_08.log'

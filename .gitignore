@@ -1,3 +1,6 @@
+#nni-experiments folder
+nni-experiments/
+
 # Notebooks
 *.ipynb
 /notebooks
