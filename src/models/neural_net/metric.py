@@ -1,46 +1,12 @@
 import torch
 import pandas as pd
 import numpy as np
-
-
-def accuracy(output, target, pct):
-    with torch.no_grad():
-      
-        assert output.shape[0] == len(target)
-        n_correct = 0
-        n_wrong = 0
-        #correct = 0
-        #print(f'output shape is: {output.shape}\ntarget shape is:{target.shape}')
-        for i in range(len(target)):
-          abs_delta = np.abs(output[i] - target[i])
-          #print(f'abs_delta: {abs_delta.item()}')
-          max_allow = np.abs(pct * target[i])
-          if abs_delta < max_allow:
-            n_correct +=1
-          
-          else:
-            n_wrong += 1
-          #print(f'Target: {target} | prediction: {output}')
-
-        #acc = (n_correct * 1.0) / (n_correct + n_wrong)
-        #correct += torch.sum(output == target).item()
-        return n_correct / len(target)
-
-
-def top_k_acc(output, target, k=3):
-    with torch.no_grad():
-        pred = torch.topk(output, k, dim=1)[1]
-        assert pred.shape[0] == len(target)
-        correct = 0
-        for i in range(k):
-            correct += torch.sum(pred[:, i] == target).item()
-    return correct / len(target)
-
-# After this line the functions are the ones I am currently using
+from portfolios.portfolio import Portfolio
 
 def calc_accuracy(model, data, pct):
   # assumes model.eval()
-  # percent correct within pct of true house price
+
+  # Percent correct within pct of true returns
   n_correct = 0; n_wrong = 0
 
   for i in range(len(data['X'])):
@@ -64,3 +30,14 @@ def calc_accuracy(model, data, pct):
 
   #return acc, prediction
   return acc, stats, prediction
+
+def calc_portfolio_alpha():
+  """
+    This function returns the portfolio alpha when the Long-Short returns are regressed on the Fama French
+    5 Factors Model + Momentum
+    
+  """
+  
+  portfolio = Portfolio()
+  alpha = portfolio.alpha
+  return alpha

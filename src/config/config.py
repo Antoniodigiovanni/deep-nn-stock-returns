@@ -28,11 +28,14 @@ paths = dict (
 
 logFileName = dt.now().strftime('/TrainRun-%Y_%m_%d-%H_%M.log')
 bestParamsFileName = dt.now().strftime('/BestNeuralNetworkParameters-%Y_%m_%d-%H_%M.json') 
-
+SavedNetFileName = dt.now().strftime('/NeuralNetwork-%Y_%m_%d-%H_%M.pt')
 
 # Variables
 ForcePreProcessing = False # Used to force the data pre-processing even if the processed dataset already exists
 ForceTraining = True #Used to force the training of the model even when a saved model already exists
+
+end_train = '198512' 
+end_val = '199512'
 
 batch_size_validation = 128
 ep_log_interval = 2

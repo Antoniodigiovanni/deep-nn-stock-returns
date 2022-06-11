@@ -27,6 +27,8 @@ class FF5FM_Mom():
         FF5FM = pd.read_csv(config.paths['FFPath'], skiprows=3, index_col=0, skipfooter=60, engine='python')
         FFMom = pd.read_csv(config.paths['FFMomPath'], skiprows=13, index_col=0, skipfooter=100, engine='python')
 
+        self.RF = FF5FM[['yyyymm', 'RF']]
+        
         FF5FM.drop('RF', axis=1, inplace=True)
         self.returns = FF5FM.join(FFMom)
         self.returns = self.returns.reset_index().rename(columns={'index':'yyyymm'})

@@ -186,33 +186,11 @@ def scale_predictors(df): #,signal_columns)
     
     """
 
-    # Rank (add cross-sectional rank)
-    #df[df.columns.intersection(columns)] = df[df.columns.intersection(columns)].rank(method='max') 
-    #df[signal_columns] = df[signal_columns].rank(method='max')
-    
-    # Divide rank by length of non-null values in column and subtract 0.5
-    #df[df.columns.intersection(columns)] = (df[df.columns.intersection(columns)]/df[df.columns.intersection(columns)].count())-0.5
-    #df[signal_columns] = (df[signal_columns]/df[signal_columns].count()) - 0.5
-    
-    # Fill NaNs with 0
-    #df = df[df.columns.intersection(columns)].fillna(0)
-    #df[signal_columns] = df[signal_columns].fillna(0)
-
     df = df.set_index(['permno','yyyymm']).groupby('yyyymm')\
         .apply(lambda x: (x.rank(method='max')/x.count())-0.5)\
             .reset_index()    
     df = df.fillna(0)
     
-    return df
-
-def scale_returns(df):
-    """
-        Test function, could be deleted in the future
-    """
-    print(f'df index: {df.index}')
-    df['ret'] = df.groupby('yyyymm')['ret']\
-        .apply(lambda x: (x.rank(method='max')/x.count())-0.5)
-
     return df
 
 def merge_crsp_with_signals(df, SingalsPath, chunksize=50000):
@@ -282,6 +260,8 @@ def de_mean_returns(df):
         (Should be alternative to scaling returns - check if correct)
     
     """
+
+    # df['ret'] = df.groupby('yyyymm')['ret'].apply(lambda x: x-np.mean(x))
     
     pass
 
@@ -292,6 +272,11 @@ def prepare_data(CRSPretpath, CRSPinfopath, FFPath, SignalsPath, ProcessedDataPa
     print('Loading data...')
     crsp = load_crsp(CRSPretpath, CRSPinfopath)
     print('Data Loaded')
+    
+    crsp = filter_exchange_code(crsp)
+    crsp = filter_share_code(crsp)
+    print('Share codes and Exchange codes filtered')
+
     crsp, dummy_cols = SIC_dummies(crsp)
     categorical_cols.extend(dummy_cols)
     print(f'Dummy columns for sectors created, n. of columns: {len(dummy_cols)}')
@@ -299,9 +284,6 @@ def prepare_data(CRSPretpath, CRSPinfopath, FFPath, SignalsPath, ProcessedDataPa
     print('Microcap stocks removed')
     crsp = calculate_excess_returns(FFPath, crsp)
     print('Excess returns calculated.')
-    crsp = filter_exchange_code(crsp)
-    crsp = filter_share_code(crsp)
-    print('Share codes and Exchange codes filtered')
     print('Beginning merge process between CRSP and OpenAssetPricing signals...')
     crsp, signal_columns = merge_crsp_with_signals(crsp, SignalsPath)
     print('Merge Complete.')
@@ -322,12 +304,20 @@ def prepare_data(CRSPretpath, CRSPinfopath, FFPath, SignalsPath, ProcessedDataPa
 
 # Should create two functions, one for training purposes(train+val) the other for testing purposes. To avoid unnecessary dfs being
 # loaded in memory
-def split_data(df, end_train='198512', end_val='199512'):
+def split_data_train_val(df, end_train='198512', end_val='199512'):
     
     """
         Splits data between train, validation and test
         dataframes (should an expanding window be included?)
     """
+    # If default values are passed to the function, gather the values from
+    # the config file, which is where the actual values are decided
+    # (ideally they are the same) - temporary solution before reformatting
+    # config variables
+
+    if end_train == '198512' and end_val == '199512':
+        end_train = config.end_train
+        end_val = config.end_val
     
     end_train = dt.datetime.strptime(end_train, '%Y%m')
     start_val = end_train + pd.DateOffset(months=1)
@@ -335,15 +325,33 @@ def split_data(df, end_train='198512', end_val='199512'):
     
 
     end_val = dt.datetime.strptime(end_val, '%Y%m')
-    start_test = end_val + pd.DateOffset(months=1)
-    start_test.strftime('%Y%m')
     
     train = df.loc[df['yyyymm'] <= int(end_train.strftime('%Y%m'))]
     val = df.loc[(df['yyyymm'] >= int(start_val.strftime('%Y%m'))) & (df['yyyymm'] <= int(end_val.strftime('%Y%m')))]
+
+    return train, val
+
+def split_data_test(df, end_val='199512'):
+    
+    """
+        Splits test data from the initial df
+        (should an expanding window be included?)
+    """
+    # If default values are passed to the function, gather the values from
+    # the config file, which is where the actual values are decided
+    # (ideally they are the same) - temporary solution before reformatting
+    # config variables
+
+    if end_val == '199512':
+        end_val = config.end_val
+    
+    end_val = dt.datetime.strptime(end_val, '%Y%m')
+    start_test = end_val + pd.DateOffset(months=1)
+    start_test.strftime('%Y%m')
+    
     test = df.loc[df['yyyymm'] >= int(start_test.strftime('%Y%m'))]
 
-    return train, val, test
-
+    return test
 
 # Separates the features from the target in the df
 def sep_target(data):
@@ -361,15 +369,15 @@ def sep_target(data):
 def sep_target_idx(data):
 
     """
-        Used for Test purposes, keeps track of the stock and the
+        Used for Test purposes (test df), keeps track of the stock and the
         relative month and year of the prediciton.
     """
     
     X = data.drop(['permno', 'yyyymm', 'ret'], axis=1).to_numpy()
     Y = data['ret'].to_numpy().ravel()
-    index = data[['permno', 'yyyymm']]
+    test_index = data[['permno', 'yyyymm']]
     
-    return X, Y, index
+    return X, Y, test_index
 
 def download_and_unzip(url, extract_to='.'):
     http_response = urlopen(url)

@@ -12,6 +12,11 @@ class Portfolio():
         self.n_cuts = n_cuts
         self.weighting = weighting
         self.rebalancing_frequency = rebalancing_frequency
+
+        self.alpha = None
+        self.t_value_alpha = None
+        self.returns = None
+
         
         try:
             crsp = pd.read_csv(config.paths['CRSPretPath'])
