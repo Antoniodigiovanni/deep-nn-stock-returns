@@ -86,7 +86,7 @@ class BaseDataset():
             crsp = dp.calculate_excess_returns(config.paths['FFPath'], crsp)
             crsp, signal_columns = dp.merge_crsp_with_signals(crsp, config.paths['SignalsPath'])
             crsp = dp.winsorize_returns(crsp)
-            crsp = dp.de_mean_returns(crsp)
+            #crsp = dp.de_mean_returns(crsp)
             
             # Dropping remainging NAs, check this, in theory there should be just some rows.
             print(f'Dropping {crsp.shape[0] - crsp.dropna().shape[0]} rows as they still contain at least a NaN number (likely ret is missing)')
@@ -99,16 +99,17 @@ class BaseDataset():
         return crsp
 
     def load_dataset_in_memory(self):
-        try:
-            self.crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)
-        
-        except FileNotFoundError:
-            print('Processed Dataset not present in data/processed, calculating..')
-            self.crsp = self.__initialize_dataset()
-            try:
-                self.crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)
-            except:
-                print('Error, can\'t load dataset')
+        print('Remember to implement returns de-meaning')
+        self.crsp = self.__initialize_dataset()
+        # try:
+        #     self.crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)
+        # except FileNotFoundError:
+        #     print('Processed Dataset not present in data/processed, calculating..')
+        #     self.crsp = self.__initialize_dataset()
+        #     try:
+        #         self.crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)
+        #     except:
+        #         print('Error, can\'t load dataset')
 
     
     def load_train_data(self):
