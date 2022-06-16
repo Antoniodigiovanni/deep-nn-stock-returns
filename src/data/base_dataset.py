@@ -79,8 +79,9 @@ class BaseDataset():
             crsp, dummy_cols = dp.SIC_dummies(crsp)
             
             self.categorical_cols.extend(dummy_cols)
-
+            print(f'Rows before filtering for microcaps: {crsp.shape[0]}')
             crsp = dp.remove_microcap_stocks(crsp)
+            print(f'Rows after filtering for microcaps: {crsp.shape[0]}')
 
             crsp = dp.calculate_excess_returns(config.paths['FFPath'], crsp)
             crsp, signal_columns = dp.merge_crsp_with_signals(crsp, config.paths['SignalsPath'])
