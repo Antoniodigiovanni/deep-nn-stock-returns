@@ -1,0 +1,8 @@
+matplotlib==3.5.2
+nni==2.7
+numpy==1.22.3
+pandas==1.4.2
+seaborn==0.11.2
+SQLAlchemy==1.4.36
+statsmodels==0.13.2
+torch==1.11.0+cpu
