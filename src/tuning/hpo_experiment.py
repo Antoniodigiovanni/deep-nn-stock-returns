@@ -23,8 +23,8 @@ experiment.config.assessor.class_args['optimize_mode'] ='maximize'
 experiment.config.assessor.class_args['start_step'] = 15
 
 
-experiment.config.max_trial_number = 10
-experiment.config.trial_concurrency = 2
+experiment.config.max_trial_number = 5
+experiment.config.trial_concurrency = 1
 #experiment.config.max_experiment_duration = 10h 
 
 experiment.run(8080)
