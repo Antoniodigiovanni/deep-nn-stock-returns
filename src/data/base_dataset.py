@@ -83,7 +83,7 @@ class BaseDataset():
             crsp = dp.remove_microcap_stocks(crsp)
 
             crsp = dp.calculate_excess_returns(config.paths['FFPath'], crsp)
-            crsp, signal_columns = dp.merge_crsp_with_signals
+            crsp, signal_columns = dp.merge_crsp_with_signals(crsp, config.paths['SignalsPath'])
             crsp = dp.winsorize_returns(crsp)
             crsp = dp.de_mean_returns(crsp)
             
