@@ -19,13 +19,15 @@ class NeuralNetTrainer():
         self.params = params
 
     def train(self):
-       
+
         for epoch in range(self.params['epochs']):
             epoch_loss = self.train_one_epoch()
             validation_loss, validation_acc = self.validate_one_epoch()
             if self.nni_experiment:
                 nni.report_intermediate_result(validation_acc)
                 #nni.assessor.AssessResult(validation_acc)
+            
+            # In this way the log is ovewritten every trial? Fix this
             with open(config.paths['logsPath'] + config.logFileName, 'a') as fh:
                 fh.write('Network parameters:')
                 fh.write(str(self.params))

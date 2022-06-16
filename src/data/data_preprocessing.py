@@ -9,7 +9,7 @@ import config
 
 # Create a class for the df - this might be a good idea to be concise in Feature Engineering (?)
 
-def load_crsp(CRSPretPath, CRSPinfoPath, StartYear=190001):
+def load_crsp(CRSPretPath, CRSPinfoPath, StartYear=197001):
 
     """ 
         The function reads the two csv files containing CRSP stocks
@@ -19,7 +19,7 @@ def load_crsp(CRSPretPath, CRSPinfoPath, StartYear=190001):
         The two files are merged and...
     
     """
-    
+    print(f'Loading CRSP data, the starting year is set at {StartYear}')
     crspm = pd.read_csv(CRSPretPath)#+'/crspminfo.csv')
     crspinfo = pd.read_csv(CRSPinfoPath)#+'/crspminfo.csv')
 
@@ -71,9 +71,9 @@ def remove_microcap_stocks(df, method=1):
 
     # Method 1
     if method == 1:
-        print(f'N. rows before filtering: {df.shape[0]}')
+        print(f'N. rows before filtering for microcap stocks: {df.shape[0]}')
         df = df.loc[df['me'] >= df['me_nyse20']]
-        print(f'N. rows after filtering: {df.shape[0]}')
+        print(f'N. rows after filtering for microcap stocks: {df.shape[0]}')
 
     # Method 2
     if method==2:
@@ -114,7 +114,7 @@ def SIC_dummies(df):
     df = pd.get_dummies(df, columns=['siccd'], dummy_na=True) # NaNs should not be contemplated (I guess?)
     after_dummy_cols = list(df.columns)
     dummy_cols = list(set(after_dummy_cols) - set(original_cols))
-    
+    print(f'Shape after dummy columns have been included{df.shape}')    
 
     return df, dummy_cols
 
@@ -209,6 +209,8 @@ def merge_crsp_with_signals(df, SingalsPath, chunksize=50000):
     
      """
 
+
+# Should dummy signals be scaled? (At the moment the merge and scaling are done before creating the dummy columns)
     crsp_columns = list(df.columns)
     final_df = pd.DataFrame()
     i = 0
@@ -217,13 +219,17 @@ def merge_crsp_with_signals(df, SingalsPath, chunksize=50000):
 
         colswithallnans += (chunk.iloc[:,3:][chunk.isnull().all(axis=1)].shape[0])
         chunk = scale_predictors(chunk)
-        
+        chunk[chunk.select_dtypes(np.float64).columns] = chunk.select_dtypes(np.float64).astype(np.float32)
+
+
         # Evaluate whether to change the join type (does this work?)
         temp = df.merge(chunk, on=['permno','yyyymm'], how='inner')
         
         if i == 0:
             final_df = final_df.reindex(columns = temp.columns.tolist())
-        
+            print('printing types:')
+            print(chunk.dtypes)
+
         final_df = pd.concat([final_df, temp], axis = 0)
         i += 1
         if i%20 == 0:

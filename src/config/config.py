@@ -31,7 +31,7 @@ bestParamsFileName = dt.now().strftime('/BestNeuralNetworkParameters-%Y_%m_%d-%H
 SavedNetFileName = dt.now().strftime('/NeuralNetwork-%Y_%m_%d-%H_%M.pt')
 
 # Variables
-ForcePreProcessing = False # Used to force the data pre-processing even if the processed dataset already exists
+ForcePreProcessing = True # Used to force the data pre-processing even if the processed dataset already exists
 ForceTraining = True #Used to force the training of the model even when a saved model already exists
 
 end_train = '198512' 

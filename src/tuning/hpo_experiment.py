@@ -27,7 +27,7 @@ experiment.config.max_trial_number = 5
 experiment.config.trial_concurrency = 1
 #experiment.config.max_experiment_duration = 10h 
 
-experiment.run(8080)
+experiment.run(8081)
 
 # input() or signal.pause() can be used to block the web app from closing
 # after the experiment is finished

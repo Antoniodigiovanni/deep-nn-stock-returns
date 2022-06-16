@@ -56,15 +56,17 @@ class BaseDataset():
     def __init__(self, mode='train') -> None:
         self.categorical_cols = []
 
-        if mode == 'train':
-            print('Initializing dataset in train mode...')
-            self.load_split_train_data()
-            print('Access to X_train, X_val, y_train and y_val attributes available')
+        # Nothing is being done now as __init__ because otherwise the crsp would be loaded multiple times
+        # An idea could be to load crsp here and then load it when other functions are called only if necessary.
+        # if mode == 'train':
+        #     print('Initializing dataset in train mode...')
+        #     self.load_split_train_data()
+        #     print('Access to X_train, X_val, y_train and y_val attributes available')
 
-        if mode == 'test':
-            print('Initializing dataset in test mode...')
-            self.load_split_test_data()
-            print('Access to X_test and y_test attributes available')
+        # if mode == 'test':
+        #     print('Initializing dataset in test mode...')
+        #     self.load_split_test_data()
+        #     print('Access to X_test and y_test attributes available')
 
 
     def __initialize_dataset(self):
@@ -76,18 +78,18 @@ class BaseDataset():
             crsp = dp.filter_exchange_code(crsp)
             crsp = dp.filter_share_code(crsp)
 
-            crsp, dummy_cols = dp.SIC_dummies(crsp)
             
-            self.categorical_cols.extend(dummy_cols)
-            print(f'Rows before filtering for microcaps: {crsp.shape[0]}')
             crsp = dp.remove_microcap_stocks(crsp)
-            print(f'Rows after filtering for microcaps: {crsp.shape[0]}')
 
             crsp = dp.calculate_excess_returns(config.paths['FFPath'], crsp)
             crsp, signal_columns = dp.merge_crsp_with_signals(crsp, config.paths['SignalsPath'])
             crsp = dp.winsorize_returns(crsp)
+            
+            # Implement function
             #crsp = dp.de_mean_returns(crsp)
             
+            crsp, dummy_cols = dp.SIC_dummies(crsp)
+            self.categorical_cols.extend(dummy_cols)
             # Dropping remainging NAs, check this, in theory there should be just some rows.
             print(f'Dropping {crsp.shape[0] - crsp.dropna().shape[0]} rows as they still contain at least a NaN number (likely ret is missing)')
             crsp = crsp.dropna()

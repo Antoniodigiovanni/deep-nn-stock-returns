@@ -70,6 +70,10 @@ params = {
 # But with an NNI *experiment*, it will receive optimized hyperparameters from tuning algorithm.
 optimized_params = nni.get_next_parameter()
 params.update(optimized_params)
+
+params['epochs'] = int(params['epochs'])
+params['batch_size'] = int(params['batch_size'])
+
 print(params)
 
 def validate_params(params):
@@ -122,9 +126,14 @@ class OptimizeNet(nn.Module):
 
 
 # Load data
-if os.path.exists(config.paths['ProcessedDataPath']+'/dataset.csv'):
+if config.ForcePreProcessing == False and os.path.exists(config.paths['ProcessedDataPath']+'/dataset.csv'):
+    print('Trying to load data')
     crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)
+    print('Data Loaded')
+
+    print('Error')
 else:
+    print('Data Pre-processing will start soon')
     data = BaseDataset().load_dataset_in_memory()
     crsp = data.crsp    
     del data
@@ -149,12 +158,11 @@ model = OptimizeNet(n_inputs, params).to(config.device)
 optimizer = map_optimizer(params['optimizer'], model.parameters(), params['learning_rate'])
 loss_fn = map_loss_func(params['loss'])
 
-params['epochs'] = int(params['epochs'])
-params['batch_size'] = int(params['batch_size'])
 
 if not validate_params(params): 
 # for invalid param combinations, report the worst possible result
         print('Invalid Parameters set')
         nni.report_final_result(0.0)
 
+print('Starting Training process')
 trainer = NeuralNetTrainer(model, train_loader, val_loader, optimizer, loss_fn, params, nni_experiment=True).train()
