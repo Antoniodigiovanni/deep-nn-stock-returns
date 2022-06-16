@@ -13,7 +13,7 @@ wrds <- dbConnect(Postgres(),
                   password=pass,
                   sslmode='require')
 
-numRowsToPull = 50000#-1 # Set to -1 for all rows and to some positive value for testing
+numRowsToPull = -1 # Set to -1 for all rows and to some positive value for testing
 yearmax_crspd = year(Sys.time()) # set to year(Sys.time()) for all years or 1930 or something for testing
 
 # CRSP monthly ------------------------------------------------------------

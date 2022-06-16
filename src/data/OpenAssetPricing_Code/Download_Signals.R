@@ -14,7 +14,7 @@
 
 
 # ==== ENVIRONMENT ====
-rm(list = ls())
+#rm(list = ls())
 tic = Sys.time()
 
 library(tidyverse)
@@ -142,7 +142,7 @@ target_dribble = pathRelease %>% drive_ls() %>%
 dl = drive_download(target_dribble, path = paste0(pathThesisData,'interim/deleteme.zip'), overwrite = T)
 
 # unzip, read, clean up
-unzip(paste0(pathThesisData,'interim/deleteme.zip'), exdir = paste0(pathThesisData, 'temp'))
+unzip(paste0(pathThesisData,'interim/deleteme.zip'), exdir = paste0(pathThesisData, 'interim'))
 wide_dl_raw = fread(paste0(pathThesisData, 'interim/signed_predictors_dl_wide.csv'))
 file.remove(paste0(pathThesisData, 'interim/signed_predictors_dl_wide.csv'))
 
@@ -157,7 +157,7 @@ signalwide = full_join(
 
 fwrite(
   signalwide
-  , file = paste0(pathThesisData, 'interim/signed_predictors_dl_wide.csv')
+  , file = paste0(pathThesisData, 'external/signed_predictors_dl_wide.csv')
   , row.names = F
 )
 
