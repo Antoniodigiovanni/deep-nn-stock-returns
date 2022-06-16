@@ -3,7 +3,7 @@ import torch
 import numpy as np
 import pandas as pd
 from data.custom_dataset import TestDataset
-from data.data_preprocessing import sep_target_idx, split_data
+from data.data_preprocessing import sep_target_idx, split_data, split_data_test
 import models.neural_net.metric as metric
 from torch.utils.data import DataLoader
 import config
@@ -18,7 +18,7 @@ class ReturnsPrediction():
 
         if os.path.exists(config.paths['ProcessedDataPath'] + '/dataset.csv'):
             self.__crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)
-            print('dataset.csv Shape:')
+            print('dataset.csv shape:')
             print(self.__crsp.shape)
         else:
             print('Processed dataset not present, exiting...')
@@ -28,7 +28,7 @@ class ReturnsPrediction():
         self.__model = torch.load(config.paths['modelsPath'] + config.SavedNetFileName)
         self.__model.eval()
 
-        _,_,test = split_data(self.crsp)
+        test = split_data_test(self.crsp)
         X_test, Y_test, index = sep_target_idx(test)
         print('X_test Shape:')
         print(X_test.shape)

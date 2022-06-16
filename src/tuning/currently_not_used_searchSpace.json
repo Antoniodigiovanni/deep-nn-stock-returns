@@ -42,5 +42,15 @@
     "momentum":{
         "_type": "uniform",
         "_value": [ 0, 1 ]
+    },
+    
+    "epochs":{
+        "_type": "quniform",
+        "_value": [1, 200, 50]
+    },
+    
+    "batch_size":{
+        "_type": "choice",
+        "_value": [4, 8, 16, 32, 64, 128, 256]
     }
 }

@@ -7,6 +7,8 @@
 experimentName: TestExperiment1
 
 # Possibly you could write the search space in a separate json file
+#searchSpacePath: searchSpace.json
+
 searchSpace:
   hidden_size_1: 
     _type: choice
@@ -69,6 +71,12 @@ tuner:
   classArgs:
     optimize_mode: maximize
     population_size: 10
+
+assessor:
+  name: Medianstop
+  classArgs:
+    optimize_mode: maximize
+    start_step: 15
 
 training_service:
   platform: local

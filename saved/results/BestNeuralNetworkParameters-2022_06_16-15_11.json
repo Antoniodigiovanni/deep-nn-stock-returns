@@ -1,0 +1,1 @@
+{"hidden_size_1": 8, "hidden_size_2": 64, "hidden_size_3": 8, "hidden_size_4": 4, "act_func": "Softplus", "optimizer": "Adam", "loss": "MSELoss", "learning_rate": 0.03198180770771306, "momentum": 0.9281428000977011, "epochs": 50, "batch_size": 8, "metric": 0.396728515625}

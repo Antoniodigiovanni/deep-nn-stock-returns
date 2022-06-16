@@ -5,14 +5,15 @@ import nni
 import json
 from json.decoder import JSONDecodeError
 from pathlib import Path
+import nni.assessor
 
 class NeuralNetTrainer():
-    def __init__(self, model, train_loader, val_loader, optimizer, params, nni_experiment=False):
+    def __init__(self, model, train_loader, val_loader, optimizer, loss_fn, params, nni_experiment=False):
         self.model = model
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.optimizer = optimizer
-        self.loss_fn = config.loss_fn
+        self.loss_fn = loss_fn
         self.device = config.device
         self.nni_experiment = nni_experiment
         self.params = params
@@ -24,9 +25,10 @@ class NeuralNetTrainer():
             validation_loss, validation_acc = self.validate_one_epoch()
             if self.nni_experiment:
                 nni.report_intermediate_result(validation_acc)
+                #nni.assessor.AssessResult(validation_acc)
             with open(config.paths['logsPath'] + config.logFileName, 'a') as fh:
                 fh.write('Network parameters:')
-                fh.write(self.params)
+                fh.write(str(self.params))
             if epoch % config.ep_log_interval == 0:
                 with open(config.paths['logsPath'] + config.logFileName, 'a') as fh:
                     fh.write(f'\nEpoch n.{epoch} | Loss: {epoch_loss}\nValidation Loss: {validation_loss} | Validation Accuracy: {validation_acc}%\n')

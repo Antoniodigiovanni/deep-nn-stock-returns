@@ -15,6 +15,7 @@ class Portfolio():
 
         self.alpha = None
         self.t_value_alpha = None
+        self.information_ratio = None
         self.returns = None
 
         
@@ -73,6 +74,7 @@ class Portfolio():
 
         self.alpha = lm.params[0]
         self.t_value_alpha = lm.tvalues[0]
+        self.information_ratio = lm.tvalues[0]
 
 
     def list_rebalancing_dates(self):

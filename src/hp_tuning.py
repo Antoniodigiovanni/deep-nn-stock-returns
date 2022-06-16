@@ -1,4 +1,3 @@
-from pyexpat import model
 import nni
 from torch import nn
 import torch
@@ -54,11 +53,14 @@ params = {
     'hidden_size_1': 4,
     'hidden_size_2': 8,
     'hidden_size_3': 0,
+    'hidden_size_4': 0,
     'act_func': 'ReLu',
     'optimizer': 'Adam',
     'loss': 'MSELoss',
     'learning_rate': 0.001,
     'momentum': 0,
+    'epochs': 20,
+    'batch_size': 64
 }
 
 # Get optimized hyperparameters
@@ -69,14 +71,23 @@ optimized_params = nni.get_next_parameter()
 params.update(optimized_params)
 print(params)
 
+def validate_params(params):
+    if params['hidden_size_2'] == 0 and (params['hidden_size_3'] != 0 or params['hidden_size_4'] != 0):
+        return False
+    if params['hidden_size_3'] == 0 and params['hidden_size_4'] != 0:
+        return False
+    return True
+
+    
 class OptimizeNet(nn.Module):
     def __init__(self, n_inputs, params):
         super(OptimizeNet, self).__init__()
         self.hidden_size_1 = params['hidden_size_1']
         self.hidden_size_2 = params['hidden_size_2']
         self.hidden_size_3 = params['hidden_size_3']
-
+        self.hidden_size_4 = params['hidden_size_4']
         act_func = map_act_func(params['act_func'])
+
         self.fc1 = self._fc_block(n_inputs, self.hidden_size_1, act_func)
         if self.hidden_size_2 > 0:
             self.fc2 = self._fc_block(self.hidden_size_1, self.hidden_size_2, act_func)
@@ -84,6 +95,10 @@ class OptimizeNet(nn.Module):
         if self.hidden_size_3 > 0:
             self.fc3 = self._fc_block(self.hidden_size_2, self.hidden_size_3, act_func)
             last_layer_size = self.hidden_size_3
+        if self.hidden_size_4 > 0:
+            self.fc4 = self._fc_block(self.hidden_size_3, self.hidden_size_4, act_func)
+            last_layer_size = self.hidden_size_4
+
         self.out = self._fc_block(last_layer_size, 1, act_func)
 
     def forward(self, x):
@@ -92,6 +107,8 @@ class OptimizeNet(nn.Module):
             x = self.fc2(x)
         if self.hidden_size_3:
             x = self.fc3(x)
+        if self.hidden_size_4:
+            x = self.fc4(x)
         x = self.out(x)
         return x
     
@@ -106,7 +123,7 @@ class OptimizeNet(nn.Module):
 # Load data
 crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)
 
-train, val, test = split_data(crsp)
+train, val = split_data_train_val(crsp)
 X_train, Y_train = sep_target(train)
 X_val, Y_val = sep_target(val)
 
@@ -123,7 +140,14 @@ val_loader = DataLoader(val, batch_size=config.batch_size_validation, num_worker
 n_inputs = train.data.shape[1]
 model = OptimizeNet(n_inputs, params).to(config.device)
 optimizer = map_optimizer(params['optimizer'], model.parameters(), params['learning_rate'])
-loss_func = map_loss_func(params['loss'])
+loss_fn = map_loss_func(params['loss'])
 
+params['epochs'] = int(params['epochs'])
+params['batch_size'] = int(params['batch_size'])
 
-trainer = NeuralNetTrainer(model, train_loader, val_loader, optimizer, params, nni_experiment=True).train()
+if not validate_params(params): 
+# for invalid param combinations, report the worst possible result
+        print('Invalid Parameters set')
+        nni.report_final_result(0.0)
+
+trainer = NeuralNetTrainer(model, train_loader, val_loader, optimizer, loss_fn, params, nni_experiment=True).train()
