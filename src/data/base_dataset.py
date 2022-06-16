@@ -104,6 +104,11 @@ class BaseDataset():
         except FileNotFoundError:
             print('Processed Dataset not present in data/processed, calculating..')
             self.crsp = self.__initialize_dataset()
+            try:
+                self.crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)
+            except:
+                print('Error, can\'t load dataset')
+
     
     def load_train_data(self):
         self.load_dataset_in_memory()

@@ -6,6 +6,7 @@ import torch.optim as optim
 import sys
 import config
 import pandas as pd
+from data.base_dataset import BaseDataset
 from data.custom_dataset import CustomDataset
 from data.data_preprocessing import *
 from torch.utils.data import DataLoader
@@ -121,7 +122,13 @@ class OptimizeNet(nn.Module):
 
 
 # Load data
-crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)
+if os.path.exists(config.paths['ProcessedDataPath']+'/dataset.csv'):
+    crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)
+else:
+    data = BaseDataset().load_dataset_in_memory()
+    crsp = data.crsp    
+    del data
+
 
 train, val = split_data_train_val(crsp)
 X_train, Y_train = sep_target(train)
