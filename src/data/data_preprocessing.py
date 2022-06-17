@@ -114,6 +114,12 @@ def SIC_dummies(df):
     df = pd.get_dummies(df, columns=['siccd'], dummy_na=True) # NaNs should not be contemplated (I guess?)
     after_dummy_cols = list(df.columns)
     dummy_cols = list(set(after_dummy_cols) - set(original_cols))
+
+    df[dummy_cols] = df[dummy_cols].astype(np.int32)
+    print('Info after SIC dummies included:')
+    print(df.info(verbose=False, memory_usage="deep"))
+#    chunk[chunk.select_dtypes(np.float64).columns] = chunk.select_dtypes(np.float64).astype(np.float32)
+
     print(f'Shape after dummy columns have been included{df.shape}')    
 
     return df, dummy_cols
@@ -219,6 +225,8 @@ def merge_crsp_with_signals(df, SingalsPath, chunksize=50000):
 
         colswithallnans += (chunk.iloc[:,3:][chunk.isnull().all(axis=1)].shape[0])
         chunk = scale_predictors(chunk)
+        
+        # Converting columns to float32, to save memory
         chunk[chunk.select_dtypes(np.float64).columns] = chunk.select_dtypes(np.float64).astype(np.float32)
 
 
