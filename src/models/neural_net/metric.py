@@ -1,7 +1,8 @@
 import torch
 import pandas as pd
 import numpy as np
-from portfolios.portfolio import Portfolio
+from portfolios.PortfolioCreation import Portfolio
+import config
 
 def accuracy(truth, yhat, pct):
   
@@ -55,6 +56,6 @@ def calc_portfolio_alpha():
     
   """
   
-  portfolio = Portfolio()
-  alpha = portfolio.alpha
-  return alpha
+  portfolio = Portfolio(config.n_cuts, config.rebalancing_frequency, config.weighting)
+
+  return portfolio.alpha, portfolio.information_ratio

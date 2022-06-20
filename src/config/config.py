@@ -39,3 +39,9 @@ end_val = '199512'
 
 batch_size_validation = 128
 ep_log_interval = 2
+
+
+""" Portfolio creation configs"""
+n_cuts = 10 # Number of quantiles in which returns are divided to construct portfolios
+rebalancing_frequency = 'yearly' # choose between yearly, monthly, and quarterly
+weighting = 'VW' # choose between Value Weighting and Equal Weighting

@@ -4,6 +4,7 @@ import os
 import datetime as dt
 import statsmodels.api as sm
 from portfolios.FF5FM_Mom import FF5FM_Mom
+from portfolios.ReturnsPrediction import ReturnsPrediction
 
 # Making pred_df private could be done, like __pred_df
 
@@ -18,36 +19,38 @@ class Portfolio():
         self.information_ratio = None
         self.returns = None
 
+      
+        if os.path.exists(config.paths['PredictedRetPath']):
+            self.__load_pred_df()
+
+        else:
+            print('Predicted Returns file not in memory, predicting returns...')
+            ReturnsPrediction()
+            self.__load_pred_df()
+
+            
+        self.calculate_portfolio_weights()
+        self.calculate_portfolio_monthly_returns()
+        self.calculate_information_ratio()
+
+
+    def __load_pred_df(self):
+        crsp = pd.read_csv(config.paths['CRSPretPath'])
+        crsp['ret'] = (crsp['ret']/100)
         
-        try:
-            crsp = pd.read_csv(config.paths['CRSPretPath'])
-            crsp['ret'] = (crsp['ret']/100)
+        self.__pred_df = pd.read_csv(config.paths['PredictedRetPath'], index_col=0)
+        
+        # Dropping returns from pred_df, as they are winsorized there.
+        self.__pred_df.drop('ret', axis=1, inplace=True)
+        self.__pred_df['permno'] = self.__pred_df.permno.astype(int)
 
-            # Not joining with crspminfo so not needed
-            #crsp.drop(['prc','exchcd','siccd','shrcd','me_nyse10','me_nyse20'], axis=1, inplace=True)     
-            assert os.path.exists(config.paths['PredictedRetPath']), 'The predicted returns df does not exist, perform the prediction!'
-            
-            self.__pred_df = pd.read_csv(config.paths['PredictedRetPath'], index_col=0)
-            
-            # Dropping returns from pred_df, as they are winsorized there.
-            self.__pred_df.drop('ret', axis=1, inplace=True)
-            self.__pred_df['permno'] = self.__pred_df.permno.astype(int)
-
-            self.__pred_df = self.__pred_df.merge(
+        self.__pred_df = self.__pred_df.merge(
                 crsp[['permno','yyyymm','melag', 'ret']], 
                 on=['permno','yyyymm'], 
                 how='left'
             )
-
-            
-            self.calculate_portfolio_weights()
-            self.calculate_portfolio_monthly_returns()
-            self.calculate_information_ratio()
-
-        except AssertionError as msg:
-            print(msg)
-
-
+    
+    
     def calculate_information_ratio(self):
         FFMom = FF5FM_Mom().returns
         """
