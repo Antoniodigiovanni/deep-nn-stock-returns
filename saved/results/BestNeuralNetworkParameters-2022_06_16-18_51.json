@@ -1,0 +1,1 @@
+{"hidden_size_1": 128, "hidden_size_2": 4, "hidden_size_3": 4, "hidden_size_4": 32, "act_func": "Tanh", "optimizer": "Adam", "loss": "MSELoss", "learning_rate": 0.027195025265582363, "momentum": 0.2082451585608618, "epochs": 200, "batch_size": 128, "metric": 13.861083984375}

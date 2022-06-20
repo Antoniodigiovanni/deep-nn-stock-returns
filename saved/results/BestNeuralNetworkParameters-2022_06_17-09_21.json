@@ -1,0 +1,1 @@
+{"hidden_size_1": 64, "hidden_size_2": 64, "hidden_size_3": 16, "hidden_size_4": 32, "act_func": "Sigmoid", "optimizer": "SGD", "loss": "MSELoss", "learning_rate": 0.0002408034666702049, "momentum": 0.44055882447046646, "epochs": 100, "batch_size": 32, "metric": 15.584272904829547}

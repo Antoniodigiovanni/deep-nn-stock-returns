@@ -130,12 +130,10 @@ if config.ForcePreProcessing == False and os.path.exists(config.paths['Processed
     print('Trying to load data')
     crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)
     print('Data Loaded')
-
-    print('Error')
 else:
     print('Data Pre-processing will start soon')
     data = BaseDataset().load_dataset_in_memory()
-    crsp = data.crsp    
+    crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)    
     del data
 
 

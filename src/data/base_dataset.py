@@ -82,14 +82,18 @@ class BaseDataset():
             crsp = dp.remove_microcap_stocks(crsp)
 
             crsp = dp.calculate_excess_returns(config.paths['FFPath'], crsp)
-            crsp, signal_columns = dp.merge_crsp_with_signals(crsp, config.paths['SignalsPath'])
+            
+            # Should also try to merge crsp with signals without for loop
+            crsp, signal_columns = dp.merge_crsp_with_signals_chunks(crsp, config.paths['SignalsPath'])
             crsp = dp.winsorize_returns(crsp)
             
             # Implement function
             #crsp = dp.de_mean_returns(crsp)
             
-            crsp, dummy_cols = dp.SIC_dummies(crsp)
-            self.categorical_cols.extend(dummy_cols)
+            # Trying without SIC_dummies - too many columns unfortunately...
+            crsp.drop('siccd', axis=1, inplace=True)
+            #crsp, dummy_cols = dp.SIC_dummies(crsp)
+            #self.categorical_cols.extend(dummy_cols)
             # Dropping remainging NAs, check this, in theory there should be just some rows.
             print(f'Dropping {crsp.shape[0] - crsp.dropna().shape[0]} rows as they still contain at least a NaN number (likely ret is missing)')
             crsp = crsp.dropna()

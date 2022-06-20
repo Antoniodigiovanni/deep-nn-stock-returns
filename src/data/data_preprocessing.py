@@ -9,7 +9,7 @@ import config
 
 # Create a class for the df - this might be a good idea to be concise in Feature Engineering (?)
 
-def load_crsp(CRSPretPath, CRSPinfoPath, StartYear=197001):
+def load_crsp(CRSPretPath, CRSPinfoPath, StartYear=197001, EndYear=202112):
 
     """ 
         The function reads the two csv files containing CRSP stocks
@@ -28,6 +28,7 @@ def load_crsp(CRSPretPath, CRSPinfoPath, StartYear=197001):
     
     # Filter for observations since 1967 (last part commented out)
     crspm = crspm[(crspm["yyyymm"] >= StartYear)]
+    crspm = crspm[(crspm["yyyymm"] <= EndYear)]
 
     # Merge CRSPret and CRSPinfo
     crsp = crspm.set_index(['permno', 'yyyymm']).join(
@@ -109,16 +110,19 @@ def SIC_dummies(df):
         following ... 
     
     """
+
+    print('Info before SIC dummies included:')
+    print(df.info(verbose=False, memory_usage="deep"))
     original_cols = list(df.columns)
     # Check out NaN in 'siccd' as it seems that the last month a stock has been traded the 'siccd' is NaN 
-    df = pd.get_dummies(df, columns=['siccd'], dummy_na=True) # NaNs should not be contemplated (I guess?)
+    df = pd.get_dummies(df, columns=['siccd'], dummy_na=True, dtype=np.int16) # NaNs should not be contemplated (I guess?)
     after_dummy_cols = list(df.columns)
     dummy_cols = list(set(after_dummy_cols) - set(original_cols))
 
-    df[dummy_cols] = df[dummy_cols].astype(np.int32)
+    # Converting dummy cols type to int32
+    #df[dummy_cols] = df[dummy_cols].astype(np.int32)
     print('Info after SIC dummies included:')
     print(df.info(verbose=False, memory_usage="deep"))
-#    chunk[chunk.select_dtypes(np.float64).columns] = chunk.select_dtypes(np.float64).astype(np.float32)
 
     print(f'Shape after dummy columns have been included{df.shape}')    
 
@@ -199,7 +203,7 @@ def scale_predictors(df): #,signal_columns)
     
     return df
 
-def merge_crsp_with_signals(df, SingalsPath, chunksize=50000):
+def merge_crsp_with_signals_chunks(df, SingalsPath, chunksize=50000):
 
     """ 
         Takes the path to the Open Asset Pricing signals csv,
@@ -249,6 +253,34 @@ def merge_crsp_with_signals(df, SingalsPath, chunksize=50000):
     print(f'Columns with all NaNs: {colswithallnans}')
     return final_df, signal_columns
 
+def merge_crsp_with_signals_no_loop(df, SingalsPath):
+
+    """ 
+       Version without for loop of the above function
+    
+     """
+
+    print('Merging CRSP data with signals from Open Asset Pricing')
+    crsp_columns = list(df.columns)
+    
+    signals = pd.read_csv(SingalsPath)
+    print('Signals loaded in memory...')
+    signals = scale_predictors(signals)
+    colswithallnans = (signals.iloc[:,3:][signals.isnull().all(axis=1)].shape[0])
+        
+        
+    # Converting columns to float32, to save memory
+    signals[signals.select_dtypes(np.float64).columns] = signals.select_dtypes(np.float64).astype(np.float32)
+
+
+    df = df.merge(signals, on=['permno','yyyymm'], how='inner')
+    df = df.astype({'yyyymm':int})
+    #final_df = final_df.reset_index(drop=True)
+    signal_columns = list(set(list(df.columns)) - set(crsp_columns))
+    print(f'Columns with all NaNs: {colswithallnans}')
+    return df, signal_columns
+
+
 def winsorize_returns(df):
 
     """ 
@@ -279,45 +311,6 @@ def de_mean_returns(df):
     
     pass
 
-def prepare_data(CRSPretpath, CRSPinfopath, FFPath, SignalsPath, ProcessedDataPath):
-    
-    categorical_cols = []
-
-    print('Loading data...')
-    crsp = load_crsp(CRSPretpath, CRSPinfopath)
-    print('Data Loaded')
-    
-    crsp = filter_exchange_code(crsp)
-    crsp = filter_share_code(crsp)
-    print('Share codes and Exchange codes filtered')
-
-    crsp, dummy_cols = SIC_dummies(crsp)
-    categorical_cols.extend(dummy_cols)
-    print(f'Dummy columns for sectors created, n. of columns: {len(dummy_cols)}')
-    crsp = remove_microcap_stocks(crsp)
-    print('Microcap stocks removed')
-    crsp = calculate_excess_returns(FFPath, crsp)
-    print('Excess returns calculated.')
-    print('Beginning merge process between CRSP and OpenAssetPricing signals...')
-    crsp, signal_columns = merge_crsp_with_signals(crsp, SignalsPath)
-    print('Merge Complete.')
-    crsp = winsorize_returns(crsp)
-    
-
-    # Dropping remainging NAs, check this, in theory there should be just some rows.
-    print(f'Dropping {crsp.shape[0] - crsp.dropna().shape[0]} rows as they still contain at least a NaN number (likely ret is missing)')
-    crsp = crsp.dropna()
-
-    
-    print('Data preparation complete, saving...')
-    crsp.to_csv(ProcessedDataPath + '/dataset.csv')
-    print('Processed dataset saved.')
-
-    
-    return crsp, categorical_cols
-
-# Should create two functions, one for training purposes(train+val) the other for testing purposes. To avoid unnecessary dfs being
-# loaded in memory
 def split_data_train_val(df, end_train='198512', end_val='199512'):
     
     """
@@ -367,7 +360,6 @@ def split_data_test(df, end_val='199512'):
 
     return test
 
-# Separates the features from the target in the df
 def sep_target(data):
 
     """
@@ -379,7 +371,6 @@ def sep_target(data):
     
     return X, Y
 
-# Separates the features from the target in the df
 def sep_target_idx(data):
 
     """
@@ -394,6 +385,10 @@ def sep_target_idx(data):
     return X, Y, test_index
 
 def download_and_unzip(url, extract_to='.'):
+
+    """
+        Used to download FF5FM returns from Kenneth French's library.
+    """
     http_response = urlopen(url)
     zipfile = ZipFile(BytesIO(http_response.read()))
     zipfile.extractall(path=extract_to)
