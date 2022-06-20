@@ -31,5 +31,8 @@ class PooledOLS():
             fh.write(pooled_osr_model_results.summary().as_csv())
         
         print('Pooled OLS Regression completed')
-        #print(pooled_osr_model_results.summary())
+        self.summary = pooled_osr_model_results.summary()
+       
+        
+        print(pooled_osr_model_results.summary())
 
