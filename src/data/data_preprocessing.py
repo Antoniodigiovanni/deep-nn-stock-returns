@@ -307,7 +307,7 @@ def de_mean_returns(df):
     
     """
 
-    # df['ret'] = df.groupby('yyyymm')['ret'].apply(lambda x: x-np.mean(x))
+    df['ret'] = df.groupby('yyyymm')['ret'].apply(lambda x: (x-np.mean(x)))
     
     pass
 
