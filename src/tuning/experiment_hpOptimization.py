@@ -6,10 +6,9 @@ experiment = Experiment('local')
 
 experiment.config.experiment_name = 'Hyperparameter_optimization'
 
-# Adjust folders and trial_code_directory #TODO
 
 experiment.config.trial_command = 'python hp_tuning.py'
-experiment.config.trial_code_directory = './src'
+experiment.config.trial_code_directory = './src/tuning'
 
 # experiment.config.search_space = search_space  #Used when the search space is defined in the file
 experiment.config.search_space_file = (os.getcwd()+'/src/tuning/searchSpace_test.json')
@@ -23,11 +22,14 @@ experiment.config.assessor.class_args['optimize_mode'] ='maximize'
 experiment.config.assessor.class_args['start_step'] = 15
 
 
-experiment.config.max_trial_number = 50
+experiment.config.max_trial_number = 200
 experiment.config.trial_concurrency = 2
-experiment.config.max_experiment_duration = '5h' 
+experiment.config.max_experiment_duration = '12h' 
 
-experiment.run(8080)
+# Add logger for experiment id - in order to be able to view the experiment afterwards
+print(f'Experiment ID: {experiment.id}')
+
+experiment.run(8081)
 
 # input() or signal.pause() can be used to block the web app from closing
 # after the experiment is finished

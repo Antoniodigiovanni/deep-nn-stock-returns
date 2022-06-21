@@ -1,9 +1,14 @@
+import sys,os
+
+# To import config from top_level folder
+currentPath = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(currentPath+'/../')
+
 import nni
 from torch import nn
 import torch
 import logging
 import torch.optim as optim
-import sys
 import config
 import pandas as pd
 from data.base_dataset import BaseDataset
@@ -12,7 +17,9 @@ from data.data_preprocessing import *
 from torch.utils.data import DataLoader
 from trainer.trainer import NeuralNetTrainer
 
-logger = logging.getLogger('func_approx_NNI')
+
+
+logger = logging.getLogger('Tuning experiment')
 
 def map_act_func(af_name):
     if af_name == "ReLU":

@@ -19,7 +19,7 @@ class Portfolio():
         self.information_ratio = None
         self.returns = None
 
-      
+
         if os.path.exists(config.paths['PredictedRetPath']):
             self.__load_pred_df()
 

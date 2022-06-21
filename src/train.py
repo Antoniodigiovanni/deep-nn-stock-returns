@@ -11,25 +11,18 @@ from trainer.trainer import *
 import data.data_preprocessing as dp
 from asyncio import create_subprocess_exec
 import sys,os
-from torch.utils.tensorboard import SummaryWriter
 import config
 
-
-""" currentPath = config.currentPath
-dataPath = config.dataPath
-
-CRSPretPath = config.paths['CRSPretPath']
-CRSPinfoPath= config.paths['CRSPinfoPath']
-FFPath = config.paths['FFPath']
-SignalsPath = config.paths['SignalsPath']
-ProcessedDataPath = config.paths['ProcessedDataPath']
-ForcePreProcessing = config.ForcePreProcessing
-ForceTraining = config.ForceTraining """
+class ExpandingWindowTraining():
+    def __init__(self, dataset, window='yearly') -> None:
+        self.starting_year = dataset.yyyymm.min()
+        self.window = window
 
 
-# Should returns be scaled?
 
-# Categorical_cols should not be only in the following variable, as the encoding should be done in general
+
+
+"""# Categorical_cols should not be only in the following variable, as the encoding should be done in general
 if os.path.exists(config.paths['ProcessedDataPath'] + '/dataset.csv') == False or config.ForcePreProcessing == True:
     print('Pre-processing data...')
    
@@ -55,22 +48,17 @@ if os.path.exists(config.currentPath +'/../../saved/models/RegressionNet_model.p
     sys.exit()
 
 
-train, val, test = split_data(crsp)
+train, val = split_data_train_val(crsp)
 X_train, Y_train = sep_target(train)
 X_val, Y_val = sep_target(val)
-# Test split will be moved in the prediction part
-#X_test, Y_test = sep_target(test)
 
-del[train, val]#, test]
+del[train, val]
 
 train = CustomDataset(X_train, Y_train)
 del [X_train, Y_train]
 
 val = CustomDataset(X_val, Y_val)
 del[X_val, Y_val]
-
-#test = CustomDataset(X_test, Y_test)
-#del[X_test, Y_test]
 
 
 del crsp
@@ -86,7 +74,7 @@ model = RegressionNet(n_inputs).to(config.device)
 
 optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
 
-trainer = NeuralNetTrainer(model, train_loader, val_loader, optimizer).train()
+trainer = NeuralNetTrainer(model, train_loader, val_loader, optimizer).train()"""
 
 """ tb = SummaryWriter()
 

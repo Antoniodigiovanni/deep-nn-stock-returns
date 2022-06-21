@@ -2,8 +2,10 @@ import os
 import torch
 import torch.nn as nn
 from datetime import datetime as dt
+from argparse import ArgumentParser
+import argparse
 
-
+parser = ArgumentParser()
 
 # Select training device - GPU or CPU based on availability
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -37,11 +39,31 @@ ForceTraining = True #Used to force the training of the model even when a saved 
 end_train = '198512' 
 end_val = '199512'
 
+parser.add_argument("--end_train", default=end_train, type=str)
+parser.add_argument("--end_val", default=end_val, type=str)
+
 batch_size_validation = 128
 ep_log_interval = 2
+
+parser.add_argument('--batch_size_validation', default=batch_size_validation, type=int)
+parser.add_argument('--ep_log_interval', default=ep_log_interval, type=int)
+
 
 
 """ Portfolio creation configs"""
 n_cuts = 10 # Number of quantiles in which returns are divided to construct portfolios
 rebalancing_frequency = 'yearly' # choose between yearly, monthly, and quarterly
 weighting = 'VW' # choose between Value Weighting and Equal Weighting
+
+parser.add_argument('--n_cuts_portfolio', default=n_cuts, type=int)
+parser.add_argument('--rebalancing_frequency', default=rebalancing_frequency, type=str)
+parser.add_argument('--weighting', default=weighting, type=str)
+
+parser.add_argument('--tuningExperiment', action=argparse.BooleanOptionalAction)
+
+
+#args = parser.parse_args()
+args, unknown = parser.parse_known_args() # Using this to avoid error with notebooks
+
+
+n_cuts = args.n_cuts_portfolio

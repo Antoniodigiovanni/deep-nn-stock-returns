@@ -105,7 +105,6 @@ class BaseDataset():
         return crsp
 
     def load_dataset_in_memory(self):
-        print('Remember to implement returns de-meaning')
         self.crsp = self.__initialize_dataset()
 
     def load_train_data(self):

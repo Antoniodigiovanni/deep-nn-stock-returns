@@ -6,6 +6,7 @@ import json
 from json.decoder import JSONDecodeError
 from pathlib import Path
 import nni.assessor
+import numpy as np
 
 class NeuralNetTrainer():
     def __init__(self, model, train_loader, val_loader, optimizer, loss_fn, params, nni_experiment=False):
@@ -17,28 +18,42 @@ class NeuralNetTrainer():
         self.device = config.device
         self.nni_experiment = nni_experiment
         self.params = params
+        self.patience = 5 # Include patience in variables
+        self.best_val_loss = np.inf
 
     def train(self):
-
+        j = 0
+     
         for epoch in range(self.params['epochs']):
-            epoch_loss = self.train_one_epoch()
-            validation_loss, validation_acc = self.validate_one_epoch()
-            if self.nni_experiment:
-                nni.report_intermediate_result(validation_acc)
-                #nni.assessor.AssessResult(validation_acc)
-            
-            # In this way the log is ovewritten every trial? Fix this
-            with open(config.paths['logsPath'] + config.logFileName, 'a') as fh:
-                fh.write('Network parameters:')
-                fh.write(str(self.params))
-            if epoch % config.ep_log_interval == 0:
+            while j < self.patience:
+                epoch_loss = self.train_one_epoch()
+                validation_loss, validation_acc = self.validate_one_epoch()
+                if validation_loss < self.best_val_loss:
+                    j = 0
+                    self.best_val_loss = validation_loss
+                    # Gu et al would not update the model if the validation loss 
+                    # was not lower than the best validation loss (should I?)
+                else:
+                    j += 1
+                if self.nni_experiment:
+                    nni.report_intermediate_result(validation_acc)
+                    nni.assessor.AssessResult(validation_acc)
+                
+                # Logging
                 with open(config.paths['logsPath'] + config.logFileName, 'a') as fh:
-                    fh.write(f'\nEpoch n.{epoch} | Loss: {epoch_loss}\nValidation Loss: {validation_loss} | Validation Accuracy: {validation_acc}%\n')
-                print(f'Epoch n.{epoch} | Loss: {epoch_loss}\nValidation Loss: {validation_loss} | Validation Accuracy: {round(validation_acc,4)}%')
-            #tb.add_scalar("Training Loss", epoch_loss, epoch)
-            #tb.add_scalar("Validation Loss", validation_loss, epoch)
-            #tb.flush()
-        
+                    fh.write('Network parameters:')
+                    fh.write(str(self.params))
+                if epoch % config.ep_log_interval == 0:
+                    with open(config.paths['logsPath'] + config.logFileName, 'a') as fh:
+                        fh.write(f'\nEpoch n.{epoch} | Loss: {epoch_loss}\nValidation Loss: {validation_loss} | Validation Accuracy: {validation_acc}%\n')
+                    print(f'Epoch n.{epoch} | Loss: {epoch_loss}\nValidation Loss: {validation_loss} | Validation Accuracy: {round(validation_acc,4)}%')
+                #tb.add_scalar("Training Loss", epoch_loss, epoch)
+                #tb.add_scalar("Validation Loss", validation_loss, epoch)
+                #tb.flush()
+                if j >= self.patience:
+                    print(f'Stopping early at epoch {epoch}!')
+       
+        # Logging
         with open(config.paths['logsPath'] +config.logFileName, 'a') as fh:
             fh.write('\n\nTraining complete\n\n')
             fh.write(f'Training epochs: {epoch+1}')
