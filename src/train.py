@@ -10,16 +10,14 @@ import torch.optim as optim
 from trainer.trainer import *
 import data.data_preprocessing as dp
 from asyncio import create_subprocess_exec
-import sys,os
+import sys, os
 import config
 
-class ExpandingWindowTraining():
+
+class ExpandingWindowTraining:
     def __init__(self, dataset, window='yearly') -> None:
         self.starting_year = dataset.yyyymm.min()
         self.window = window
-
-
-
 
 
 """# Categorical_cols should not be only in the following variable, as the encoding should be done in general
@@ -91,8 +89,9 @@ for epoch in range(config.n_epochs):
     tb.flush()
 print(f'\nFinal Training Loss: {epoch_loss} at epoch n. {epoch+1}')
 print(f'\nFinal Validation Loss: {validation_loss} at epoch n. {epoch+1}')
- """
+ 
 # Save final model (entire model)
 print("\nSaving trained model")
-fn = config.paths['modelsPath']+'/RegressionNet_model.pt'
+fn = config.paths['modelsPath'] + '/RegressionNet_model.pt'
 torch.save(model, fn)
+"""

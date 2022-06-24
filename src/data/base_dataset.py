@@ -4,7 +4,7 @@ import os
 import pandas as pd
 
 
-class BaseDataset():
+class BaseDataset:
     """
         Handles the data loading, feature engineering, and split between
         train, validation and test data, as well as the split between features
@@ -52,8 +52,20 @@ class BaseDataset():
                     - self.y_test
                 
     """
-    
+
     def __init__(self, mode='train') -> None:
+
+        self.X_train = None
+        self.X_val = None
+        self.X_test = None
+        self.y_train = None
+        self.y_val = None
+        self.y_test = None
+        self.train = None
+        self.val = None
+        self.test_index = None
+        self.test = None
+        self.crsp = None
         self.categorical_cols = []
 
         # Nothing is being done now as __init__ because otherwise the crsp would be loaded multiple times
@@ -68,40 +80,41 @@ class BaseDataset():
         #     self.load_split_test_data()
         #     print('Access to X_test and y_test attributes available')
 
-
     def __initialize_dataset(self):
-        
-        if config.ForcePreProcessing == True or (os.path.exists(config.paths['ProcessedDataPath'] + '/dataset.csv') == False):
-            
+        if config.ForcePreProcessing is True or (
+                os.path.exists(config.paths['ProcessedDataPath'] + '/dataset.csv') is False):
+
             print('Data processing...')
             crsp = dp.load_crsp(config.paths['CRSPretPath'], config.paths['CRSPinfoPath'])
             crsp = dp.filter_exchange_code(crsp)
             crsp = dp.filter_share_code(crsp)
 
-            
             crsp = dp.remove_microcap_stocks(crsp)
 
             crsp = dp.calculate_excess_returns(config.paths['FFPath'], crsp)
-            
+
             # Should also try to merge crsp with signals without for loop
             crsp, signal_columns = dp.merge_crsp_with_signals_chunks(crsp, config.paths['SignalsPath'])
             crsp = dp.winsorize_returns(crsp)
-            
+
             # Implement function
-            #crsp = dp.de_mean_returns(crsp)
-            
+            crsp = dp.de_mean_returns(crsp)
+
             # Trying without SIC_dummies - too many columns unfortunately...
             crsp.drop('siccd', axis=1, inplace=True)
-            #crsp, dummy_cols = dp.SIC_dummies(crsp)
-            #self.categorical_cols.extend(dummy_cols)
-            # Dropping remainging NAs, check this, in theory there should be just some rows.
-            print(f'Dropping {crsp.shape[0] - crsp.dropna().shape[0]} rows as they still contain at least a NaN number (likely ret is missing)')
+            # crsp, dummy_cols = dp.SIC_dummies(crsp)
+            # self.categorical_cols.extend(dummy_cols)
+
+            # Dropping remaining NAs, check this, in theory there should be just some rows.
+            print(
+                f'Dropping {crsp.shape[0] - crsp.dropna().shape[0]} rows as they still contain at least a NaN number '
+                f'(likely ret is missing)')
             crsp = crsp.dropna()
 
             print('Data preparation complete, saving...')
             crsp.to_csv(config.paths['ProcessedDataPath'] + '/dataset.csv')
         else:
-            crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)
+            crsp = pd.read_csv(config.paths['ProcessedDataPath'] + '/dataset.csv', index_col=0)
         return crsp
 
     def load_dataset_in_memory(self):
@@ -111,36 +124,29 @@ class BaseDataset():
         self.load_dataset_in_memory()
 
         self.train, self.val = dp.split_data_train_val(self.crsp)
-        delattr(self.crsp)
-    
+        del self.crsp
+
     def load_split_train_data(self):
         self.load_dataset_in_memory()
 
         self.train, self.val = dp.split_data_train_val(self.crsp)
-        del(self.crsp)
+        del self.crsp
         self.X_train, self.y_train = dp.sep_target(self.train)
         self.X_val, self.y_val = dp.sep_target(self.val)
 
-        del([self.train, self.val])
+        del ([self.train, self.val])
 
     def load_test_data(self):
         self.load_dataset_in_memory()
 
         self.test = dp.split_data_test(self.crsp)
-        delattr(self.crsp)
-    
+        del self.crsp
+
     def load_split_test_data(self):
         self.load_dataset_in_memory()
 
         self.test = dp.split_data_test(self.crsp)
-        del(self.crsp)
+        del self.crsp
 
         self.X_test, self.y_test, self.test_index = dp.sep_target_idx(self.test)
-        del (self.test)
-
-
-
-        
-
-
-        
+        del self.test

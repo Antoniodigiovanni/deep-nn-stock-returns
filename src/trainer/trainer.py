@@ -23,9 +23,8 @@ class NeuralNetTrainer():
 
     def train(self):
         j = 0
-     
-        for epoch in range(self.params['epochs']):
-            while j < self.patience:
+        while j < self.patience: 
+            for epoch in range(self.params['epochs']):
                 epoch_loss = self.train_one_epoch()
                 validation_loss, validation_acc = self.validate_one_epoch()
                 if validation_loss < self.best_val_loss:
@@ -37,7 +36,7 @@ class NeuralNetTrainer():
                     j += 1
                 if self.nni_experiment:
                     nni.report_intermediate_result(validation_acc)
-                    nni.assessor.AssessResult(validation_acc)
+                    #nni.assessor.AssessResult(validation_acc)
                 
                 # Logging
                 with open(config.paths['logsPath'] + config.logFileName, 'a') as fh:
@@ -52,7 +51,9 @@ class NeuralNetTrainer():
                 #tb.flush()
                 if j >= self.patience:
                     print(f'Stopping early at epoch {epoch}!')
-       
+                    nni.report_final_result(validation_acc)
+                    break
+        
         # Logging
         with open(config.paths['logsPath'] +config.logFileName, 'a') as fh:
             fh.write('\n\nTraining complete\n\n')

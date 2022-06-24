@@ -131,6 +131,10 @@ class OptimizeNet(nn.Module):
         )
         return block
 
+if not validate_params(params): 
+# for invalid param combinations, report the worst possible result
+        print('Invalid Parameters set')
+        nni.report_final_result(0.0)
 
 # Load data
 if config.ForcePreProcessing == False and os.path.exists(config.paths['ProcessedDataPath']+'/dataset.csv'):
@@ -164,10 +168,6 @@ optimizer = map_optimizer(params['optimizer'], model.parameters(), params['learn
 loss_fn = map_loss_func(params['loss'])
 
 
-if not validate_params(params): 
-# for invalid param combinations, report the worst possible result
-        print('Invalid Parameters set')
-        nni.report_final_result(0.0)
 
 print('Starting Training process')
 trainer = NeuralNetTrainer(model, train_loader, val_loader, optimizer, loss_fn, params, nni_experiment=True).train()
