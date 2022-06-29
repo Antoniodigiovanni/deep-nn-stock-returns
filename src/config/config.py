@@ -43,8 +43,10 @@ parser.add_argument("--end_train", default=end_train, type=str)
 parser.add_argument("--end_val", default=end_val, type=str)
 
 batch_size_validation = 128
-ep_log_interval = 2
+ep_log_interval = 1
+epochs = 100
 
+parser.add_argument('--epochs', default=epochs, type=int)
 parser.add_argument('--batch_size_validation', default=batch_size_validation, type=int)
 parser.add_argument('--ep_log_interval', default=ep_log_interval, type=int)
 
