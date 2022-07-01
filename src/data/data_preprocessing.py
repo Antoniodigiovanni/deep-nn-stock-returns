@@ -27,7 +27,8 @@ def load_crsp(CRSPretPath, CRSPinfoPath, StartYear=197001, EndYear=202112):
     crspm = crspm.drop(columns=['date'], errors='ignore')
 
     # Filter for observations since 1967 (last part commented out)
-    crspm = crspm[(crspm["yyyymm"] >= StartYear)]
+    
+    #crspm = crspm[(crspm["yyyymm"] >= StartYear)]
     crspm = crspm[(crspm["yyyymm"] <= EndYear)]
 
     # Merge CRSPret and CRSPinfo
@@ -120,7 +121,7 @@ def SIC_dummies(df):
     dummy_cols = list(set(after_dummy_cols) - set(original_cols))
 
     # Converting dummy cols type to int32
-    # df[dummy_cols] = df[dummy_cols].astype(np.int32)
+    df[dummy_cols] = df[dummy_cols].astype(np.int8)
     print('Info after SIC dummies included:')
     print(df.info(verbose=False, memory_usage="deep"))
 
@@ -305,7 +306,7 @@ def de_mean_returns(df):
 
     df['ret'] = df.groupby('yyyymm')['ret'].apply(lambda x: (x - np.mean(x)))
 
-    pass
+    return df
 
 
 def split_data_train_val(df, end_train='198512', end_val='199512'):

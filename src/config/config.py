@@ -43,7 +43,7 @@ parser.add_argument("--end_train", default=end_train, type=str)
 parser.add_argument("--end_val", default=end_val, type=str)
 
 batch_size_validation = 128
-ep_log_interval = 1
+ep_log_interval = 20
 epochs = 100
 
 parser.add_argument('--epochs', default=epochs, type=int)
@@ -61,8 +61,12 @@ parser.add_argument('--n_cuts_portfolio', default=n_cuts, type=int)
 parser.add_argument('--rebalancing_frequency', default=rebalancing_frequency, type=str)
 parser.add_argument('--weighting', default=weighting, type=str)
 
+###################################
+# Additional important parameters #
+###################################
 parser.add_argument('--tuningExperiment', action=argparse.BooleanOptionalAction)
-
+parser.add_argument('--predict', action=argparse.BooleanOptionalAction)
+parser.add_argument('--guNetworkTuning', action=argparse.BooleanOptionalAction)
 
 #args = parser.parse_args()
 args, unknown = parser.parse_known_args() # Using this to avoid error with notebooks

@@ -6,7 +6,6 @@ import statsmodels.api as sm
 from portfolios.FF5FM_Mom import FF5FM_Mom
 from portfolios.ReturnsPrediction import ReturnsPrediction
 
-# Making pred_df private could be done, like __pred_df
 
 class Portfolio():
     def __init__(self, n_cuts=10, rebalancing_frequency='yearly', weighting="VW"):
@@ -76,7 +75,7 @@ class Portfolio():
         lm = sm.OLS(y, X).fit()
 
         self.alpha = lm.params[0]
-        self.t_value_alpha = lm.tvalues[0]
+        #self.t_value_alpha = lm.tvalues[0]
         self.information_ratio = lm.tvalues[0]
 
 

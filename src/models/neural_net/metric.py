@@ -13,6 +13,7 @@ def accuracy(truth, yhat, pct):
   max_allow = np.abs(pct * truth)
 
   acc = torch.sum(abs_delta <= max_allow).numpy() / yhat.shape[0]
+  print(f'Correct: {torch.sum(abs_delta <= max_allow).numpy()} on {yhat.shape[0]}')
   return acc
 
 def calc_accuracy(model, data, pct):

@@ -1,28 +1,42 @@
+import config
 from nni.experiment import Experiment
 import os
 
 experiment = Experiment('local')
 
 
-experiment.config.experiment_name = 'Hyperparameter_optimization'
 
 
-experiment.config.trial_command = 'python hp_tuning.py'
+# Trying to use the same file for tuning Gu et al's network and the self experiment (add grid search on best results of self experiment afterwards)
+if config.args.tuningExperiment:
+    experiment.config.experiment_name = 'Hyperparameter_optimization'
+    experiment.config.trial_command = 'python hp_tuning.py'
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/searchSpace_test.json')
+    experiment.config.max_trial_number = 200
+
+    experiment.config.tuner.name = 'TPE'
+    experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
+
+
+elif config.args.guNetworkTuning:
+    experiment.config.experiment_name = "Gu et al.'s NN4 Optimization"
+    experiment.config.trial_command = 'python gunetworkOptimization.py'
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/gu_grid_search_space.json')
+
+    experiment.config.tuner.name = 'GridSearch'
+
 experiment.config.trial_code_directory = './src/tuning'
 
 # experiment.config.search_space = search_space  #Used when the search space is defined in the file
-experiment.config.search_space_file = (os.getcwd()+'/src/tuning/searchSpace_test.json')
 
 
-experiment.config.tuner.name = 'TPE'
-experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
+
 
 experiment.config.assessor.name = 'Medianstop'
 experiment.config.assessor.class_args['optimize_mode'] ='maximize'
 experiment.config.assessor.class_args['start_step'] = 15
 
 
-experiment.config.max_trial_number = 200
 experiment.config.trial_concurrency = 2
 experiment.config.max_experiment_duration = '12h' 
 
