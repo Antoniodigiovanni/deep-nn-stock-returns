@@ -16,7 +16,7 @@ def accuracy(truth, yhat, pct):
   print(f'Correct: {torch.sum(abs_delta <= max_allow).numpy()} on {yhat.shape[0]}')
   return acc
 
-def calc_accuracy(model, data, pct):
+def calc_accuracy_and_predict(model, data, pct):
   # assumes model.eval()
 
   # Percent correct within pct of true returns

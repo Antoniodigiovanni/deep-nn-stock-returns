@@ -6,6 +6,7 @@ from data.custom_dataset import CustomDataset
 from data.data_preprocessing import *
 from torch.utils.data import DataLoader
 import torch.optim as optim
+from src.portfolios.ReturnsPrediction import ReturnsPrediction
 from trainer.trainer import *
 import data.data_preprocessing as dp
 import sys,os
@@ -103,6 +104,9 @@ class ExpandingWindowTraining():
                 if j >= self.patience:
                     print(f'Early stopping at epoch {epoch+1}!')
                     break
+            prediction_df = ReturnsPrediction(self.test_loader, self.model)
+            print(prediction_df.shape)
+            print(prediction_df.head())
             self.__update_years()
 
         print(f'The expanding window training is completed,\
