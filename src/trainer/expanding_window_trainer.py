@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 from models.neural_net.gu_et_al_NN4 import GuNN4
-from data.custom_dataset import CustomDataset
+from data.custom_dataset import CustomDataset, TestDataset
 from data.data_preprocessing import *
 from torch.utils.data import DataLoader
 import torch.optim as optim
@@ -39,6 +39,7 @@ class ExpandingWindowTraining():
 
         self.train_starting_year = dataset.yyyymm.min()
         self.df_end_date = dataset.yyyymm.max()
+
         self.train_window = train_window_years
         self.val_window = val_window_years
         self.val_starting_year = int((dt.datetime.strptime(
@@ -51,11 +52,11 @@ class ExpandingWindowTraining():
             str(self.val_starting_year), '%Y%m') - 
             DateOffset(months=1)).strftime('%Y%m'))
         
-        self.train_dates = None
-        self.val_dates = None
 
-        self.train, self.val = None, None
-        self.train_loader, self.val_loader = None, None
+        self.train_dates, self.val_dates, self.test_dates = None, None, None
+
+        self.train, self.val, self.test = None, None, None
+        self.train_loader, self.val_loader, self.test_loader = None, None, None
 
         self.__generate_training_window()
         self.__subset_df()
@@ -77,7 +78,8 @@ class ExpandingWindowTraining():
             self.loss_fn = nn.L1Loss()
             
             print(f'\n\nTraining from {self.train_dates[0]} to {self.train_dates[-1]}')
-            print(f'Validating from {self.val_dates[0]} to {self.val_dates[-1]}\n\n')
+            print(f'Validating from {self.val_dates[0]} to {self.val_dates[-1]}')
+            print(f'Testing from {self.test_dates[0]} to {self.test_dates[-1]}')
             
             # Reset parameters for early stopping 
             j = 0
@@ -90,24 +92,32 @@ class ExpandingWindowTraining():
 
                 # Early stopping logic:
                 if val_loss < self.best_val_loss:
-                    j = 0
                     self.best_val_loss = val_loss
-                    print(f'j set back to 0, best val_loss is: {self.best_val_loss}')
+
+                    if j != 0:
+                        print(f'j set back to 0, best val_loss is: {self.best_val_loss}')
+                    j = 0
+                    
                 else:
                     j+=1
                     print(f'j incremented to {j}!')
+
                 # I could maybe report validation loss
                 nni.report_intermediate_result(val_acc)
+                
                 if epoch%config.args.ep_log_interval == 0:
                     print(f'Epoch n. {epoch+1} [of #{config.args.epochs}]')
                     print(f'Training loss: {epoch_loss} | Val loss: {val_loss}')
                     print(f'Validation accuracy: {val_acc}%')
+                
                 if j >= self.patience:
                     print(f'Early stopping at epoch {epoch+1}!')
                     break
-                prediction_df = ReturnsPrediction(self.test_loader, self.model)
-                print(prediction_df.shape)
-                print(prediction_df.head())
+                
+            prediction_df = ReturnsPrediction(self.test_loader, self.model).pred_df
+            print('Prediction completed, here is how it looks: shape and head')
+            print(prediction_df.shape)
+            print(prediction_df.head())
             self.__update_years()
 
         print(f'The expanding window training is completed,\
@@ -115,6 +125,7 @@ class ExpandingWindowTraining():
                 this trial is {val_acc} - maybe print out avg or best.')
 
         nni.report_final_result( val_acc)
+
 
     def __process_one_epoch(self, mode='train'):
         """,
@@ -146,7 +157,8 @@ class ExpandingWindowTraining():
             return total_loss
         else:
             return total_loss, total_acc
-    
+
+
     def __process_one_step(self, data, mode):
         if mode == 'train':
             self.optimizer.zero_grad()
@@ -215,21 +227,35 @@ class ExpandingWindowTraining():
                 .astype(int)
                 )
 
+        self.test_dates = list(
+            pd.period_range(
+                start= (dt.datetime.strptime(str(self.val_dates[-1]), '%Y%m') + DateOffset(months=1)),
+                periods=12,
+                freq='M'
+                )
+                .strftime('%Y%m')
+                .astype(int)
+                )
+
     def __subset_df(self):
         train = self.dataset.loc[self.dataset['yyyymm'].isin(self.train_dates)].copy()
         validation = self.dataset.loc[self.dataset['yyyymm'].isin(self.val_dates)].copy()
+        test = self.dataset.loc[self.dataset['yyyymm'].isin(self.test_dates)].copy()
 
         X_train, y_train = dp.sep_target(train)
         X_val, y_val = dp.sep_target(validation)
+        X_test, y_test, test_index = dp.sep_target_idx(test)
 
         self.train = CustomDataset(X_train, y_train)
         self.val = CustomDataset(X_val, y_val)
+        self.test = TestDataset(X_test, y_test, test_index)
 
         self.n_inputs = self.train.data.shape[1]
         # Modify batch size to make it trainable with higher values
         # Modify dataloader args
         self.train_loader = DataLoader(self.train, batch_size=10000)
         self.val_loader = DataLoader(self.val, batch_size = 10000)
+        self.test_loader = DataLoader(self.test, batch_size=10000)
 
 
     def __report_to_nni(self, experiment='False'):
