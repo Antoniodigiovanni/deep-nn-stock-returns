@@ -20,7 +20,6 @@ from torch.utils.data import DataLoader
 from trainer.trainer import NeuralNetTrainer
 
 
-
 logger = logging.getLogger('Grid search experiment')
 
 

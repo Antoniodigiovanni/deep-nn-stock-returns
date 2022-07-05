@@ -6,7 +6,7 @@ from data.custom_dataset import CustomDataset
 from data.data_preprocessing import *
 from torch.utils.data import DataLoader
 import torch.optim as optim
-from src.portfolios.ReturnsPrediction import ReturnsPrediction
+from portfolios.ReturnsPrediction import ReturnsPrediction
 from trainer.trainer import *
 import data.data_preprocessing as dp
 import sys,os
@@ -30,7 +30,8 @@ class ExpandingWindowTraining():
         self.l1_reg = True
         self.l1_lambda = self.params['l1_lambda1']
         
-        # Prediction step to be implemented - #TODO
+        # Prediction step to be implemented 
+        #TODO
         if config.args.predict:
             self.prediction = True
         else:
@@ -104,9 +105,9 @@ class ExpandingWindowTraining():
                 if j >= self.patience:
                     print(f'Early stopping at epoch {epoch+1}!')
                     break
-            prediction_df = ReturnsPrediction(self.test_loader, self.model)
-            print(prediction_df.shape)
-            print(prediction_df.head())
+                prediction_df = ReturnsPrediction(self.test_loader, self.model)
+                print(prediction_df.shape)
+                print(prediction_df.head())
             self.__update_years()
 
         print(f'The expanding window training is completed,\

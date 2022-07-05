@@ -5,9 +5,8 @@ import os
 experiment = Experiment('local')
 
 
-
-
-# Trying to use the same file for tuning Gu et al's network and the self experiment (add grid search on best results of self experiment afterwards)
+# Trying to use the same file for tuning Gu et al's network and the self experiment (add grid search on best results of
+# self experiment afterwards)
 if config.args.tuningExperiment:
     experiment.config.experiment_name = 'Hyperparameter_optimization'
     experiment.config.trial_command = 'python hp_tuning.py'
@@ -28,8 +27,6 @@ elif config.args.guNetworkTuning:
 experiment.config.trial_code_directory = './src/tuning'
 
 # experiment.config.search_space = search_space  #Used when the search space is defined in the file
-
-
 
 
 experiment.config.assessor.name = 'Medianstop'
