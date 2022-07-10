@@ -30,8 +30,6 @@ class ExpandingWindowTraining():
         self.l1_reg = True
         self.l1_lambda = self.params['l1_lambda1']
         
-        # Prediction step to be implemented 
-        #TODO
         if config.args.predict:
             self.prediction = True
         else:
@@ -57,6 +55,8 @@ class ExpandingWindowTraining():
 
         self.train, self.val, self.test = None, None, None
         self.train_loader, self.val_loader, self.test_loader = None, None, None
+
+        self.prediction_df = pd.DataFrame()
 
         self.__generate_training_window()
         self.__subset_df()
@@ -84,7 +84,7 @@ class ExpandingWindowTraining():
             # Reset parameters for early stopping 
             j = 0
             self.best_val_loss = np.inf
-
+            print(f'Params type is: {type(self.params)}')
             for epoch in range(config.args.epochs):
                 
                 epoch_loss = self.__process_one_epoch('train')
@@ -114,17 +114,31 @@ class ExpandingWindowTraining():
                     print(f'Early stopping at epoch {epoch+1}!')
                     break
                 
-            prediction_df = ReturnsPrediction(self.test_loader, self.model).pred_df
-            print('Prediction completed, here is how it looks: shape and head')
-            print(prediction_df.shape)
-            print(prediction_df.head())
+            pred_df = ReturnsPrediction(self.test_loader, self.model).pred_df
+            self.prediction_df = pd.concat([self.prediction_df, pred_df], ignore_index=True)
+            
+            #To delete this part until next #
+            print(f'Check for  prediction df, min:{self.prediction_df.yyyymm.min()}, max: {self.prediction_df.yyyymm.max()}\n shape:{self.prediction_df.shape}')
+            print(f'\n Tail:\n {self.prediction_df.tail()}')
+            #
             self.__update_years()
 
         print(f'The expanding window training is completed,\
                 the last validation accuracy for\
                 this trial is {val_acc} - maybe print out avg or best.')
 
-        nni.report_final_result( val_acc)
+        #To delete this part until next # - this is for debugging only
+        print(f'Check for  prediction df, min:{self.prediction_df.min}, max: {self.prediction_df.max}\n shape:{self.prediction_df.shape}')
+        print(f'\n Head:\n {self.prediction_df.head()}')
+        #
+        
+        timeStamp_id = dt.now().strftime('%Y_%m_%d-%H_%M')
+        with open(timeStamp_id + '- trial.json', 'w') as fp:
+            json.dump(dict, fp)
+        self.prediction_df.to_csv(config.paths['resultsPath'] + '/' + timeStamp_id + ' - predicted_returns.csv')
+
+        nni.report_final_result(val_acc)
+
 
 
     def __process_one_epoch(self, mode='train'):

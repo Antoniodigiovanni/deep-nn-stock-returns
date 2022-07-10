@@ -10,7 +10,7 @@ experiment = Experiment('local')
 if config.args.tuningExperiment:
     experiment.config.experiment_name = 'Hyperparameter_optimization'
     experiment.config.trial_command = 'python hp_tuning.py'
-    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/searchSpace_test.json')
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace_test.json')
     experiment.config.max_trial_number = 200
 
     experiment.config.tuner.name = 'TPE'
@@ -20,7 +20,7 @@ if config.args.tuningExperiment:
 elif config.args.guNetworkTuning:
     experiment.config.experiment_name = "Gu et al.'s NN4 Optimization"
     experiment.config.trial_command = 'python gunetworkOptimization.py'
-    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/gu_grid_search_space.json')
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/gu_grid_search_space_small.json')
 
     experiment.config.tuner.name = 'GridSearch'
 

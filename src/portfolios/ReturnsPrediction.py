@@ -9,18 +9,10 @@ from torch.utils.data import DataLoader
 import config
 
 class ReturnsPrediction():
-    def __init__(self, test_loader, model=None):
+    def __init__(self, test_loader, model):
         self.__pct = 0.1
         self.pred_df = None        
 
-        # The following if could be deleted because I don't want to load from file at the moment, what is the benefit?
-        if model is None:
-            print('Model has not been passed, trying to load from previously saved models')
-            if os.path.exists(config.paths['modelsPath'] + config.SavedNetFileName) == False:
-                print('Trained model does not exist, exiting..')
-                sys.exit()
-            else:
-                model = torch.load(config.paths['modelsPath'] + config.SavedNetFileName)
 
         self.__model = model
         self.__model.eval()
@@ -28,8 +20,6 @@ class ReturnsPrediction():
         self.__test_loader = test_loader
 
         accuracies, self.pred_df = self.prediction_loop()
-        # print('Saving df with predicted returns...')
-        # pred_df.to_csv(config.paths['ProcessedDataPath']+'/predicted_ret.csv')
         
         avg_accurancy = np.mean(accuracies) 
         print(f'Avg accuracy over the test set at {self.__pct*100}% is: {round(avg_accurancy*100)}%')
@@ -38,8 +28,6 @@ class ReturnsPrediction():
     def prediction_loop(self):
         self.__model.eval()
 
-        Correct = 0
-        Wrong = 0
         accuracies = []
         print('In test_loader loop')
         for index, data in enumerate(self.__test_loader):
