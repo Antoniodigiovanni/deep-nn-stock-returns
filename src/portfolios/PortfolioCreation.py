@@ -8,26 +8,18 @@ from portfolios.ReturnsPrediction import ReturnsPrediction
 
 
 class Portfolio():
-    def __init__(self, n_cuts=10, rebalancing_frequency='yearly', weighting="VW"):
+    def __init__(self, n_cuts=10, pred_df = None, rebalancing_frequency='yearly', weighting="VW"):
         self.n_cuts = n_cuts
         self.weighting = weighting
         self.rebalancing_frequency = rebalancing_frequency
 
         self.alpha = None
-        self.t_value_alpha = None
+        # self.t_value_alpha = None
         self.information_ratio = None
         self.returns = None
+        self.__pred_df = pred_df
 
-
-        if os.path.exists(config.paths['PredictedRetPath']):
-            self.__load_pred_df()
-
-        else:
-            print('Predicted Returns file not in memory, predicting returns...')
-            ReturnsPrediction()
-            self.__load_pred_df()
-
-            
+        self.__load_pred_df()
         self.calculate_portfolio_weights()
         self.calculate_portfolio_monthly_returns()
         self.calculate_information_ratio()
@@ -36,11 +28,17 @@ class Portfolio():
     def __load_pred_df(self):
         crsp = pd.read_csv(config.paths['CRSPretPath'])
         crsp['ret'] = (crsp['ret']/100)
-        
-        self.__pred_df = pd.read_csv(config.paths['PredictedRetPath'], index_col=0)
+
+        # if self.__pred_df == None:        
+            # if os.path.exists(config.paths['PredictedRetPath']):
+            #     self.__pred_df = pd.read_csv(config.paths['PredictedRetPath'], index_col=0)
+            
+            # else:
+            #     print('Predicted Returns file not in memory, predicting returns...')
+            #     ReturnsPrediction()
         
         # Dropping returns from pred_df, as they are winsorized there.
-        self.__pred_df.drop('ret', axis=1, inplace=True)
+        self.__pred_df.drop('ret', axis=1, inplace=True, errors='ignore')
         self.__pred_df['permno'] = self.__pred_df.permno.astype(int)
 
         self.__pred_df = self.__pred_df.merge(
