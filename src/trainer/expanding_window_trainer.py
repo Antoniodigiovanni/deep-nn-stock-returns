@@ -95,12 +95,13 @@ class ExpandingWindowTraining():
                     self.best_val_loss = val_loss
 
                     if j != 0:
-                        print(f'j set back to 0, best val_loss is: {self.best_val_loss}')
+                        pass
+                        #print(f'j set back to 0, best val_loss is: {self.best_val_loss}')
                     j = 0
                     
                 else:
                     j+=1
-                    print(f'j incremented to {j}!')
+                    #print(f'j incremented to {j}!')
 
                 # I could maybe report validation loss
                 nni.report_intermediate_result(val_acc)
@@ -137,6 +138,15 @@ class ExpandingWindowTraining():
             json.dump(dict, fp)
         self.prediction_df.to_csv(config.paths['resultsPath'] + '/' + timeStamp_id + ' - predicted_returns.csv')
 
+        returns = pd.DataFrame()
+        information_ratio = None
+        alpha = None
+        final_dict = {'params': self.params, 'information_ratio': information_ratio, 'alpha':alpha}
+
+        returns.to_csv(config.paths['resultsPath'] + '/' + timeStamp_id + ' - portfolio_returns.csv')
+        with open(timeStamp_id + '- trial_full.json', 'w') as fp:
+            json.dump(final_dict, fp)
+       
         nni.report_final_result(val_acc)
 
 
