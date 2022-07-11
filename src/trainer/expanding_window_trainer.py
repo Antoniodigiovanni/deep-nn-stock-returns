@@ -7,6 +7,7 @@ from data.data_preprocessing import *
 from torch.utils.data import DataLoader
 import torch.optim as optim
 from portfolios.ReturnsPrediction import ReturnsPrediction
+from portfolios.PortfolioCreation import Portfolio
 from trainer.trainer import *
 import data.data_preprocessing as dp
 import sys,os
@@ -84,7 +85,7 @@ class ExpandingWindowTraining():
             # Reset parameters for early stopping 
             j = 0
             self.best_val_loss = np.inf
-            print(f'Params type is: {type(self.params)}')
+            
             for epoch in range(config.args.epochs):
                 
                 epoch_loss = self.__process_one_epoch('train')
@@ -104,7 +105,7 @@ class ExpandingWindowTraining():
                     #print(f'j incremented to {j}!')
 
                 # I could maybe report validation loss
-                nni.report_intermediate_result(val_acc)
+                nni.report_intermediate_result(val_acc)#(val_loss)
                 
                 if epoch%config.args.ep_log_interval == 0:
                     print(f'Epoch n. {epoch+1} [of #{config.args.epochs}]')
@@ -128,26 +129,24 @@ class ExpandingWindowTraining():
                 the last validation accuracy for\
                 this trial is {val_acc} - maybe print out avg or best.')
 
-        #To delete this part until next # - this is for debugging only
-        print(f'Check for  prediction df, min:{self.prediction_df.min}, max: {self.prediction_df.max}\n shape:{self.prediction_df.shape}')
-        print(f'\n Head:\n {self.prediction_df.head()}')
-        #
-        
-        timeStamp_id = dt.now().strftime('%Y_%m_%d-%H_%M')
-        with open(timeStamp_id + '- trial.json', 'w') as fp:
-            json.dump(dict, fp)
+                
+        timeStamp_id = dt.datetime.now().strftime('%Y_%m_%d-%H_%M')
+        # with open(timeStamp_id + '- trial.json', 'w') as fp:
+        #     json.dump(dict, fp)
         self.prediction_df.to_csv(config.paths['resultsPath'] + '/' + timeStamp_id + ' - predicted_returns.csv')
 
-        returns = pd.DataFrame()
-        information_ratio = None
-        alpha = None
-        final_dict = {'params': self.params, 'information_ratio': information_ratio, 'alpha':alpha}
-
+        print('Calculating portfolios')
+        portfolio = Portfolio(pred_df=self.prediction_df)
+        information_ratio = portfolio.information_ratio
+        alpha = portfolio.alpha
+        returns = portfolio.returns
         returns.to_csv(config.paths['resultsPath'] + '/' + timeStamp_id + ' - portfolio_returns.csv')
-        with open(timeStamp_id + '- trial_full.json', 'w') as fp:
+
+        final_dict = {'params': self.params, 'information_ratio': information_ratio, 'alpha':alpha}
+        with open(config.paths['resultsPath'] + '/' + timeStamp_id + '- trial_full.json', 'w') as fp:
             json.dump(final_dict, fp)
        
-        nni.report_final_result(val_acc)
+        nni.report_final_result(val_acc) #(val_loss)
 
 
 

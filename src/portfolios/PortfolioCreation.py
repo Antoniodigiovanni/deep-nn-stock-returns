@@ -59,9 +59,8 @@ class Portfolio():
         columns_to_keep.extend(self.returns.columns[-2:])
         
         df = self.returns[columns_to_keep]
-        
-        df = df.merge(FFMom, on=['yyyymm'], how='left')
 
+        df = df.merge(FFMom, on=['yyyymm'], how='left')
         # On long-short returns        
         X = df.iloc[:, 3:]
         

@@ -35,8 +35,7 @@ class ReturnsPrediction():
             print(f'Test loader batch shape:')
             print(data['X'].shape)
             accuracy, batch_prediction = metric.calc_accuracy_and_predict(self.__model, data, self.__pct)
-            print(batch_prediction)
-            batch_prediction['predicted_ret'] = batch_prediction['predicted_ret'].reshape(-1)
+            
             accuracies.append(accuracy)
             for k in batch_prediction:
                 if index == 0:
@@ -44,5 +43,4 @@ class ReturnsPrediction():
                 prediction[k].extend(batch_prediction[k])
                
         pred_df = pd.DataFrame.from_dict(prediction) 
-        print(pred_df.shape)
         return accuracies, pred_df
