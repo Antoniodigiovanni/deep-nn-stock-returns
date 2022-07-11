@@ -64,7 +64,7 @@ class ExpandingWindowTraining():
 
     def fit(self):
 
-        while self.val_dates[-1] <= self.df_end_date:
+        while self.test_dates[-1] <= self.df_end_date:
             # Aggiusta parametri per fare esperimenti nni
             self.model = GuNN4(self.n_inputs).to(config.device)
             
@@ -278,7 +278,7 @@ class ExpandingWindowTraining():
         # Modify batch size to make it trainable with higher values
         # Modify dataloader args
         self.train_loader = DataLoader(self.train, batch_size=10000)
-        self.val_loader = DataLoader(self.val, batch_size = 10000)
+        self.val_loader = DataLoader(self.val, batch_size=10000)
         self.test_loader = DataLoader(self.test, batch_size=10000)
 
 

@@ -44,7 +44,7 @@ parser.add_argument("--end_val", default=end_val, type=str)
 
 batch_size_validation = 128
 ep_log_interval = 20
-epochs = 100
+epochs = 2
 
 parser.add_argument('--epochs', default=epochs, type=int)
 parser.add_argument('--batch_size_validation', default=batch_size_validation, type=int)
@@ -73,3 +73,4 @@ args, unknown = parser.parse_known_args() # Using this to avoid error with noteb
 
 
 n_cuts = args.n_cuts_portfolio
+print(f'No. of epochs is: {args.epochs}')

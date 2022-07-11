@@ -21,9 +21,9 @@ def calc_accuracy_and_predict(model, data, pct):
 
 
   with torch.no_grad():
-    output = model (data['X'])
-    
-    prediction = {'permno': data['permno'], 'yyyymm':data['yyyymm'], 'predicted_ret':output}
+    output = model(data['X'])
+    print(type(data['permno']))
+    prediction = {'permno': data['permno'].squeeze().tolist(), 'yyyymm':data['yyyymm'].squeeze().tolist(), 'predicted_ret':output.squeeze().tolist()}
     acc = accuracy(data['Y'], output, pct)
 
   return acc, prediction

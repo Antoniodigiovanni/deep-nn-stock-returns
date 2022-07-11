@@ -27,15 +27,22 @@ class ReturnsPrediction():
         
     def prediction_loop(self):
         self.__model.eval()
-
+        prediction = {}
         accuracies = []
         print('In test_loader loop')
         for index, data in enumerate(self.__test_loader):
             print(f'loop n. {index+1}')
-            accuracy, prediction = metric.calc_accuracy_and_predict(self.__model, data, self.__pct)
+            print(f'Test loader batch shape:')
+            print(data['X'].shape)
+            accuracy, batch_prediction = metric.calc_accuracy_and_predict(self.__model, data, self.__pct)
+            print(batch_prediction)
+            batch_prediction['predicted_ret'] = batch_prediction['predicted_ret'].reshape(-1)
             accuracies.append(accuracy)
-            prediction['predicted_ret'] = prediction['predicted_ret'].reshape(-1)
+            for k in batch_prediction:
+                if index == 0:
+                    prediction[k] = []
+                prediction[k].extend(batch_prediction[k])
                
         pred_df = pd.DataFrame.from_dict(prediction) 
-
+        print(pred_df.shape)
         return accuracies, pred_df
