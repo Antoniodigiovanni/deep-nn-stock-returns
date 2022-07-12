@@ -57,13 +57,12 @@ class Portfolio():
         """
         columns_to_keep = [self.returns.columns[0]]
         columns_to_keep.extend(self.returns.columns[-2:])
-        
         df = self.returns[columns_to_keep]
 
         df = df.merge(FFMom, on=['yyyymm'], how='left')
         # On long-short returns        
         X = df.iloc[:, 3:]
-        
+
         # Column 1 is long returns on max quantile, 
         # Column 2 is long-short returns
         y = df.iloc[:,2]

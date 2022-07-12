@@ -27,15 +27,15 @@ class FF5FM_Mom():
         FF5FM = pd.read_csv(config.paths['FFPath'], skiprows=3, skipfooter=60, engine='python')
         FFMom = pd.read_csv(config.paths['FFMomPath'], skiprows=13, skipfooter=100, engine='python')
 
-        # FF5FM = FF5FM.rename(columns={'Unnamed: 0': 'yyyymm'})
-        # FFMom = FFMom.rename(columns={'Unnamed: 0': 'yyyymm'})
+
+        FF5FM = FF5FM.rename(columns={'Unnamed: 0': 'yyyymm'})
+        FFMom = FFMom.rename(columns={'Unnamed: 0': 'yyyymm'})
         
-        # self.RF = FF5FM[['yyyymm', 'RF']]
+        self.RF = FF5FM[['yyyymm', 'RF']]
         
         FF5FM.drop('RF', axis=1, inplace=True)
-        self.returns = FF5FM.merge(FFMom, on=['Unnamed: 0'])#, on=['yyyymm'])
-        self.returns = self.returns.reset_index().rename(columns={'index':'yyyymm'})
-
+        self.returns = FF5FM.merge(FFMom, on=['yyyymm'])#, on=['yyyymm'])
+        
         del FF5FM, FFMom
 
 

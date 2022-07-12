@@ -1,1 +1,0 @@
-{"hidden_size_1": 64, "hidden_size_2": 64, "hidden_size_3": 16, "hidden_size_4": 8, "act_func": "ReLU", "optimizer": "RMSprop", "loss": "MSELoss", "learning_rate": 0.0007610137360017089, "momentum": 0.48770311603902816, "epochs": 150, "batch_size": 8, "metric": 0.0}

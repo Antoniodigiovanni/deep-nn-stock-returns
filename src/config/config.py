@@ -14,6 +14,7 @@ print(f'Device: {device}')
 
 currentPath = os.path.dirname(os.path.abspath(__file__))
 dataPath = (currentPath + '/../../data')
+guResultsTimestamp = dt.now().strftime('/GuTuningResults-%m_%d-%H:%M:%S:%f')
 
 paths = dict (
     CRSPretPath = (dataPath + '/external/crspmret.csv'),
@@ -25,7 +26,8 @@ paths = dict (
     PredictedRetPath = (dataPath + '/processed/predicted_ret.csv'),
     modelsPath = (currentPath + '/../../saved/models'),
     resultsPath = (currentPath + '/../../saved/results'),
-    logsPath = (currentPath + '/../../saved/logs')
+    logsPath = (currentPath + '/../../saved/logs'),
+    guTuningResultsPath = (currentPath + '/../../saved/results') +'/GuTuningResults'#+ guResultsTimestamp)
     )
 
 logFileName = dt.now().strftime('/TrainRun-%Y_%m_%d-%H_%M.log')
@@ -44,9 +46,9 @@ parser.add_argument("--end_val", default=end_val, type=str)
 
 batch_size_validation = 128
 ep_log_interval = 20
-epochs = 2
+epochs = 100
 
-parser.add_argument('--epochs', default=epochs, type=int)
+parser.add_argument('-e', '--epochs', default=epochs, type=int)
 parser.add_argument('--batch_size_validation', default=batch_size_validation, type=int)
 parser.add_argument('--ep_log_interval', default=ep_log_interval, type=int)
 

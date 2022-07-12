@@ -62,5 +62,6 @@ else:
 
 
 print('Starting Training process')
+log_dir = os.path.join(os.environ["NNI_OUTPUT_DIR"], 'tensorboard')
 trainer = ExpandingWindowTraining(crsp, params)
 trainer.fit()

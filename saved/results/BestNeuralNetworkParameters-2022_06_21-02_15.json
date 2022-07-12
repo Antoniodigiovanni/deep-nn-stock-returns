@@ -1,1 +1,0 @@
-{"hidden_size_1": 64, "hidden_size_2": 4, "hidden_size_3": 32, "hidden_size_4": 4, "act_func": "Tanh", "optimizer": "SGD", "loss": "SmoothL1Loss", "learning_rate": 0.06763144192503369, "momentum": 0.8058708612444208, "epochs": 50, "batch_size": 256, "metric": 9.36279296875}

@@ -11,7 +11,6 @@ from portfolios.PortfolioCreation import Portfolio
 from trainer.trainer import *
 import data.data_preprocessing as dp
 import sys,os
-import config
 from pandas.tseries.offsets import DateOffset
 import datetime as dt
 
@@ -64,11 +63,11 @@ class ExpandingWindowTraining():
 
 
     def fit(self):
-
+        # Trying with moving the model instantiation outside of the loop, so every time training is repeated we are not 
+        # re-instantiating the model.
+        self.model = GuNN4(self.n_inputs).to(config.device)
         while self.test_dates[-1] <= self.df_end_date:
-            # Aggiusta parametri per fare esperimenti nni
-            self.model = GuNN4(self.n_inputs).to(config.device)
-            
+                        
             self.optimizer = optim.Adam(self.model.parameters(),
                 self.params['learning_rate'],
                 betas=(
@@ -125,28 +124,53 @@ class ExpandingWindowTraining():
             #
             self.__update_years()
 
-        print(f'The expanding window training is completed,\
-                the last validation accuracy for\
-                this trial is {val_acc} - maybe print out avg or best.')
+        print(f'The expanding window training is completed.')
 
                 
-        timeStamp_id = dt.datetime.now().strftime('%Y_%m_%d-%H_%M')
+        timeStamp_id = dt.datetime.now().strftime('%Y%m%d-%H_%M:%S:%f')
         # with open(timeStamp_id + '- trial.json', 'w') as fp:
         #     json.dump(dict, fp)
-        self.prediction_df.to_csv(config.paths['resultsPath'] + '/' + timeStamp_id + ' - predicted_returns.csv')
 
         print('Calculating portfolios')
         portfolio = Portfolio(pred_df=self.prediction_df)
         information_ratio = portfolio.information_ratio
         alpha = portfolio.alpha
         returns = portfolio.returns
-        returns.to_csv(config.paths['resultsPath'] + '/' + timeStamp_id + ' - portfolio_returns.csv')
+        
+        # Saving files
+        if os.path.exists(config.paths['guTuningResultsPath'] + '/predicted_returns') == False:
+            os.makedirs(config.paths['guTuningResultsPath'] + '/predicted_returns')
+        if os.path.exists(config.paths['guTuningResultsPath'] + '/portfolio_returns') == False:
+            os.makedirs(config.paths['guTuningResultsPath'] + '/portfolio_returns')
+        if os.path.exists(config.paths['guTuningResultsPath'] + '/trial_info') == False:
+            os.makedirs(config.paths['guTuningResultsPath'] + '/trial_info')
 
+        from csv import DictWriter, writer
+
+        field_names = ['timeStamp','information_ratio','alpha']
+        summary_dict = {'timeStamp': timeStamp_id, 'information_ratio': information_ratio, 'alpha': alpha}
+        with open(config.paths['guTuningResultsPath'] + '/experiment_summary.json', 'a') as fp:          
+            writer_obj = writer(fp)
+            if fp.tell() == 0:
+                writer_obj.writerow(field_names)
+            dictwriter_object = DictWriter(fp, fieldnames=field_names)
+            dictwriter_object.writerow(summary_dict)
+  
+        self.prediction_df.to_csv(config.paths['guTuningResultsPath'] + '/predicted_returns/' + timeStamp_id + ' - predicted_returns.csv')
+        returns.to_csv(config.paths['guTuningResultsPath'] + '/portfolio_returns/' + timeStamp_id + ' - portfolio_returns.csv')
         final_dict = {'params': self.params, 'information_ratio': information_ratio, 'alpha':alpha}
-        with open(config.paths['resultsPath'] + '/' + timeStamp_id + '- trial_full.json', 'w') as fp:
-            json.dump(final_dict, fp)
+        with open(config.paths['guTuningResultsPath'] + '/trial_info/' + timeStamp_id + '- trial_full.json', 'w') as fp:
+            json.dump(final_dict, fp, indent=4)
+        
+        # Old version
+        # returns.to_csv(config.paths['resultsPath'] + '/' + timeStamp_id + ' - portfolio_returns.csv')
+        # final_dict = {'params': self.params, 'information_ratio': information_ratio, 'alpha':alpha}
+        # with open(config.paths['resultsPath'] + '/' + timeStamp_id + '- trial_full.json', 'w') as fp:
+        #     json.dump(final_dict, fp)
+
+        print('Portfolio returns calculation completed.')
        
-        nni.report_final_result(val_acc) #(val_loss)
+        nni.report_final_result(alpha) #(val_loss)
 
 
 
