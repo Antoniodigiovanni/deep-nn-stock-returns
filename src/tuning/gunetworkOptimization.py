@@ -1,5 +1,6 @@
 import sys,os
 
+
 # To import config from top_level folder
 currentPath = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(currentPath+'/../')
@@ -18,6 +19,7 @@ from data.custom_dataset import CustomDataset
 from data.data_preprocessing import *
 from torch.utils.data import DataLoader
 from trainer.trainer import NeuralNetTrainer
+from trainer.simple_trainer import SimpleTrainerForGu
 
 
 logger = logging.getLogger('Grid search experiment')
@@ -62,6 +64,8 @@ else:
 
 
 print('Starting Training process')
-log_dir = os.path.join(os.environ["NNI_OUTPUT_DIR"], 'tensorboard')
-trainer = ExpandingWindowTraining(crsp, params)
+# trainer = ExpandingWindowTraining(crsp, params)
+# trainer.fit()
+
+trainer = SimpleTrainerForGu(crsp, params)
 trainer.fit()

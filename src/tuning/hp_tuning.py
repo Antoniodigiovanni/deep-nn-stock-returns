@@ -1,5 +1,6 @@
 import sys,os
 
+
 # To import config from top_level folder
 currentPath = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(currentPath+'/../')
@@ -17,6 +18,7 @@ from data.data_preprocessing import *
 from torch.utils.data import DataLoader
 from trainer.trainer import NeuralNetTrainer
 from tuning_utils import *
+from trainer.simple_trainer import SimpleTrainerGeneralized
 
 
 logger = logging.getLogger('Tuning experiment')
@@ -32,8 +34,7 @@ params = {
     'loss': 'MSELoss',
     'learning_rate': 0.001,
     'momentum': 0,
-    'epochs': 20,
-    'batch_size': 64
+    'patience': 5
 }
 
 # Get optimized hyperparameters
@@ -43,8 +44,8 @@ params = {
 optimized_params = nni.get_next_parameter()
 params.update(optimized_params)
 
-params['epochs'] = int(params['epochs'])
-params['batch_size'] = int(params['batch_size'])
+# params['epochs'] = int(params['epochs'])
+# params['batch_size'] = int(params['batch_size'])
 
 print(params)
 
@@ -113,26 +114,28 @@ else:
     del data
 
 
-train, val = split_data_train_val(crsp)
-X_train, Y_train = sep_target(train)
-X_val, Y_val = sep_target(val)
+# train, val = split_data_train_val(crsp)
+# X_train, Y_train = sep_target(train)
+# X_val, Y_val = sep_target(val)
 
-train = CustomDataset(X_train, Y_train)
-del [X_train, Y_train]
+# train = CustomDataset(X_train, Y_train)
+# del [X_train, Y_train]
 
-val = CustomDataset(X_val, Y_val)
-del[X_val, Y_val]
+# val = CustomDataset(X_val, Y_val)
+# del[X_val, Y_val]
 
-train_loader = DataLoader(train, batch_size=params['batch_size'], num_workers=2)
-val_loader = DataLoader(val, batch_size=config.batch_size_validation, num_workers=2)
+# train_loader = DataLoader(train, batch_size=params['batch_size'], num_workers=2)
+# val_loader = DataLoader(val, batch_size=config.batch_size_validation, num_workers=2)
 
+# n_inputs = train.data.shape[1]
 
-n_inputs = train.data.shape[1]
-model = OptimizeNet(n_inputs, params).to(config.device)
-optimizer = map_optimizer(params['optimizer'], model.parameters(), params['learning_rate'])
 loss_fn = map_loss_func(params['loss'])
 
+trainer = SimpleTrainerGeneralized(crsp, params, loss_fn)
+n_inputs = trainer.n_inputs
 
+model = OptimizeNet(n_inputs, params).to(config.device)
+optimizer = map_optimizer(params['optimizer'], model.parameters(), params['learning_rate'])
 
 print('Starting Training process')
-trainer = NeuralNetTrainer(model, train_loader, val_loader, optimizer, loss_fn, params, nni_experiment=True).train()
+trainer.fit(model, optimizer)

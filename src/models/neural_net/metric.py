@@ -8,11 +8,13 @@ def accuracy(truth, yhat, pct):
   
   yhat = yhat.reshape(yhat.shape[0])
   truth = truth.reshape(truth.shape[0])
-
+  #print('In accuracy function:')
+  #print(f'yhat shape: {yhat.shape}')
   abs_delta = np.abs(yhat-truth)
   max_allow = np.abs(pct * truth)
 
   acc = torch.sum(abs_delta <= max_allow).numpy() / yhat.shape[0]
+  #print(f'acc: {acc}')
   #print(f'Correct: {torch.sum(abs_delta <= max_allow).numpy()} on {yhat.shape[0]}')
   return acc
 
@@ -22,7 +24,7 @@ def calc_accuracy_and_predict(model, data, pct):
 
   with torch.no_grad():
     output = model(data['X'])
-    print(type(data['permno']))
+    #print(type(data['permno']))
     prediction = {'permno': data['permno'].squeeze().tolist(), 'yyyymm':data['yyyymm'].squeeze().tolist(), 'predicted_ret':output.squeeze().tolist()}
     acc = accuracy(data['Y'], output, pct)
 

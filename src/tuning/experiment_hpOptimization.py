@@ -15,10 +15,33 @@ if config.args.tuningExperiment:
 
     experiment.config.tuner.name = 'TPE'
     experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
+    # experiment.config.tuner.name = 'Evolution'
+    # experiment.config.tuner.class_args = {
+    #     'optimize_mode': 'maximize',
+    #     'population_size': 100
+    # }
+    experiment.config.assessor.name = 'Medianstop'
+    experiment.config.assessor.class_args['optimize_mode'] ='minimize'
+    experiment.config.assessor.class_args['start_step'] = 10
+
+elif config.args.batchExperiment:
+    experiment.config.experiment_name = 'Batch Experiment'
+    # Finish to implement
+    #experiment.config.trial_command = 'python hp_tuning.py'
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/batch_search_space.json')
+
+    experiment.config.tuner.name = 'Batch'
 
 
 elif config.args.guNetworkTuning:
     experiment.config.experiment_name = "Gu et al.'s NN4 Optimization"
+    experiment.config.trial_command = 'python gunetworkOptimization.py'
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/gu_grid_search_space_small.json')
+
+    experiment.config.tuner.name = 'GridSearch'
+
+elif config.args.guSimpleTuning:
+    experiment.config.experiment_name = "Gu et al.'s NN4 - simple Optimization"
     experiment.config.trial_command = 'python gunetworkOptimization.py'
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/gu_grid_search_space_small.json')
 
@@ -29,9 +52,6 @@ experiment.config.trial_code_directory = './src/tuning'
 # experiment.config.search_space = search_space  #Used when the search space is defined in the file
 
 
-experiment.config.assessor.name = 'Medianstop'
-experiment.config.assessor.class_args['optimize_mode'] ='maximize'
-experiment.config.assessor.class_args['start_step'] = 15
 
 
 experiment.config.trial_concurrency = 2

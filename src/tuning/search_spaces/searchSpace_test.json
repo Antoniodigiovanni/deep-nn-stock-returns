@@ -44,13 +44,8 @@
         "_value": [ 0, 1 ]
     },
     
-    "epochs":{
+    "patience":{
         "_type": "quniform",
-        "_value": [1, 200, 50]
-    },
-    
-    "batch_size":{
-        "_type": "choice",
-        "_value": [4, 8, 16, 32, 64, 128, 256]
+        "_value": [5,10,2]
     }
 }

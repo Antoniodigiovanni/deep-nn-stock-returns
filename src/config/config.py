@@ -27,7 +27,8 @@ paths = dict (
     modelsPath = (currentPath + '/../../saved/models'),
     resultsPath = (currentPath + '/../../saved/results'),
     logsPath = (currentPath + '/../../saved/logs'),
-    guTuningResultsPath = (currentPath + '/../../saved/results') +'/GuTuningResults'#+ guResultsTimestamp)
+    guTuningResultsPath = (currentPath + '/../../saved/results' + '/GuTuningResults'),
+    hpoResultsPath = (currentPath + '/../../saved/results' +'/tuningResults')
     )
 
 logFileName = dt.now().strftime('/TrainRun-%Y_%m_%d-%H_%M.log')
@@ -45,7 +46,7 @@ parser.add_argument("--end_train", default=end_train, type=str)
 parser.add_argument("--end_val", default=end_val, type=str)
 
 batch_size_validation = 128
-ep_log_interval = 20
+ep_log_interval = 5
 epochs = 100
 
 parser.add_argument('-e', '--epochs', default=epochs, type=int)
@@ -69,6 +70,11 @@ parser.add_argument('--weighting', default=weighting, type=str)
 parser.add_argument('--tuningExperiment', action=argparse.BooleanOptionalAction)
 parser.add_argument('--predict', action=argparse.BooleanOptionalAction)
 parser.add_argument('--guNetworkTuning', action=argparse.BooleanOptionalAction)
+parser.add_argument('--resumeTuning', action=argparse.BooleanOptionalAction)
+parser.add_argument('--guSimpleTuning', action=argparse.BooleanOptionalAction)
+parser.add_argument('--batchExperiment', action=argparse.BooleanOptionalAction)
+
+
 
 #args = parser.parse_args()
 args, unknown = parser.parse_known_args() # Using this to avoid error with notebooks

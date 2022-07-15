@@ -29,11 +29,11 @@ class ReturnsPrediction():
         self.__model.eval()
         prediction = {}
         accuracies = []
-        print('In test_loader loop')
+        #print('In test_loader loop')
         for index, data in enumerate(self.__test_loader):
-            print(f'loop n. {index+1}')
-            print(f'Test loader batch shape:')
-            print(data['X'].shape)
+            #print(f'loop n. {index+1}')
+            #print(f'Test loader batch shape:')
+            #print(data['X'].shape)
             accuracy, batch_prediction = metric.calc_accuracy_and_predict(self.__model, data, self.__pct)
             
             accuracies.append(accuracy)

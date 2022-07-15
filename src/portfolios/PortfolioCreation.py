@@ -4,7 +4,6 @@ import os
 import datetime as dt
 import statsmodels.api as sm
 from portfolios.FF5FM_Mom import FF5FM_Mom
-from portfolios.ReturnsPrediction import ReturnsPrediction
 
 
 class Portfolio():
@@ -105,12 +104,23 @@ class Portfolio():
         df_rebalancing_months = self.__pred_df.loc[self.__pred_df['yyyymm'].isin(rebalancing_months)].copy()
 
         # Calculating bins..
-        # Still have to check cut vs. qcut
+        # Still have to check cut vs. qcut - update: using qcut for quantiles
+        
+        # Moreover, I will be adding a small infinitesimal number to avoid the case in which some
+        # predicted returns are equal causing the presence of less than 10 unique predicted_ret in the df
+        # (with some architectures it happens in 3 rows on 86000+, but still messes up all calculation)
+        import random
+        df_rebalancing_months['predicted_ret'] = df_rebalancing_months['predicted_ret'].apply(lambda x: x + random.uniform(1e-30, 1e-15))
+        
         rebalancing_month_bins = df_rebalancing_months.set_index(['yyyymm', 'permno'])\
             .groupby('yyyymm')['predicted_ret']\
-                .apply(lambda x: pd.cut(x, bins=self.n_cuts, labels=False))\
+                .apply(lambda x: pd.qcut(x, q=self.n_cuts, labels=False, duplicates='drop'))\
                     .reset_index(name='bin')
+            #.apply(lambda x: pd.cut(x, bins=self.n_cuts, labels=False))\
 
+        # print(rebalancing_month_bins.loc[rebalancing_month_bins['bin'].isna()])
+        print(f'Rebalancing month which have NaN as bin:')
+        print(rebalancing_month_bins.loc[rebalancing_month_bins['bin'].isna()]['yyyymm'].unique())
 
         df_rebalancing_months = df_rebalancing_months.merge(
             rebalancing_month_bins,
@@ -138,6 +148,9 @@ class Portfolio():
             on=['permno','yyyymm'],
             how='left')
         
+        print('Pred_df NaNs:')
+        print(self.__pred_df.isna().sum())
+        
         # Idea could be to add a column which contains the split between rebalancing dates
         # such that if some - Chen and Zimmermann do not do that in their code (maybe because I have dropped
         # rows with NaN as return)
@@ -145,11 +158,19 @@ class Portfolio():
         self.__pred_df['bin'] = self.__pred_df.groupby(['permno'])[['bin']].ffill()
         self.__pred_df['pweight'] = self.__pred_df.groupby(['permno','bin'])[['pweight']].ffill()
 
+        print('Pred_df NaNs (after ffill):')
+        print(self.__pred_df.isna().sum())
+
+
         # Drop NaN in pweight filled, they are related to stocks that started 
         # trading before the rebalancing period, before being included 
         # in the rebalanced portfolio
         self.__pred_df.dropna(subset=['pweight'], inplace=True)
+        
+        print('\n\nPred_df NaNs (final):')
+        print(self.__pred_df.isna().sum())
 
+        
 
     def calculate_portfolio_monthly_returns(self):
         
@@ -176,3 +197,6 @@ class Portfolio():
             portfolio_returns.iloc[:,1]
         
         self.returns = portfolio_returns
+
+        print('Portfolio Returns NaNs:')
+        print(self.returns.isna().sum())
