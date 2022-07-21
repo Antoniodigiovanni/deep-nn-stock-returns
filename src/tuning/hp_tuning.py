@@ -34,7 +34,7 @@ params = {
     'loss': 'MSELoss',
     'learning_rate': 0.001,
     'momentum': 0,
-    'patience': 5
+    'patience': 100
 }
 
 # Get optimized hyperparameters
@@ -100,7 +100,7 @@ class OptimizeNet(nn.Module):
 if not validate_params(params): 
 # for invalid param combinations, report the worst possible result
         print('Invalid Parameters set')
-        nni.report_final_result(0.0)
+        nni.report_final_result(np.inf)
 
 # Load data
 if config.ForcePreProcessing == False and os.path.exists(config.paths['ProcessedDataPath']+'/dataset.csv'):

@@ -19,28 +19,33 @@ class ReturnsPrediction():
 
         self.__test_loader = test_loader
 
-        accuracies, self.pred_df = self.prediction_loop()
+        acc, self.pred_df = self.prediction_loop()
         
-        avg_accurancy = np.mean(accuracies) 
-        print(f'Avg accuracy over the test set at {self.__pct*100}% is: {round(avg_accurancy*100)}%')
+        print(f'Avg accuracy over the test set at {self.__pct*100}% is: {round(acc)}%')
 
         
     def prediction_loop(self):
         self.__model.eval()
         prediction = {}
         accuracies = []
+        total_correct = 0
+        total = 0
         #print('In test_loader loop')
         for index, data in enumerate(self.__test_loader):
             #print(f'loop n. {index+1}')
             #print(f'Test loader batch shape:')
             #print(data['X'].shape)
-            accuracy, batch_prediction = metric.calc_accuracy_and_predict(self.__model, data, self.__pct)
+            correct, batch_prediction = metric.calc_accuracy_and_predict(self.__model, data, self.__pct)
+            total += data['X'].size(0)
+            total_correct += correct
+            #accuracies.append(accuracy)
             
-            accuracies.append(accuracy)
             for k in batch_prediction:
                 if index == 0:
                     prediction[k] = []
                 prediction[k].extend(batch_prediction[k])
-               
+
+        accuracy = 100.*total_correct/total   
         pred_df = pd.DataFrame.from_dict(prediction) 
-        return accuracies, pred_df
+        
+        return accuracy, pred_df

@@ -16,25 +16,22 @@ import datetime as dt
 
 
 class ExpandingWindowTraining():
-    def __init__(self, dataset, params, train_window_years=15, val_window_years=10) -> None:
+    def __init__(self, dataset, params, loss_fn, l1_reg=False, train_window_years=15, val_window_years=10) -> None:
         self.dataset = dataset
         self.params = params
         self.model = None
         self.optimizer = None
-        self.loss_fn = None
+        self.loss_fn = loss_fn
         self.device = config.device
         self.best_val_loss = np.inf
         self.patience = self.params['patience'] # Add patience as a parameter could be an idea
         
         # L1 Regularization
-        self.l1_reg = True
-        self.l1_lambda = self.params['l1_lambda1']
+        self.l1_reg = l1_reg
+        if self.l1_reg:
+            self.l1_lambda = self.params['l1_lambda1']
         
-        if config.args.predict:
-            self.prediction = True
-        else:
-            self.prediction = False
-
+        
         self.train_starting_year = dataset.yyyymm.min()
         self.df_end_date = dataset.yyyymm.max()
 
@@ -62,20 +59,13 @@ class ExpandingWindowTraining():
         self.__subset_df()
 
 
-    def fit(self):
+    def fit(self, model, optimizer):
         # Trying with moving the model instantiation outside of the loop, so every time training is repeated we are not 
         # re-instantiating the model.
-        self.model = GuNN4(self.n_inputs).to(config.device)
-        while self.test_dates[-1] <= self.df_end_date:
-                        
-            self.optimizer = optim.Adam(self.model.parameters(),
-                self.params['learning_rate'],
-                betas=(
-                    self.params['adam_beta_1'], 
-                    self.params['adam_beta_2'])
-                    )
+        self.model = model
+        self.optimizer = optimizer
 
-            self.loss_fn = nn.L1Loss()
+        while self.test_dates[-1] <= self.df_end_date:
             
             print(f'\n\nTraining from {self.train_dates[0]} to {self.train_dates[-1]}')
             print(f'Validating from {self.val_dates[0]} to {self.val_dates[-1]}')
@@ -103,9 +93,9 @@ class ExpandingWindowTraining():
                     j+=1
                     #print(f'j incremented to {j}!')
 
-                # I could maybe report validation loss
-                nni.report_intermediate_result(val_acc)#(val_loss)
-                
+                results = {'default': float(val_loss), 'val_acc': val_acc}
+                nni.report_intermediate_result(results)#(val_loss)
+            
                 if epoch%config.args.ep_log_interval == 0:
                     print(f'Epoch n. {epoch+1} [of #{config.args.epochs}]')
                     print(f'Training loss: {epoch_loss} | Val loss: {val_loss}')
@@ -132,11 +122,34 @@ class ExpandingWindowTraining():
         #     json.dump(dict, fp)
 
         print('Calculating portfolios')
+        print('Prediction df:')
+        print(self.prediction_df.describe())
+
+        self.prediction_df.sort_values(['permno','yyyymm'], inplace=True)
+        print('NaNs in prediction_df:')
+        count = self.prediction_df.isna().sum()
+        percentage = self.prediction_df.isna().mean()
+        null_values = pd.concat([count, percentage], axis=1, keys=['count', '%'])
+        print(null_values)
+
+
+
         portfolio = Portfolio(pred_df=self.prediction_df)
         information_ratio = portfolio.information_ratio
         alpha = portfolio.alpha
         returns = portfolio.returns
         
+        
+        print('\nNaNs in Portfolio returns:')
+        count = returns.isna().sum()
+        percentage = returns.isna().mean()
+        null_values = pd.concat([count, percentage], axis=1, keys=['count', '%'])
+        print(null_values)
+        print(f'IR: {information_ratio}\nAlpha: {alpha}')
+        print('Portfolio Returns:')
+        print(returns.describe())
+        
+
         # Saving files
         if os.path.exists(config.paths['guTuningResultsPath'] + '/predicted_returns') == False:
             os.makedirs(config.paths['guTuningResultsPath'] + '/predicted_returns')
@@ -149,7 +162,7 @@ class ExpandingWindowTraining():
 
         field_names = ['timeStamp','information_ratio','alpha']
         summary_dict = {'timeStamp': timeStamp_id, 'information_ratio': information_ratio, 'alpha': alpha}
-        with open(config.paths['guTuningResultsPath'] + '/experiment_summary.json', 'a') as fp:          
+        with open(config.paths['guTuningResultsPath'] + '/experiment_summary.csv', 'a') as fp:          
             writer_obj = writer(fp)
             if fp.tell() == 0:
                 writer_obj.writerow(field_names)
@@ -170,7 +183,13 @@ class ExpandingWindowTraining():
 
         print('Portfolio returns calculation completed.')
        
-        nni.report_final_result(alpha) #(val_loss)
+        results = {
+            'default': float(val_loss), 
+            'val_acc': val_acc,
+            'alpha': float(alpha),
+            'information_ratio': float(information_ratio)}
+        
+        nni.report_final_result(results) #(val_loss)
 
 
 
@@ -186,19 +205,22 @@ class ExpandingWindowTraining():
             self.model.eval()
             loader = self.val_loader
             
-        total_acc = 0
+        total_correct = 0
         total_loss = 0
+        total = 0
 
-        for _, data in enumerate(loader):
+        for batch_idx, data in enumerate(loader):
             #print(data['X'].shape)
             #print(data['Y'].shape)
-            loss, acc = self.__process_one_step(data, mode)
-            total_loss += loss
-            total_acc += acc
+            loss, correct = self.__process_one_step(data, mode)
+            total += data['X'].size(0)
+            total_loss += loss.item()
+            total_correct += correct
+            
 
+        total_loss /= batch_idx
+        total_acc = 100.*correct/total
 
-        total_loss = total_loss / loader.batch_size
-        total_acc = total_acc / loader.batch_size * 100
         
         if mode == 'train':
             return total_loss
@@ -216,11 +238,11 @@ class ExpandingWindowTraining():
         if mode == 'train':
             yhat = self.model(data['X'])
             # Dummy acc, as it is not needed for training
-            acc = 0
+            correct = 0
         elif mode == 'val':
             with torch.no_grad():
                 yhat = self.model(data['X'])
-            acc = metric.accuracy(data['Y'], yhat, 0.1)
+            correct = metric.accuracy(data['Y'], yhat, 0.1)
         
         loss = self.loss_fn(yhat.ravel(), data['Y'].ravel())
         
@@ -235,7 +257,7 @@ class ExpandingWindowTraining():
             loss.backward()
             self.optimizer.step()
 
-        return loss, acc
+        return loss, correct
 
 
     def __update_years(self):
