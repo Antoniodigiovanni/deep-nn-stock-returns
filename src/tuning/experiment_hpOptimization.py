@@ -13,7 +13,7 @@ if config.args.tuningExperiment:
     experiment.config.experiment_name = 'Hyperparameter_optimization'
     experiment.config.trial_command = 'python hp_tuning.py'
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace_test.json')
-    experiment.config.max_trial_number = 200
+    experiment.config.max_trial_number = 2000
 
     experiment.config.tuner.name = 'TPE'
     experiment.config.tuner.class_args['optimize_mode'] = 'minimize'

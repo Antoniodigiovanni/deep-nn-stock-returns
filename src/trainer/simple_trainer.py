@@ -470,8 +470,8 @@ class SimpleTrainerGeneralized():
 
         from csv import DictWriter, writer
 
-        field_names = ['timeStamp','information_ratio','alpha', 'r2']
-        summary_dict = {'timeStamp': timeStamp_id, 'information_ratio': information_ratio, 'alpha': alpha, 'r2': r2}
+        field_names = ['timeStamp','information_ratio','alpha', 'r2', 'val_loss']
+        summary_dict = {'timeStamp': timeStamp_id, 'information_ratio': information_ratio, 'alpha': alpha, 'r2': r2, 'val_loss': val_loss}
         with open(config.paths['hpoResultsPath'] + '/experiment_summary.csv', 'a') as fp:          
             writer_obj = writer(fp)
             if fp.tell() == 0:
@@ -488,15 +488,27 @@ class SimpleTrainerGeneralized():
 
         print('Portfolio returns calculation completed.')
        
+        # results = {
+        #     'default': float(val_loss), 
+        #     'val_acc': val_acc,
+        #     'alpha': float(alpha),
+        #     'information_ratio': float(information_ratio),
+        #     'R2': r2['R2']}
+        
+        # nni.report_final_result(results) #(val_loss)
+
         results = {
             'default': float(val_loss), 
             'val_acc': val_acc,
             'alpha': float(alpha),
-            'information_ratio': float(information_ratio)}
+            'information_ratio': float(information_ratio),
+            'R2': r2['R2']}
+
+        print(r2)
         
         nni.report_final_result(results) #(val_loss)
 
-
+ 
 
     def __process_one_epoch(self, mode='train'):
         """,
