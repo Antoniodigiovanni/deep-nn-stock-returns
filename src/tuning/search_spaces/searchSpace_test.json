@@ -26,7 +26,7 @@
 
     "learning_rate":{ 
         "_type": "loguniform",
-        "_value": [ 0.0001, 0.1 ]
+        "_value": [ 0.000001, 0.001 ]
     },
 
     "optimizer":{
@@ -36,7 +36,7 @@
 
     "loss":{
         "_type": "choice",
-        "_value":  ["SmoothL1Loss", "MSELoss"]
+        "_value":  ["MSELoss"]
     },
     
     "momentum":{
@@ -46,6 +46,6 @@
     
     "patience":{
         "_type": "quniform",
-        "_value": [100,100,2]
+        "_value": [50,100,2]
     }
 }

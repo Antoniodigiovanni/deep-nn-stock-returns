@@ -1,7 +1,7 @@
 from config import config
 import nni
 
-if config.args.tuningExperiment or config.args.guNetworkTuning or config.args.guSimpleTuning or config.args.batchExperiment:
+if config.args.expandingTuning or config.args.guNetworkTuning or config.args.guSimpleTuning or config.args.batchExperiment or config.args.normalTuning:
     import tuning.experiment_hpOptimization
 
 # if config.args.resumeTuning:

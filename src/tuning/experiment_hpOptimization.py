@@ -7,11 +7,11 @@ experiment = Experiment('local')
 
 # Trying to use the same file for tuning Gu et al's network and the self experiment (add grid search on best results of
 # self experiment afterwards)
-if config.args.tuningExperiment:
+if config.args.expandingTuning:
     print('Tuning Experiment to discover an optimal architecture from scratch')
     print('Minimising validation loss')
     experiment.config.experiment_name = 'Hyperparameter_optimization'
-    experiment.config.trial_command = 'python hp_tuning.py'
+    experiment.config.trial_command = 'python hp_tuning.py --expandingTuning'
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace_test.json')
     experiment.config.max_trial_number = 2000
 
@@ -26,6 +26,26 @@ if config.args.tuningExperiment:
     experiment.config.assessor.class_args['optimize_mode'] ='minimize'
     experiment.config.assessor.class_args['start_step'] = 10
 
+if config.args.normalTuning:
+    print('Tuning Experiment to discover an optimal architecture from scratch')
+    print('Minimising validation loss')
+    experiment.config.experiment_name = 'Hyperparameter_optimization'
+    experiment.config.trial_command = 'python hp_tuning.py --normalTuning'
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace_test.json')
+    experiment.config.max_trial_number = 2000
+
+    experiment.config.tuner.name = 'TPE'
+    experiment.config.tuner.class_args['optimize_mode'] = 'minimize'
+    # experiment.config.tuner.name = 'Evolution'
+    # experiment.config.tuner.class_args = {
+    #     'optimize_mode': 'maximize',
+    #     'population_size': 100
+    # }
+    experiment.config.assessor.name = 'Medianstop'
+    experiment.config.assessor.class_args['optimize_mode'] ='minimize'
+    experiment.config.assessor.class_args['start_step'] = 10
+
+
 elif config.args.batchExperiment:
     experiment.config.experiment_name = 'Batch Experiment'
     # Finish to implement
@@ -35,9 +55,9 @@ elif config.args.batchExperiment:
     experiment.config.tuner.name = 'BatchTuner'
 
 
-elif config.args.guNetworkTuning:
+elif config.args.guNetworkTuning: #guExpandingGridSearch
     experiment.config.experiment_name = "Gu et al.'s NN4 Optimization"
-    experiment.config.trial_command = 'python gunetworkOptimization.py'
+    experiment.config.trial_command = 'python gunetworkOptimization.py --expandingTraining'
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/gu_grid_search_space_small.json')
 
     experiment.config.tuner.name = 'GridSearch'
@@ -47,9 +67,9 @@ elif config.args.guNetworkTuning:
     experiment.config.assessor.class_args['start_step'] = 10
 
 
-elif config.args.guSimpleTuning:
+elif config.args.guSimpleTuning: #guSimpleGridSearch
     experiment.config.experiment_name = "Gu et al.'s NN4 - simple Optimization"
-    experiment.config.trial_command = 'python gunetworkOptimization.py'
+    experiment.config.trial_command = 'python gunetworkOptimization.py --normalTraining'
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/gu_grid_search_space_small.json')
 
     experiment.config.tuner.name = 'GridSearch'
@@ -72,7 +92,7 @@ experiment.config.max_experiment_duration = '12h'
 # Add logger for experiment id - in order to be able to view the experiment afterwards
 print(f'Experiment ID: {experiment.id}')
 
-experiment.run(8081)
+experiment.run(8083)
 
 # input() or signal.pause() can be used to block the web app from closing
 # after the experiment is finished

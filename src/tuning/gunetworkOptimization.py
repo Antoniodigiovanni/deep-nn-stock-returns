@@ -64,6 +64,11 @@ else:
 
 parser = ArgumentParser()
 parser.add_argument('--ExpandingBatchTest', action=argparse.BooleanOptionalAction)
+parser.add_argument('--expandingTraining', action=argparse.BooleanOptionalAction)
+parser.add_argument('--normalTraining', action=argparse.BooleanOptionalAction)
+
+
+
 args, unknown = parser.parse_known_args() # Using this to avoid error with notebooks
 
 
@@ -74,8 +79,10 @@ loss_fn = nn.L1Loss()
 if args.ExpandingBatchTest:
     print('Expanding window - batches fixed in order to do the correlation test')
     trainer = ExpandingWindowTraining(crsp, params, loss_fn, l1_reg=True)
-else:
-    trainer = SimpleTrainerGeneralized(crsp, params, loss_fn, l1_reg=True)
+elif args.normalTraining:
+    trainer = SimpleTrainerGeneralized(crsp, params, loss_fn, methodology='normal', l1_reg=True)
+elif args.expandingTraining:
+    trainer = SimpleTrainerGeneralized(crsp, params, loss_fn, methodology='expanding', l1_reg=True)
 
 
 n_inputs = trainer.n_inputs

@@ -19,6 +19,8 @@ from torch.utils.data import DataLoader
 from trainer.trainer import NeuralNetTrainer
 from tuning_utils import *
 from trainer.simple_trainer import SimpleTrainerGeneralized
+import argparse
+from argparse import ArgumentParser
 
 
 logger = logging.getLogger('Tuning experiment')
@@ -106,6 +108,7 @@ if not validate_params(params):
 if config.ForcePreProcessing == False and os.path.exists(config.paths['ProcessedDataPath']+'/dataset.csv'):
     print('Trying to load data')
     crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)
+    crsp = crsp.loc[crsp['yyyymm']//100 <= 1990]
     print('Data Loaded')
 else:
     print('Data Pre-processing will start soon')
@@ -113,25 +116,22 @@ else:
     crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)    
     del data
 
+parser = ArgumentParser()
+parser.add_argument('--expandingTuning', action=argparse.BooleanOptionalAction)
+parser.add_argument('--normalTuning', action=argparse.BooleanOptionalAction)
 
-# train, val = split_data_train_val(crsp)
-# X_train, Y_train = sep_target(train)
-# X_val, Y_val = sep_target(val)
 
-# train = CustomDataset(X_train, Y_train)
-# del [X_train, Y_train]
+args, unknown = parser.parse_known_args() # Using this to avoid error with notebooks
 
-# val = CustomDataset(X_val, Y_val)
-# del[X_val, Y_val]
 
-# train_loader = DataLoader(train, batch_size=params['batch_size'], num_workers=2)
-# val_loader = DataLoader(val, batch_size=config.batch_size_validation, num_workers=2)
-
-# n_inputs = train.data.shape[1]
 
 loss_fn = map_loss_func(params['loss'])
+if args.expandingTuning:
+    method = 'expanding'
+elif args.normalTuning:
+    method = 'normal'
 
-trainer = SimpleTrainerGeneralized(crsp, params, loss_fn)
+trainer = SimpleTrainerGeneralized(crsp, params, loss_fn, methodology=method, train_window_years=3, val_window_years=1)
 n_inputs = trainer.n_inputs
 
 model = OptimizeNet(n_inputs, params).to(config.device)

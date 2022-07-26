@@ -67,7 +67,8 @@ parser.add_argument('--weighting', default=weighting, type=str)
 ###################################
 # Additional important parameters #
 ###################################
-parser.add_argument('--tuningExperiment', action=argparse.BooleanOptionalAction)
+parser.add_argument('--expandingTuning', action=argparse.BooleanOptionalAction)
+parser.add_argument('--normalTuning', action=argparse.BooleanOptionalAction)
 parser.add_argument('--predict', action=argparse.BooleanOptionalAction)
 parser.add_argument('--guNetworkTuning', action=argparse.BooleanOptionalAction)
 parser.add_argument('--resumeTuning', action=argparse.BooleanOptionalAction)

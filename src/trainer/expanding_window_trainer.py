@@ -24,7 +24,7 @@ class ExpandingWindowTraining():
         self.loss_fn = loss_fn
         self.device = config.device
         self.best_val_loss = np.inf
-        self.patience = self.params['patience'] # Add patience as a parameter could be an idea
+        self.patience = self.params['patience'] 
         
         # L1 Regularization
         self.l1_reg = l1_reg
