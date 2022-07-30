@@ -7,20 +7,18 @@ currentPath = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(currentPath+'/../')
 print(currentPath)
 from models.neural_net.gu_et_al_NN4 import GuNN4
-from trainer.expanding_window_trainer import ExpandingWindowTraining
+# from trainer.expanding_window_trainer import ExpandingWindowTraining
 import nni
 from torch import nn
 import torch
 import logging
 import torch.optim as optim
-import config
 import pandas as pd
 from data.base_dataset import BaseDataset
 from data.custom_dataset import CustomDataset
 from data.data_preprocessing import *
 from torch.utils.data import DataLoader
-from trainer.trainer import NeuralNetTrainer
-from trainer.simple_trainer import SimpleTrainerGeneralized
+from trainer.trainer import GeneralizedTrainer
 import argparse
 
 logger = logging.getLogger('Grid search experiment')
@@ -78,11 +76,11 @@ print('Starting Training process')
 loss_fn = nn.L1Loss()
 if args.ExpandingBatchTest:
     print('Expanding window - batches fixed in order to do the correlation test')
-    trainer = ExpandingWindowTraining(crsp, params, loss_fn, l1_reg=True)
+    trainer = GeneralizedTrainer(crsp, params, loss_fn, l1_reg=True)
 elif args.normalTraining:
-    trainer = SimpleTrainerGeneralized(crsp, params, loss_fn, methodology='normal', l1_reg=True)
+    trainer = GeneralizedTrainer(crsp, params, loss_fn, methodology='normal', l1_reg=True)
 elif args.expandingTraining:
-    trainer = SimpleTrainerGeneralized(crsp, params, loss_fn, methodology='expanding', l1_reg=True)
+    trainer = GeneralizedTrainer(crsp, params, loss_fn, methodology='expanding', l1_reg=True)
 
 
 n_inputs = trainer.n_inputs
@@ -90,9 +88,10 @@ n_inputs = trainer.n_inputs
 model = GuNN4(n_inputs).to(config.device)
 optimizer = optim.Adam(model.parameters(),
             params['learning_rate'],
-            betas=(
-                params['adam_beta_1'], 
-                params['adam_beta_2'])
+            # Uncomment when will be using them as parameters
+            # betas=(
+            #     params['adam_beta_1'], 
+            #     params['adam_beta_2'])
                 )
 print('Starting Training process')
 trainer.fit(model, optimizer)

@@ -58,7 +58,7 @@ elif config.args.batchExperiment:
 elif config.args.guNetworkTuning: #guExpandingGridSearch
     experiment.config.experiment_name = "Gu et al.'s NN4 Optimization"
     experiment.config.trial_command = 'python gunetworkOptimization.py --expandingTraining'
-    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/gu_grid_search_space_small.json')
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/gu_grid_search_space.json')
 
     experiment.config.tuner.name = 'GridSearch'
 
@@ -92,7 +92,7 @@ experiment.config.max_experiment_duration = '12h'
 # Add logger for experiment id - in order to be able to view the experiment afterwards
 print(f'Experiment ID: {experiment.id}')
 
-experiment.run(8083)
+experiment.run(8081)
 
 # input() or signal.pause() can be used to block the web app from closing
 # after the experiment is finished

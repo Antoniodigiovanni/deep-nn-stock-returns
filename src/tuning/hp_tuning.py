@@ -16,9 +16,9 @@ from data.base_dataset import BaseDataset
 from data.custom_dataset import CustomDataset
 from data.data_preprocessing import *
 from torch.utils.data import DataLoader
-from trainer.trainer import NeuralNetTrainer
+# from trainer.trainer import NeuralNetTrainer
 from tuning_utils import *
-from trainer.simple_trainer import SimpleTrainerGeneralized
+from trainer.trainer import GeneralizedTrainer
 import argparse
 from argparse import ArgumentParser
 
@@ -108,7 +108,6 @@ if not validate_params(params):
 if config.ForcePreProcessing == False and os.path.exists(config.paths['ProcessedDataPath']+'/dataset.csv'):
     print('Trying to load data')
     crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)
-    crsp = crsp.loc[crsp['yyyymm']//100 <= 1990]
     print('Data Loaded')
 else:
     print('Data Pre-processing will start soon')
@@ -131,10 +130,12 @@ if args.expandingTuning:
 elif args.normalTuning:
     method = 'normal'
 
-trainer = SimpleTrainerGeneralized(crsp, params, loss_fn, methodology=method, train_window_years=3, val_window_years=1)
+trainer = GeneralizedTrainer(crsp, params, loss_fn, methodology=method)
 n_inputs = trainer.n_inputs
 
 model = OptimizeNet(n_inputs, params).to(config.device)
+print(f'Device from config: {config.device}')
+print(f'N. of epochs set at {config.epochs}')
 optimizer = map_optimizer(params['optimizer'], model.parameters(), params['learning_rate'])
 
 print('Starting Training process')

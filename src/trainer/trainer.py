@@ -1,4 +1,4 @@
-from unittest import result
+import nni
 import torch
 import torch.nn as nn
 import numpy as np
@@ -9,15 +9,16 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 from portfolios.ReturnsPrediction import ReturnsPrediction
 from portfolios.PortfolioCreation import Portfolio
-from trainer.trainer import *
 import data.data_preprocessing as dp
-import sys,os
+import os
+import json
 from pandas.tseries.offsets import DateOffset
 import datetime as dt
 from torch.utils.tensorboard import SummaryWriter
+from models.neural_net import metric
 
 
-class SimpleTrainerGeneralized():
+class GeneralizedTrainer():
     def __init__(self, dataset, params, loss_fn, methodology = 'normal', l1_reg = False, train_window_years=15, val_window_years=10) -> None:
         self.dataset = dataset
         self.params = params
@@ -28,6 +29,7 @@ class SimpleTrainerGeneralized():
         self.best_val_loss = np.inf
         self.patience = self.params['patience'] # Add patience as a parameter could be an idea
         
+        print(f'Epochs in Training class: {config.epochs}')
         self.methodology = methodology
         if self.methodology == 'expanding':
             print('Expanding window training')
@@ -87,7 +89,7 @@ class SimpleTrainerGeneralized():
             j = 0
             self.best_val_loss = np.inf
             
-            for epoch in range(config.args.epochs):
+            for epoch in range(config.epochs):
                 
                 epoch_loss = self.__process_one_epoch('train')
                 val_loss, val_acc = self.__process_one_epoch('val')
@@ -115,8 +117,8 @@ class SimpleTrainerGeneralized():
                 results = {'default': float(val_loss), 'val_acc': val_acc}
                 nni.report_intermediate_result(results)#(val_loss)
                 
-                if epoch%config.args.ep_log_interval == 0:
-                    print(f'Epoch n. {epoch+1} [of #{config.args.epochs}]')
+                if epoch%config.ep_log_interval == 0:
+                    print(f'Epoch n. {epoch+1} [of #{config.epochs}]')
                     print(f'Training loss: {round(epoch_loss, 4)} | Val loss: {round(val_loss,4)}')
                     print(f'Validation accuracy: {round(100*val_acc,2)}%')
                 

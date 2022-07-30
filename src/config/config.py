@@ -35,44 +35,41 @@ logFileName = dt.now().strftime('/TrainRun-%Y_%m_%d-%H_%M.log')
 bestParamsFileName = dt.now().strftime('/BestNeuralNetworkParameters-%Y_%m_%d-%H_%M.json') 
 SavedNetFileName = dt.now().strftime('/NeuralNetwork-%Y_%m_%d-%H_%M.pt')
 
-# Variables
-ForcePreProcessing = False # Used to force the data pre-processing even if the processed dataset already exists
-ForceTraining = True #Used to force the training of the model even when a saved model already exists
 
-end_train = '198512' 
-end_val = '199512'
+# end_train = '198512' 
+# end_val = '199512'
 
-parser.add_argument("--end_train", default=end_train, type=str)
-parser.add_argument("--end_val", default=end_val, type=str)
+# parser.add_argument("--end_train", default=end_train, type=str)
+# parser.add_argument("--end_val", default=end_val, type=str)
 
-batch_size_validation = 128
-ep_log_interval = 5
-epochs = 100
+# batch_size_validation = 128
+# ep_log_interval = 5
+# epochs = 100
 
-parser.add_argument('-e', '--epochs', default=epochs, type=int)
-parser.add_argument('--batch_size_validation', default=batch_size_validation, type=int)
-parser.add_argument('--ep_log_interval', default=ep_log_interval, type=int)
+# parser.add_argument('-e', '--epochs', default=epochs, type=int, help='Set the maximum number of epochs')
+# parser.add_argument('--batch_size_validation', default=batch_size_validation, type=int)
+# parser.add_argument('--ep_log_interval', default=ep_log_interval, type=int)
 
 
 
 """ Portfolio creation configs"""
-n_cuts = 10 # Number of quantiles in which returns are divided to construct portfolios
-rebalancing_frequency = 'yearly' # choose between yearly, monthly, and quarterly
-weighting = 'VW' # choose between Value Weighting and Equal Weighting
+# n_cuts = 10 # Number of quantiles in which returns are divided to construct portfolios
+# rebalancing_frequency = 'yearly' # choose between yearly, monthly, and quarterly
+# weighting = 'VW' # choose between Value Weighting and Equal Weighting
 
-parser.add_argument('--n_cuts_portfolio', default=n_cuts, type=int)
-parser.add_argument('--rebalancing_frequency', default=rebalancing_frequency, type=str)
-parser.add_argument('--weighting', default=weighting, type=str)
+# parser.add_argument('--n_cuts_portfolio', default=n_cuts, type=int)
+# parser.add_argument('--rebalancing_frequency', default=rebalancing_frequency, type=str)
+# parser.add_argument('--weighting', default=weighting, type=str)
 
 ###################################
 # Additional important parameters #
 ###################################
-parser.add_argument('--expandingTuning', action=argparse.BooleanOptionalAction)
-parser.add_argument('--normalTuning', action=argparse.BooleanOptionalAction)
-parser.add_argument('--predict', action=argparse.BooleanOptionalAction)
-parser.add_argument('--guNetworkTuning', action=argparse.BooleanOptionalAction)
-parser.add_argument('--resumeTuning', action=argparse.BooleanOptionalAction)
-parser.add_argument('--guSimpleTuning', action=argparse.BooleanOptionalAction)
+parser.add_argument('--expandingTuning', action=argparse.BooleanOptionalAction, help="Expanding Window training. Architecture and hyperparams from scratch")
+parser.add_argument('--normalTuning', action=argparse.BooleanOptionalAction, help="Normal one-shot training. Architecture and hyperparams from scratch")
+# parser.add_argument('--predict', action=argparse.BooleanOptionalAction)
+parser.add_argument('--guNetworkTuning', action=argparse.BooleanOptionalAction, help="Expanding Window training. Gu et al.'s NN4")
+# parser.add_argument('--resumeTuning', action=argparse.BooleanOptionalAction)
+parser.add_argument('--guSimpleTuning', action=argparse.BooleanOptionalAction, help="Normal one-shot training. Gu et al.'s NN4")
 parser.add_argument('--batchExperiment', action=argparse.BooleanOptionalAction)
 
 
@@ -81,5 +78,33 @@ parser.add_argument('--batchExperiment', action=argparse.BooleanOptionalAction)
 args, unknown = parser.parse_known_args() # Using this to avoid error with notebooks
 
 
-n_cuts = args.n_cuts_portfolio
-print(f'No. of epochs is: {args.epochs}')
+
+import configparser
+
+configuration = configparser.ConfigParser()
+configuration.read(currentPath + '/config.ini')
+
+# Variables
+ForcePreProcessing = configuration.get('Data', 'ForcePreProcessing') 
+ForceTraining = configuration.get('Data', 'ForceTraining')
+
+if ForcePreProcessing == 'False':
+    ForcePreProcessing = False
+elif ForcePreProcessing == 'True':
+    ForcePreProcessing = True
+
+if ForceTraining == 'False':
+    ForceTraining = False
+elif ForceTraining == 'True':
+    ForceTraining = True
+
+
+ep_log_interval = int(configuration.get('Training', 'ep_log_interval'))
+epochs = int(configuration.get('Training', 'epochs'))
+
+
+n_cuts = int(configuration.get('Portfolios', 'n_cuts'))
+rebalancing_frequency = configuration.get('Portfolios', 'rebalancing_frequency')
+weighting = configuration.get('Portfolios', 'weighting')
+
+print(f'Epochs: {epochs}')
