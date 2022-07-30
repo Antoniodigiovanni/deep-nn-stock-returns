@@ -169,7 +169,8 @@ class GeneralizedTrainer():
         null_values = pd.concat([count, percentage], axis=1, keys=['count', '%'])
         print(null_values)
 
-        portfolio = Portfolio(pred_df=self.prediction_df)
+        print(f'Rebalancing is: {config.rebalancing_frequency}')
+        portfolio = Portfolio(pred_df=self.prediction_df, n_cuts=config.n_cuts, rebalancing_frequency=config.rebalancing_frequency, weighting = config.weighting)
         information_ratio = portfolio.information_ratio
         alpha = portfolio.alpha
         returns = portfolio.returns
