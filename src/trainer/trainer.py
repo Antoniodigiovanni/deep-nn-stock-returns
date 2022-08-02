@@ -19,7 +19,7 @@ from models.neural_net import metric
 
 
 class GeneralizedTrainer():
-    def __init__(self, dataset, params, loss_fn, methodology = 'normal', l1_reg = False, train_window_years=15, val_window_years=10) -> None:
+    def __init__(self, dataset, params, loss_fn, methodology = 'normal', l1_reg = False, train_window_years=15, val_window_years=10, nni_experiment='True') -> None:
         self.dataset = dataset
         self.params = params
         self.model = None
@@ -27,9 +27,10 @@ class GeneralizedTrainer():
         self.loss_fn = loss_fn
         self.device = config.device
         self.best_val_loss = np.inf
-        self.patience = self.params['patience'] # Add patience as a parameter could be an idea
-        
-        print(f'Epochs in Training class: {config.epochs}')
+        self.patience = self.params['patience']
+        self.nni_experiment = nni_experiment
+
+        # print(f'Epochs in Training class: {config.epochs}')
         self.methodology = methodology
         if self.methodology == 'expanding':
             print('Expanding window training')
@@ -69,8 +70,12 @@ class GeneralizedTrainer():
         self.subset_df()
 
         # Tensorboard
-        self.log_dir = os.path.join(os.environ["NNI_OUTPUT_DIR"], 'tensorboard')
-        self.writer = SummaryWriter(log_dir=self.log_dir)
+        if self.nni_experiment == True:
+            self.log_dir = os.path.join(os.environ["NNI_OUTPUT_DIR"], 'tensorboard')
+            self.writer = SummaryWriter(log_dir=self.log_dir)
+        else:
+            self.writer = SummaryWriter()
+
 
     def fit(self, model, optimizer):
         self.model = model
@@ -115,8 +120,9 @@ class GeneralizedTrainer():
 
 
                 results = {'default': float(val_loss), 'val_acc': val_acc}
-                nni.report_intermediate_result(results)#(val_loss)
-                
+                if self.nni_experiment == True:
+                    nni.report_intermediate_result(results)
+
                 if epoch%config.ep_log_interval == 0:
                     print(f'Epoch n. {epoch+1} [of #{config.epochs}]')
                     print(f'Training loss: {round(epoch_loss, 4)} | Val loss: {round(val_loss,4)}')
@@ -155,9 +161,7 @@ class GeneralizedTrainer():
         self.writer.flush()    
 
         timeStamp_id = dt.datetime.now().strftime('%Y%m%d-%H_%M:%S:%f')
-        # with open(timeStamp_id + '- trial.json', 'w') as fp:
-        #     json.dump(dict, fp)
-
+        
         print('Calculating portfolios')
         print('Prediction df:')
         print(self.prediction_df.describe())
@@ -174,6 +178,7 @@ class GeneralizedTrainer():
         information_ratio = portfolio.information_ratio
         alpha = portfolio.alpha
         returns = portfolio.returns
+        portfolio_weights = portfolio.portfolio_weights
 
         print('\nNaNs in Portfolio returns:')
         count = returns.isna().sum()
@@ -184,6 +189,8 @@ class GeneralizedTrainer():
         print('Portfolio Returns:')
         print(returns.describe())
         
+        # Modify folder structure for when not doing the nni_experiment.
+        
         # Saving files
         if os.path.exists(config.paths['hpoResultsPath'] + '/predicted_returns') == False:
             os.makedirs(config.paths['hpoResultsPath'] + '/predicted_returns')
@@ -191,6 +198,8 @@ class GeneralizedTrainer():
             os.makedirs(config.paths['hpoResultsPath'] + '/portfolio_returns')
         if os.path.exists(config.paths['hpoResultsPath'] + '/trial_info') == False:
             os.makedirs(config.paths['hpoResultsPath'] + '/trial_info')
+        if os.path.exists(config.paths['hpoResultsPath'] + '/portfolio_weights') == False:
+            os.makedirs(config.paths['hpoResultsPath'] + '/portfolio_weights')
 
         from csv import DictWriter, writer
 
@@ -208,19 +217,11 @@ class GeneralizedTrainer():
         final_dict = {'params': self.params, 'information_ratio': information_ratio, 'alpha':alpha, 'r2': r2}
         with open(config.paths['hpoResultsPath'] + '/trial_info/' + timeStamp_id + '- trial_full.json', 'w') as fp:
             json.dump(final_dict, fp, indent=4)
+        portfolio_weights.to_csv(config.paths['hpoResultsPath'] + '/portfolio_weights/' + timeStamp_id + ' - portfolio_weights.csv')
         
 
         print('Portfolio returns calculation completed.')
        
-        # results = {
-        #     'default': float(val_loss), 
-        #     'val_acc': val_acc,
-        #     'alpha': float(alpha),
-        #     'information_ratio': float(information_ratio),
-        #     'R2': r2['R2']}
-        
-        # nni.report_final_result(results) #(val_loss)
-
         results = {
             'default': float(val_loss), 
             'val_acc': val_acc,
@@ -230,7 +231,8 @@ class GeneralizedTrainer():
 
         print(r2)
         
-        nni.report_final_result(results) #(val_loss)
+        if self.nni_experiment == True:
+            nni.report_final_result(results)
 
  
 

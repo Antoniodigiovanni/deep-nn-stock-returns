@@ -18,13 +18,13 @@ def map_act_func(af_name):
         sys.exit("Invalid activation function")
     return act_func
 
-def map_optimizer(opt_name, net_params, lr):
+def map_optimizer(opt_name, net_params, lr, momentum):
     if opt_name == "SGD":
-        opt = optim.SGD(net_params, lr=lr)
+        opt = optim.SGD(net_params, lr=lr, momentum=momentum)
     elif opt_name == "Adam":
         opt = optim.Adam(net_params, lr=lr)
     elif opt_name == "RMSprop":
-        opt = optim.RMSprop(net_params, lr=lr)
+        opt = optim.RMSprop(net_params, lr=lr, momentum=momentum)
     else:
         sys.exit("Invalid optimizer")
     return opt

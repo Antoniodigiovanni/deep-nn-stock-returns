@@ -43,9 +43,9 @@
         "_type": "uniform",
         "_value": [ 0, 1 ]
     },
-    
-    "patience":{
-        "_type": "quniform",
-        "_value": [50,100,2]
+
+     "l1_lambda1":{ 
+        "_type": "choice",
+        "_value": [1e-5, 4.95e-4, 1e-3]
     }
 }

@@ -36,7 +36,8 @@ params = {
     'loss': 'MSELoss',
     'learning_rate': 0.001,
     'momentum': 0,
-    'patience': 100
+    'l1_lambda': 1,
+    "patience": 10
 }
 
 # Get optimized hyperparameters
@@ -130,13 +131,18 @@ if args.expandingTuning:
 elif args.normalTuning:
     method = 'normal'
 
-trainer = GeneralizedTrainer(crsp, params, loss_fn, methodology=method)
+if 'l1_lambda' in params:
+    l1_reg = True
+else:
+    l1_reg = False
+    
+trainer = GeneralizedTrainer(crsp, params, loss_fn, methodology=method, l1_reg=l1_reg)
 n_inputs = trainer.n_inputs
 
 model = OptimizeNet(n_inputs, params).to(config.device)
 print(f'Device from config: {config.device}')
 print(f'N. of epochs set at {config.epochs}')
-optimizer = map_optimizer(params['optimizer'], model.parameters(), params['learning_rate'])
+optimizer = map_optimizer(params['optimizer'], model.parameters(), params['learning_rate'], params['momentum'])
 
 print('Starting Training process')
 trainer.fit(model, optimizer)

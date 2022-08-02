@@ -12,6 +12,7 @@ class Portfolio():
         self.weighting = weighting
         self.rebalancing_frequency = rebalancing_frequency
 
+        self.portfolio_weights = None
         self.alpha = None
         # self.t_value_alpha = None
         self.information_ratio = None
@@ -147,7 +148,9 @@ class Portfolio():
             df_rebalancing_months[['permno', 'yyyymm', 'bin','pweight']],
             on=['permno','yyyymm'],
             how='left')
-        
+        # Saving weights in an accessible df from outside
+        self.portfolio_weights = df_rebalancing_months
+
         print('Pred_df NaNs:')
         print(self.__pred_df.isna().sum())
         
