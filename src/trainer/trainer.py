@@ -19,7 +19,7 @@ from models.neural_net import metric
 
 
 class GeneralizedTrainer():
-    def __init__(self, dataset, params, loss_fn, methodology = 'normal', l1_reg = False, train_window_years=15, val_window_years=10, nni_experiment='True') -> None:
+    def __init__(self, dataset, params, loss_fn, methodology = 'normal', l1_reg = False, train_window_years=15, val_window_years=10, nni_experiment=True) -> None:
         self.dataset = dataset
         self.params = params
         self.model = None
