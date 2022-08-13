@@ -28,6 +28,7 @@ class GeneralizedTrainer():
         self.device = config.device
         self.best_val_loss = np.inf
         self.patience = self.params['patience']
+        print(f'Patience is {self.patience}')
         self.nni_experiment = nni_experiment
 
         # print(f'Epochs in Training class: {config.epochs}')
@@ -200,6 +201,9 @@ class GeneralizedTrainer():
             os.makedirs(config.paths['hpoResultsPath'] + '/trial_info')
         if os.path.exists(config.paths['hpoResultsPath'] + '/portfolio_weights') == False:
             os.makedirs(config.paths['hpoResultsPath'] + '/portfolio_weights')
+        if os.path.exists(config.paths['hpoResultsPath'] + '/models') == False:
+            os.makedirs(config.paths['hpoResultsPath'] + '/models')
+
 
         from csv import DictWriter, writer
 
@@ -218,7 +222,10 @@ class GeneralizedTrainer():
         with open(config.paths['hpoResultsPath'] + '/trial_info/' + timeStamp_id + '- trial_full.json', 'w') as fp:
             json.dump(final_dict, fp, indent=4)
         portfolio_weights.to_csv(config.paths['hpoResultsPath'] + '/portfolio_weights/' + timeStamp_id + ' - portfolio_weights.csv')
-        
+
+        # Saving model
+        torch.save(self.model, config.paths['hpoResultsPath'] + '/models/' + timeStamp_id + ' - model.pt')
+        torch.save(self.model.state_dict(), config.paths['hpoResultsPath'] + '/models/' + timeStamp_id + ' - model_state_dict.pt')
 
         print('Portfolio returns calculation completed.')
        

@@ -58,8 +58,14 @@ class Portfolio():
         columns_to_keep = [self.returns.columns[0]]
         columns_to_keep.extend(self.returns.columns[-2:])
         df = self.returns[columns_to_keep]
-
+        print('Inf alpha calculation:')
+        print(df.head())
         df = df.merge(FFMom, on=['yyyymm'], how='left')
+        print(f'After merging and multiplying by 100:')
+        
+        df.iloc[:,1] = df.iloc[:,1] * 100
+        df.iloc[:,2] = df.iloc[:,2] * 100
+        print(df.head())
         # On long-short returns        
         X = df.iloc[:, 3:]
 
@@ -70,6 +76,10 @@ class Portfolio():
         X = sm.add_constant(X)
         lm = sm.OLS(y, X).fit()
 
+        print('Params')
+        print(lm.params)
+        print('tValues')
+        print(lm.tvalues)
         self.alpha = lm.params[0]
         #self.t_value_alpha = lm.tvalues[0]
         self.information_ratio = lm.tvalues[0]

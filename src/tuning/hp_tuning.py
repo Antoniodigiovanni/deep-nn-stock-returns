@@ -31,12 +31,13 @@ params = {
     'hidden_size_2': 8,
     'hidden_size_3': 0,
     'hidden_size_4': 0,
+    'hidden_size_5': 0,
     'act_func': 'ReLu',
     'optimizer': 'Adam',
     'loss': 'MSELoss',
     'learning_rate': 0.001,
     'momentum': 0,
-    'l1_lambda': 1,
+    'l1_lambda1': 1,
     "patience": 10
 }
 
@@ -53,10 +54,13 @@ params.update(optimized_params)
 print(params)
 
 def validate_params(params):
-    if params['hidden_size_2'] == 0 and (params['hidden_size_3'] != 0 or params['hidden_size_4'] != 0):
+    if params['hidden_size_2'] == 0 and (params['hidden_size_3'] != 0 or params['hidden_size_4'] != 0 or params['hidden_size_5'] != 0):
         return False
-    if params['hidden_size_3'] == 0 and params['hidden_size_4'] != 0:
+    if params['hidden_size_3'] == 0 and (params['hidden_size_4'] != 0 or params['hidden_size_5'] != 0):
         return False
+    if params['hidden_size_4'] == 0 and params['hidden_size_5'] != 0:
+        return False
+
     return True
 
     
@@ -67,6 +71,8 @@ class OptimizeNet(nn.Module):
         self.hidden_size_2 = params['hidden_size_2']
         self.hidden_size_3 = params['hidden_size_3']
         self.hidden_size_4 = params['hidden_size_4']
+        self.hidden_size_5 = params['hidden_size_5']
+
         act_func = map_act_func(params['act_func'])
 
         self.fc1 = self._fc_block(n_inputs, self.hidden_size_1, act_func)
@@ -79,6 +85,10 @@ class OptimizeNet(nn.Module):
         if self.hidden_size_4 > 0:
             self.fc4 = self._fc_block(self.hidden_size_3, self.hidden_size_4, act_func)
             last_layer_size = self.hidden_size_4
+        if self.hidden_size_5 > 0:
+            self.fc5 = self._fc_block(self.hidden_size_4, self.hidden_size_5, act_func)
+            last_layer_size = self.hidden_size_5
+        
 
         self.out = self._fc_block(last_layer_size, 1, act_func)
 
@@ -90,6 +100,8 @@ class OptimizeNet(nn.Module):
             x = self.fc3(x)
         if self.hidden_size_4:
             x = self.fc4(x)
+        if self.hidden_size_5:
+            x = self.fc5(x)
         x = self.out(x)
         return x
     

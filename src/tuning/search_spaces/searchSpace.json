@@ -19,6 +19,11 @@
         "_value": [0, 4, 8, 16, 32]
     },
 
+    "hidden_size_5":{
+        "_type": "choice",
+        "_value": [0, 4, 8, 16, 32]
+    },
+
     "act_func":{ 
         "_type": "choice",
         "_value": ["ReLU", "LeakyReLU", "Sigmoid", "Tanh", "Softplus"]
