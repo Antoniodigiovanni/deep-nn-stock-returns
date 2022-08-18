@@ -7,10 +7,11 @@ from portfolios.FF5FM_Mom import FF5FM_Mom
 
 
 class Portfolio():
-    def __init__(self, n_cuts=10, pred_df = None, rebalancing_frequency='yearly', weighting="VW"):
+    def __init__(self, n_cuts=10, pred_df = None, rebalancing_frequency='yearly', weighting="VW", verbose = True):
         self.n_cuts = n_cuts
         self.weighting = weighting
         self.rebalancing_frequency = rebalancing_frequency
+        self.verbose = verbose
 
         self.portfolio_weights = None
         self.alpha = None
@@ -58,14 +59,14 @@ class Portfolio():
         columns_to_keep = [self.returns.columns[0]]
         columns_to_keep.extend(self.returns.columns[-2:])
         df = self.returns[columns_to_keep]
-        print('Inf alpha calculation:')
-        print(df.head())
+        if self.verbose == True:
+            print('IR & alpha calculation:')
+            print(df.head())
         df = df.merge(FFMom, on=['yyyymm'], how='left')
-        print(f'After merging and multiplying by 100:')
         
-        df.iloc[:,1] = df.iloc[:,1] * 100
-        df.iloc[:,2] = df.iloc[:,2] * 100
-        print(df.head())
+        # df.iloc[:,1] = df.iloc[:,1] * 100
+        # df.iloc[:,2] = df.iloc[:,2] * 100
+        
         # On long-short returns        
         X = df.iloc[:, 3:]
 
@@ -76,10 +77,11 @@ class Portfolio():
         X = sm.add_constant(X)
         lm = sm.OLS(y, X).fit()
 
-        print('Params')
-        print(lm.params)
-        print('tValues')
-        print(lm.tvalues)
+        if self.verbose == True:
+            print('Params')
+            print(lm.params)
+            print('tValues')
+            print(lm.tvalues)
         self.alpha = lm.params[0]
         #self.t_value_alpha = lm.tvalues[0]
         self.information_ratio = lm.tvalues[0]
@@ -130,8 +132,10 @@ class Portfolio():
             #.apply(lambda x: pd.cut(x, bins=self.n_cuts, labels=False))\
 
         # print(rebalancing_month_bins.loc[rebalancing_month_bins['bin'].isna()])
-        print(f'Rebalancing month which have NaN as bin:')
-        print(rebalancing_month_bins.loc[rebalancing_month_bins['bin'].isna()]['yyyymm'].unique())
+        
+        if self.verbose == True:
+            print(f'Rebalancing month which have NaN as bin:')
+            print(rebalancing_month_bins.loc[rebalancing_month_bins['bin'].isna()]['yyyymm'].unique())
 
         df_rebalancing_months = df_rebalancing_months.merge(
             rebalancing_month_bins,
@@ -161,8 +165,9 @@ class Portfolio():
         # Saving weights in an accessible df from outside
         self.portfolio_weights = df_rebalancing_months
 
-        print('Pred_df NaNs:')
-        print(self.__pred_df.isna().sum())
+        if self.verbose == True:
+            print('Pred_df NaNs:')
+            print(self.__pred_df.isna().sum())
         
         # Idea could be to add a column which contains the split between rebalancing dates
         # such that if some - Chen and Zimmermann do not do that in their code (maybe because I have dropped
@@ -171,8 +176,9 @@ class Portfolio():
         self.__pred_df['bin'] = self.__pred_df.groupby(['permno'])[['bin']].ffill()
         self.__pred_df['pweight'] = self.__pred_df.groupby(['permno','bin'])[['pweight']].ffill()
 
-        print('Pred_df NaNs (after ffill):')
-        print(self.__pred_df.isna().sum())
+        if self.verbose == True:
+            print('Pred_df NaNs (after ffill):')
+            print(self.__pred_df.isna().sum())
 
 
         # Drop NaN in pweight filled, they are related to stocks that started 
@@ -180,8 +186,9 @@ class Portfolio():
         # in the rebalanced portfolio
         self.__pred_df.dropna(subset=['pweight'], inplace=True)
         
-        print('\n\nPred_df NaNs (final):')
-        print(self.__pred_df.isna().sum())
+        if self.verbose == True:
+            print('\n\nPred_df NaNs (final):')
+            print(self.__pred_df.isna().sum())
 
         
 
@@ -211,5 +218,6 @@ class Portfolio():
         
         self.returns = portfolio_returns
 
-        print('Portfolio Returns NaNs:')
-        print(self.returns.isna().sum())
+        if self.verbose == True:
+            print('Portfolio Returns NaNs:')
+            print(self.returns.isna().sum())

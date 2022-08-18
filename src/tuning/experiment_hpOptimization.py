@@ -24,7 +24,7 @@ if config.args.expandingTuning:
     
     experiment.config.assessor.name = 'Medianstop'
     experiment.config.assessor.class_args['optimize_mode'] ='minimize'
-    experiment.config.assessor.class_args['start_step'] = 10
+    experiment.config.assessor.class_args['start_step'] = 100
 
 if config.args.normalTuning:
     print('Tuning Experiment to discover an optimal architecture from scratch')
@@ -43,7 +43,7 @@ if config.args.normalTuning:
     # }
     experiment.config.assessor.name = 'Medianstop'
     experiment.config.assessor.class_args['optimize_mode'] ='minimize'
-    experiment.config.assessor.class_args['start_step'] = 10
+    experiment.config.assessor.class_args['start_step'] = 100
 
 
 elif config.args.batchExperiment:
@@ -87,7 +87,7 @@ experiment.config.trial_code_directory = './src/tuning'
 
 
 experiment.config.trial_concurrency = 2
-experiment.config.max_experiment_duration = '12h' 
+experiment.config.max_experiment_duration = '480h' 
 
 # Add logger for experiment id - in order to be able to view the experiment afterwards
 print(f'Experiment ID: {experiment.id}')

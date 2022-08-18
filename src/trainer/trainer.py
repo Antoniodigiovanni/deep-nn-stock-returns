@@ -1,3 +1,4 @@
+from tabnanny import check
 import nni
 import torch
 import torch.nn as nn
@@ -81,7 +82,7 @@ class GeneralizedTrainer():
     def fit(self, model, optimizer):
         self.model = model
         self.optimizer = optimizer
-        
+        PATH = 'model.pt'
         keep_training = 1
 
 
@@ -103,15 +104,22 @@ class GeneralizedTrainer():
                 # Early stopping logic:
                 if val_loss < self.best_val_loss:
                     self.best_val_loss = val_loss
-
-                    if j != 0:
-                        pass
+                    torch.save({
+                        'epoch': epoch,
+                        'model_state_dict': self.model.state_dict(),
+                        'optimizer_state_dict': self.optimizer.state_dict(),
+                        'epoch_loss': epoch_loss,
+                        'val_loss': val_loss,
+                        'val_acc': val_acc
+                        }, PATH)
+                    print('Saved new best model')
+                    # if j != 0:
                         #print(f'j set back to 0, best val_loss is: {self.best_val_loss}')
                     j = 0
                     
                 else:
                     j+=1
-                    #print(f'j incremented to {j}!')
+                    print(f'j incremented to {j}!')
                 # print(f'Epoch loss is of type: {type(epoch_loss)}, Validation loss is of type: {type(val_loss)},  Validation accuracy is of type: {type(val_acc)}')
                 epoch_loss = epoch_loss.item()
                 self.writer.add_scalar("Loss/train", float(epoch_loss), epoch)
@@ -131,6 +139,18 @@ class GeneralizedTrainer():
                 
                 if j >= self.patience:
                     print(f'Early stopping at epoch {epoch+1}!')
+                    
+
+                    checkpoint = torch.load(PATH)
+                    self.model.load_state_dict(checkpoint['model_state_dict'])
+                    self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+                    epoch = checkpoint['epoch']
+                    print(f'Loading last good epoch checkpoint, epoch #{epoch+1}')
+                    epoch_loss = checkpoint['epoch_loss']
+                    val_loss = checkpoint['val_loss']
+                    val_acc = checkpoint['val_acc']
+                    model.train()
+
                     break
                 
             pred_df = ReturnsPrediction(self.test_loader, self.model).pred_df
