@@ -21,7 +21,7 @@ from tuning_utils import *
 from trainer.trainer import GeneralizedTrainer
 import argparse
 from argparse import ArgumentParser
-
+from models.neural_net.Optimize_Net import OptimizeNet
 
 logger = logging.getLogger('Tuning experiment')
 
@@ -64,53 +64,7 @@ def validate_params(params):
     return True
 
     
-class OptimizeNet(nn.Module):
-    def __init__(self, n_inputs, params):
-        super(OptimizeNet, self).__init__()
-        self.hidden_size_1 = params['hidden_size_1']
-        self.hidden_size_2 = params['hidden_size_2']
-        self.hidden_size_3 = params['hidden_size_3']
-        self.hidden_size_4 = params['hidden_size_4']
-        self.hidden_size_5 = params['hidden_size_5']
 
-        act_func = map_act_func(params['act_func'])
-
-        self.fc1 = self._fc_block(n_inputs, self.hidden_size_1, act_func)
-        if self.hidden_size_2 > 0:
-            self.fc2 = self._fc_block(self.hidden_size_1, self.hidden_size_2, act_func)
-            last_layer_size = self.hidden_size_2
-        if self.hidden_size_3 > 0:
-            self.fc3 = self._fc_block(self.hidden_size_2, self.hidden_size_3, act_func)
-            last_layer_size = self.hidden_size_3
-        if self.hidden_size_4 > 0:
-            self.fc4 = self._fc_block(self.hidden_size_3, self.hidden_size_4, act_func)
-            last_layer_size = self.hidden_size_4
-        if self.hidden_size_5 > 0:
-            self.fc5 = self._fc_block(self.hidden_size_4, self.hidden_size_5, act_func)
-            last_layer_size = self.hidden_size_5
-        
-
-        self.out = self._fc_block(last_layer_size, 1, act_func)
-
-    def forward(self, x):
-        x = self.fc1(x)
-        if self.hidden_size_2:
-            x = self.fc2(x)
-        if self.hidden_size_3:
-            x = self.fc3(x)
-        if self.hidden_size_4:
-            x = self.fc4(x)
-        if self.hidden_size_5:
-            x = self.fc5(x)
-        x = self.out(x)
-        return x
-    
-    def _fc_block(self, in_c, out_c, act_func):
-        block = nn.Sequential(
-            nn.Linear(in_c, out_c),
-            act_func
-        )
-        return block
 
 if not validate_params(params): 
 # for invalid param combinations, report the worst possible result
@@ -154,6 +108,24 @@ n_inputs = trainer.n_inputs
 model = OptimizeNet(n_inputs, params).to(config.device)
 print(f'Device from config: {config.device}')
 print(f'N. of epochs set at {config.epochs}')
+
+print('Initializing weights')
+def initialize_weights(m):
+    print(m)
+    if isinstance(m, nn.Linear):
+        if params['act_func'] == 'LeakyReLU':
+            print('Activation Function is LeakyReLU')
+            nn.init.kaiming_uniform_(m.weight, a=0, mode='fan_in', nonlinearity='leaky_relu')
+        elif params['act_func'] == 'ReLU':
+            print('Activation Function is ReLU')
+            nn.init.kaiming_uniform_(m.weight, a=0, mode='fan_in', nonlinearity='relu')
+        else:
+            print('Xavier Uniform for other activation functions')
+            nn.init.xavier_uniform_(m.weight)
+        m.bias.data.fill_(0.01)
+
+model.apply(initialize_weights)
+
 optimizer = map_optimizer(params['optimizer'], model.parameters(), params['learning_rate'], params['momentum'])
 
 print('Starting Training process')

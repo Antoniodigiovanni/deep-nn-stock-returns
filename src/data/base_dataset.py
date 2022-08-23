@@ -116,6 +116,7 @@ class BaseDataset:
             crsp.to_csv(config.paths['ProcessedDataPath'] + '/dataset.csv')
         else:
             crsp = pd.read_csv(config.paths['ProcessedDataPath'] + '/dataset.csv', index_col=0)
+            crsp['ret'] = crsp['ret']/100
         return crsp
 
     def load_dataset_in_memory(self):

@@ -107,4 +107,7 @@ n_cuts = int(configuration.get('Portfolios', 'n_cuts'))
 rebalancing_frequency = configuration.get('Portfolios', 'rebalancing_frequency')
 weighting = configuration.get('Portfolios', 'weighting')
 
+n_train_years = int(configuration.get('Training', 'number_initial_training_years'))
+n_val_years = int(configuration.get('Training', 'number_validation_years'))
+
 print(f'Epochs: {epochs}')

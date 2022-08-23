@@ -112,14 +112,14 @@ class GeneralizedTrainer():
                         'val_loss': val_loss,
                         'val_acc': val_acc
                         }, PATH)
-                    print('Saved new best model')
+                    # print('Saved new best model')
                     # if j != 0:
                         #print(f'j set back to 0, best val_loss is: {self.best_val_loss}')
                     j = 0
                     
                 else:
                     j+=1
-                    print(f'j incremented to {j}!')
+                    # print(f'j incremented to {j}!')
                 # print(f'Epoch loss is of type: {type(epoch_loss)}, Validation loss is of type: {type(val_loss)},  Validation accuracy is of type: {type(val_acc)}')
                 epoch_loss = epoch_loss.item()
                 self.writer.add_scalar("Loss/train", float(epoch_loss), epoch)
@@ -175,13 +175,14 @@ class GeneralizedTrainer():
 
         r2 = metric.r2_metric_calculation(self.prediction_df)
         print(r2)
+
         self.writer.add_scalar("R2/All", r2['R2'])
         self.writer.add_scalar("R2/Top1000", r2['R2_top_1000'])
         self.writer.add_scalar("R2/Bottom1000", r2['R2_bottom_1000'])
         
         self.writer.flush()    
 
-        timeStamp_id = dt.datetime.now().strftime('%Y%m%d-%H_%M:%S:%f')
+        timeStamp_id = dt.datetime.now().strftime('%Y%m%d-%H:%M:%S:%f')
         
         print('Calculating portfolios')
         print('Prediction df:')
@@ -201,6 +202,8 @@ class GeneralizedTrainer():
         returns = portfolio.returns
         portfolio_weights = portfolio.portfolio_weights
 
+        
+
         print('\nNaNs in Portfolio returns:')
         count = returns.isna().sum()
         percentage = returns.isna().mean()
@@ -210,6 +213,11 @@ class GeneralizedTrainer():
         print('Portfolio Returns:')
         print(returns.describe())
         
+        
+        sharpe_ratio = metric.calc_sharpe_ratio(returns)
+        print(f'Sharpe Ratio of {config.rebalancing_frequency} {config.weighting} portfolio:')
+        print(sharpe_ratio)
+
         # Modify folder structure for when not doing the nni_experiment.
         
         # Saving files
@@ -227,8 +235,8 @@ class GeneralizedTrainer():
 
         from csv import DictWriter, writer
 
-        field_names = ['timeStamp','information_ratio','alpha', 'r2', 'val_loss']
-        summary_dict = {'timeStamp': timeStamp_id, 'information_ratio': information_ratio, 'alpha': alpha, 'r2': r2, 'val_loss': val_loss}
+        field_names = ['timeStamp','information_ratio','alpha', 'r2', 'val_loss', 'Sharpe_Ratio']
+        summary_dict = {'timeStamp': timeStamp_id, 'information_ratio': information_ratio, 'alpha': alpha, 'r2': r2, 'val_loss': val_loss, 'Sharpe_Ratio': sharpe_ratio}
         with open(config.paths['hpoResultsPath'] + '/experiment_summary.csv', 'a') as fp:          
             writer_obj = writer(fp)
             if fp.tell() == 0:
@@ -422,3 +430,4 @@ class GeneralizedTrainer():
         self.train_loader = DataLoader(self.train, batch_size=10000)
         self.val_loader = DataLoader(self.val, batch_size=10000)
         self.test_loader = DataLoader(self.test, batch_size=10000)
+        

@@ -2,6 +2,7 @@ import torch
 import pandas as pd
 import numpy as np
 from portfolios.PortfolioCreation import Portfolio
+from portfolios.FF5FM_Mom import FF5FM_Mom
 import config
 
 def accuracy(truth, yhat, pct):
@@ -21,8 +22,11 @@ def calc_accuracy_and_predict(model, data, pct):
 
   with torch.no_grad():
     output = model(data['X'])
-    #print(type(data['permno']))
-    prediction = {'permno': data['permno'].squeeze().tolist(), 'yyyymm':data['yyyymm'].squeeze().tolist(), 'predicted_ret':output.squeeze().tolist()}
+    prediction = {
+      'permno': data['permno'].squeeze().tolist(), 
+      'yyyymm':data['yyyymm'].squeeze().tolist(), 
+      'predicted_ret':output.squeeze().tolist()}
+    
     correct = accuracy(data['Y'], output, pct)
 
   return correct, prediction
@@ -30,6 +34,7 @@ def calc_accuracy_and_predict(model, data, pct):
 
 def r2_metric_calculation(df):
     crsp = pd.read_csv(config.paths['CRSPretPath'])
+    crsp['ret'] = crsp['ret']/100
     crsp.drop(['date'], axis=1, inplace=True)
     df_std = df.merge(crsp, on=['yyyymm', 'permno'], how='left')
     
@@ -75,7 +80,18 @@ def calc_portfolio_alpha():
     predictions. This has to be changed a bit. In order to take it from here.
     
   """
-  
-  portfolio = Portfolio(config.n_cuts, config.rebalancing_frequency, config.weighting)
+  pass
 
-  return portfolio.alpha, portfolio.information_ratio
+def calc_sharpe_ratio(df, already_excess_returns=False):
+  RF = FF5FM_Mom().RF
+  RF['RF'] = RF['RF'] / 100
+  
+  SR = {}
+  for column in df.iloc[:,1:].columns:
+    if already_excess_returns == False:
+      df[column] = df[column] - RF['RF']
+    mean_ret = df[column].mean()
+    std_dev = df[column].std()
+    SR[column] = mean_ret/std_dev
+
+  return SR

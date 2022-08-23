@@ -30,7 +30,7 @@ class ReturnsPrediction():
         accuracies = []
         total_correct = 0
         total = 0
-        #print('In test_loader loop')
+        
         for index, data in enumerate(self.__test_loader):
             #print(f'loop n. {index+1}')
             #print(f'Test loader batch shape:')

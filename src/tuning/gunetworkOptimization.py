@@ -53,7 +53,15 @@ else:
     crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)    
     del data
 
-# Model should be included here but I don't have n_inputs at this point, how to correct?
+# Added snippet to fix the NN results that were too good to be true
+crsp['ret'] = crsp['ret']/100
+crsp.drop('melag', axis=1, inplace=True)
+crsp.drop('prc', axis=1, inplace=True)
+crsp.drop('me', axis=1, inplace=True)
+
+torch.manual_seed(2022)
+torch.use_deterministic_algorithms(True)
+
 
 # n_inputs = train.data.shape[1]
 #model = GuNN4(n_inputs, params).to(config.device)
@@ -76,7 +84,7 @@ print('Starting Training process')
 loss_fn = nn.L1Loss()
 if args.ExpandingBatchTest:
     print('Expanding window - batches fixed in order to do the correlation test')
-    trainer = GeneralizedTrainer(crsp, params, loss_fn, l1_reg=True)
+    trainer = GeneralizedTrainer(crsp, params, loss_fn, methodology='expanding', l1_reg=True)
 elif args.normalTraining:
     trainer = GeneralizedTrainer(crsp, params, loss_fn, methodology='normal', l1_reg=True)
 elif args.expandingTraining:
@@ -86,6 +94,15 @@ elif args.expandingTraining:
 n_inputs = trainer.n_inputs
 
 model = GuNN4(n_inputs).to(config.device)
+def initialize_weights(m):
+    print(m)
+    if isinstance(m, nn.Linear):
+        print('Activation Function is ReLU')
+        nn.init.kaiming_uniform_(m.weight, a=0, mode='fan_in', nonlinearity='relu')
+        m.bias.data.fill_(0.01)
+
+model.apply(initialize_weights)
+
 optimizer = optim.Adam(model.parameters(),
             params['learning_rate'],
             # Uncomment when will be using them as parameters

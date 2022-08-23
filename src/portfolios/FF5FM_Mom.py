@@ -34,7 +34,7 @@ class FF5FM_Mom():
         self.RF = FF5FM[['yyyymm', 'RF']]
         
         FF5FM.drop('RF', axis=1, inplace=True)
-        self.returns = FF5FM.merge(FFMom, on=['yyyymm'])#, on=['yyyymm'])
+        self.returns = FF5FM.merge(FFMom, on=['yyyymm'])
         self.returns.iloc[:,1:] = self.returns.iloc[:,1:]/100
         
         del FF5FM, FFMom

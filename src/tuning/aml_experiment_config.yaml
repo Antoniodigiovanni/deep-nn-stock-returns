@@ -1,0 +1,10 @@
+trialConcurrency: 1
+searchSpace:
+experimentName: Gu_et_al Optimization
+trainingService:
+  platform: aml
+  dockerImage: msranni/nni
+  subscriptionId: 68ac269d-2ad1-489a-aad4-f7134d95768c
+  resourceGroup: Risorse1
+  workspaceName: aml-test
+  computeTarget: antoniodg981

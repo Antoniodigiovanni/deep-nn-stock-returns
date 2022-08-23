@@ -1,3 +1,4 @@
+import numpy as np
 import config
 import pandas as pd
 import os
@@ -15,7 +16,7 @@ class Portfolio():
 
         self.portfolio_weights = None
         self.alpha = None
-        # self.t_value_alpha = None
+        self.t_value_alpha = None
         self.information_ratio = None
         self.returns = None
         self.__pred_df = pred_df
@@ -64,8 +65,6 @@ class Portfolio():
             print(df.head())
         df = df.merge(FFMom, on=['yyyymm'], how='left')
         
-        # df.iloc[:,1] = df.iloc[:,1] * 100
-        # df.iloc[:,2] = df.iloc[:,2] * 100
         
         # On long-short returns        
         X = df.iloc[:, 3:]
@@ -83,8 +82,16 @@ class Portfolio():
             print('tValues')
             print(lm.tvalues)
         self.alpha = lm.params[0]
-        #self.t_value_alpha = lm.tvalues[0]
-        self.information_ratio = lm.tvalues[0]
+        self.t_value_alpha = lm.tvalues[0]
+        
+        year_min = self.returns['yyyymm'].min()//100
+        month_min = self.returns['yyyymm'].min()%100
+
+        year_max = self.returns['yyyymm'].max()//100
+        month_max = self.returns['yyyymm'].max()%100
+
+        n_months =  ((year_max - year_min) + (month_max-month_min+1)/12)*12 
+        self.information_ratio = self.t_value_alpha / np.sqrt(n_months)
 
 
     def list_rebalancing_dates(self):
@@ -116,53 +123,85 @@ class Portfolio():
         # Select rows of the rebalancing date (yearly, monthly or quarterly)
         df_rebalancing_months = self.__pred_df.loc[self.__pred_df['yyyymm'].isin(rebalancing_months)].copy()
 
-        # Calculating bins..
-        # Still have to check cut vs. qcut - update: using qcut for quantiles
         
         # Moreover, I will be adding a small infinitesimal number to avoid the case in which some
         # predicted returns are equal causing the presence of less than 10 unique predicted_ret in the df
         # (with some architectures it happens in 3 rows on 86000+, but still messes up all calculation)
-        import random
-        df_rebalancing_months['predicted_ret'] = df_rebalancing_months['predicted_ret'].apply(lambda x: x + random.uniform(1e-30, 1e-15))
+        # import random
+        # df_rebalancing_months['predicted_ret'] = df_rebalancing_months['predicted_ret'].apply(lambda x: x + random.uniform(1e-30, 1e-15))
         
-        rebalancing_month_bins = df_rebalancing_months.set_index(['yyyymm', 'permno'])\
-            .groupby('yyyymm')['predicted_ret']\
-                .apply(lambda x: pd.qcut(x, q=self.n_cuts, labels=False, duplicates='drop'))\
-                    .reset_index(name='bin')
-            #.apply(lambda x: pd.cut(x, bins=self.n_cuts, labels=False))\
+        """ Original method in the next 4 lines"""
+        # rebalancing_month_bins = df_rebalancing_months.set_index(['yyyymm', 'permno'])\
+        #     .groupby('yyyymm')['predicted_ret']\
+        #         .apply(lambda x: pd.qcut(x, q=self.n_cuts, labels=False, duplicates='drop'))\
+        #             .reset_index(name='bin')
+        
+        # Updated method which is more concise and does not require a merge.
+        # try:
+        df_rebalancing_months['bin'] = (
+            df_rebalancing_months.groupby('yyyymm')['predicted_ret']
+            .transform(lambda x: pd.qcut(x, q=self.n_cuts, labels = False, duplicates='drop'))
+            )
+        #     df_rebalancing_months['predicted_ret_noise'] = df_rebalancing_months['predicted_ret'] + 0.0000001 * (np.random.rand(len(df_rebalancing_months)) - 0.5)
+        #     df_rebalancing_months['bin_test'] = (
+        #         df_rebalancing_months.groupby('yyyymm')['predicted_ret_noise']
+        #         .transform(lambda x: pd.qcut(x, q=self.n_cuts, labels=False))
+        #     ) 
+        #     if df_rebalancing_months['bin'].equals(df_rebalancing_months['bin_test']) == False:
+        #         print('The two methodologies are not equal')
+        #     else:
+        #         print('The two methodologies are equal')
+        # except:
+        #     print('\n\nError in calculating deciles, likely the bins are non-unique using alternative method:')
+        #     df_rebalancing_months['predicted_ret_noise'] = df_rebalancing_months['predicted_ret'] + 0.0000001 * (np.random.rand(len(df_rebalancing_months)) - 0.5)
 
-        # print(rebalancing_month_bins.loc[rebalancing_month_bins['bin'].isna()])
+        #     df_rebalancing_months['bin'] = (
+        #         df_rebalancing_months.groupby('yyyymm')['predicted_ret_noise']
+        #         .transform(lambda x: pd.qcut(x, q=self.n_cuts, labels=False))
+        #     )
+        # df_rebalancing_months.drop(['predicted_ret_noise', 'bin_test'], axis=1, errors='ignore', inplace=True)
+        
+        # print('Are the two columns equal?')
+        # print(df_rebalancing_months['bin'].equals(rebalancing_month_bins['bin']))
         
         if self.verbose == True:
-            print(f'Rebalancing month which have NaN as bin:')
-            print(rebalancing_month_bins.loc[rebalancing_month_bins['bin'].isna()]['yyyymm'].unique())
+            print(f'Rebalancing month which have at least one NaN as bin:')
+            print(df_rebalancing_months.loc[df_rebalancing_months['bin'].isna()]['yyyymm'].unique())
 
-        df_rebalancing_months = df_rebalancing_months.merge(
-            rebalancing_month_bins,
-            on=['permno','yyyymm'],
-            how='left'
-        )
+        # df_rebalancing_months = df_rebalancing_months.merge(
+        #     rebalancing_month_bins,
+        #     on=['permno','yyyymm'],
+        #     how='left'
+        # )
 
 
         if self.weighting == 'VW':
 
-            df_rebalancing_months['pweight'] =\
-                ((df_rebalancing_months['melag'])\
-                   /(df_rebalancing_months.groupby(['yyyymm','bin'])\
-                        ['melag'].transform('sum')))
-
-        elif self.weighting == 'EW':
-            
             df_rebalancing_months['pweight'] =(
-                1/df_rebalancing_months.groupby(
-                ['yyyymm','bin'])['melag']\
-                .transform('count'))
+                df_rebalancing_months['melag']/(df_rebalancing_months.groupby(['yyyymm','bin'])['melag'].transform('sum'))
+                )
+
+
+        elif self.weighting == 'EW':            
+            df_rebalancing_months['pweight'] =(
+                1/df_rebalancing_months.groupby(['yyyymm','bin'])['melag'].transform('count'))
+
+        if self.verbose == True:
+            print('Checking weights sum:')
+            df_rebalancing_months['weight_sum'] = df_rebalancing_months.groupby(['yyyymm', 'bin'])['pweight'].transform('sum').round(5)
+            
+            if (df_rebalancing_months['weight_sum'] == df_rebalancing_months['weight_sum'].iloc[0]).all():
+                print("All values are equal in column 'Weight Sum'")
+            else:
+                print("Some values are not equal to the first row in column 'Weight Sum', printing them below:")
+                print(df_rebalancing_months.loc[(df_rebalancing_months['weight_sum'] != df_rebalancing_months['weight_sum'].iloc[0])])
         
         self.__pred_df = self.__pred_df.merge(
             df_rebalancing_months[['permno', 'yyyymm', 'bin','pweight']],
             on=['permno','yyyymm'],
             how='left')
-        # Saving weights in an accessible df from outside
+        
+        # Saving weights in an accessible df from outside - is this the right position to do this or should I do it after the ffill?
         self.portfolio_weights = df_rebalancing_months
 
         if self.verbose == True:
@@ -180,6 +219,15 @@ class Portfolio():
             print('Pred_df NaNs (after ffill):')
             print(self.__pred_df.isna().sum())
 
+        if self.verbose == True:
+            print('Re-checking weights sum after ffill:')
+            self.__pred_df['weight_sum'] = self.__pred_df.groupby(['yyyymm', 'bin'])['pweight'].transform('sum').round(5)
+            
+            if (self.__pred_df['weight_sum'] == self.__pred_df['weight_sum'].iloc[0]).all():
+                print("All values are equal in column 'Weight Sum'")
+            else:
+                print("Some values are not equal to the first row in column 'Weight Sum', printing them below:")
+                print(self.__pred_df.loc[(self.__pred_df['weight_sum'] != self.__pred_df['weight_sum'].iloc[0])])
 
         # Drop NaN in pweight filled, they are related to stocks that started 
         # trading before the rebalancing period, before being included 
@@ -198,8 +246,6 @@ class Portfolio():
             ['yyyymm','bin']).apply(
                 lambda x: sum(x['ret']*x['pweight']))\
                 .reset_index(name='portfolio_ret')
-        
-        portfolio_returns['bin'] = portfolio_returns.bin.astype(int)
 
         portfolio_returns = portfolio_returns.pivot(
             index='yyyymm',
@@ -217,7 +263,13 @@ class Portfolio():
             portfolio_returns.iloc[:,1]
         
         self.returns = portfolio_returns
-
+        
         if self.verbose == True:
             print('Portfolio Returns NaNs:')
             print(self.returns.isna().sum())
+
+            print('Cumulative returns:')
+            print(f'{((self.returns.iloc[:,-1]/100+1).cumprod()-1).iloc[-1]*100}%') # Remove dividing by 100 if using decimal percentages
+            print('Average monthly return')
+            print(f'{self.returns.iloc[:,-1].mean()}%') # Add *100 if using decimals
+        
