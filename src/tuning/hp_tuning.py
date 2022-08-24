@@ -117,8 +117,8 @@ crsp.drop('prc', axis=1, inplace=True)
 crsp.drop('me', axis=1, inplace=True)
 
 parser = ArgumentParser()
-parser.add_argument('--expandingTuning', action=argparse.BooleanOptionalAction)
-parser.add_argument('--normalTuning', action=argparse.BooleanOptionalAction)
+parser.add_argument('--expandingTuning', action='store_true')
+parser.add_argument('--normalTuning', action='store_true')
 
 
 args, unknown = parser.parse_known_args() # Using this to avoid error with notebooks

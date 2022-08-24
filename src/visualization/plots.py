@@ -13,7 +13,7 @@ import argparse
 
 parser = ArgumentParser()
 
-parser.add_argument('--cumulativeReturn', action=argparse.BooleanOptionalAction, help="")
+parser.add_argument('--cumulativeReturn', action='store_true', help="")
 
 args, unknown = parser.parse_known_args() # Using this to avoid error with notebooks
 

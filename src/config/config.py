@@ -65,13 +65,15 @@ SavedNetFileName = dt.now().strftime('/NeuralNetwork-%Y_%m_%d-%H_%M.pt')
 ###################################
 # Additional important parameters #
 ###################################
-parser.add_argument('--expandingTuning', action=argparse.BooleanOptionalAction, help="Expanding Window training. Architecture and hyperparams from scratch")
-parser.add_argument('--normalTuning', action=argparse.BooleanOptionalAction, help="Normal one-shot training. Architecture and hyperparams from scratch")
-# parser.add_argument('--predict', action=argparse.BooleanOptionalAction)
-parser.add_argument('--guNetworkTuning', action=argparse.BooleanOptionalAction, help="Expanding Window training. Gu et al.'s NN4")
-# parser.add_argument('--resumeTuning', action=argparse.BooleanOptionalAction)
-parser.add_argument('--guSimpleTuning', action=argparse.BooleanOptionalAction, help="Normal one-shot training. Gu et al.'s NN4")
-parser.add_argument('--batchExperiment', action=argparse.BooleanOptionalAction)
+parser.add_argument('--foo', action='store_true')
+
+parser.add_argument('--expandingTuning', action='store_true', help="Expanding Window training. Architecture and hyperparams from scratch")
+parser.add_argument('--normalTuning', action='store_true', help="Normal one-shot training. Architecture and hyperparams from scratch")
+# parser.add_argument('--predict', action='store_true')
+parser.add_argument('--guNetworkTuning', action='store_true', help="Expanding Window training. Gu et al.'s NN4")
+# parser.add_argument('--resumeTuning', action='store_true')
+parser.add_argument('--guSimpleTuning', action='store_true', help="Normal one-shot training. Gu et al.'s NN4")
+parser.add_argument('--batchExperiment', action='store_true')
 
 
 

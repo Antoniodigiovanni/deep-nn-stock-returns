@@ -71,9 +71,9 @@ torch.use_deterministic_algorithms(True)
 #loss_fn = None
 
 parser = ArgumentParser()
-parser.add_argument('--ExpandingBatchTest', action=argparse.BooleanOptionalAction)
-parser.add_argument('--expandingTraining', action=argparse.BooleanOptionalAction)
-parser.add_argument('--normalTraining', action=argparse.BooleanOptionalAction)
+parser.add_argument('--ExpandingBatchTest', action='store_true')
+parser.add_argument('--expandingTraining', action='store_true')
+parser.add_argument('--normalTraining', action='store_true')
 
 
 
