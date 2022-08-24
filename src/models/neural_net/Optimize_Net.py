@@ -4,11 +4,20 @@ from tuning.tuning_utils import *
 class OptimizeNet(nn.Module):
     def __init__(self, n_inputs, params):
         super(OptimizeNet, self).__init__()
-        self.hidden_size_1 = params['hidden_size_1']
-        self.hidden_size_2 = params['hidden_size_2']
-        self.hidden_size_3 = params['hidden_size_3']
-        self.hidden_size_4 = params['hidden_size_4']
-        self.hidden_size_5 = params['hidden_size_5']
+        self.hidden_size_1 = params['hidden_layer1']
+        self.hidden_size_2 = params['hidden_layer2']
+        self.hidden_size_3 = params['hidden_layer3']
+        self.hidden_size_4 = params['hidden_layer4']
+        self.hidden_size_5 = params['hidden_layer5']  
+        # self.hidden_size_1 = params['hidden_layer1']['size']
+        # if params['hidden_layer2'] != 'empty':
+        #     self.hidden_size_2 = params['hidden_layer2']['size']
+        # if params['hidden_layer3'] != 'empty':
+        #     self.hidden_size_3 = params['hidden_layer3']['size']
+        # if params['hidden_layer4'] != 'empty':
+        #     self.hidden_size_4 = params['hidden_layer4']['size']
+        # if params['hidden_layer5'] != 'empty':
+        #     self.hidden_size_5 = params['hidden_layer5']['size']
 
         self.act_func = map_act_func(params['act_func'])
 

@@ -12,7 +12,7 @@ if config.args.expandingTuning:
     print('Minimising validation loss')
     experiment.config.experiment_name = 'Hyperparameter_optimization'
     experiment.config.trial_command = 'python hp_tuning.py --expandingTuning'
-    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace.json')
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace_nested.json')
     experiment.config.max_trial_number = 2000
 
     # experiment.config.tuner.name = 'Anneal'
@@ -31,7 +31,7 @@ if config.args.normalTuning:
     print('Minimising validation loss')
     experiment.config.experiment_name = 'Hyperparameter_optimization'
     experiment.config.trial_command = 'python hp_tuning.py --normalTuning'
-    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace.json')
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace_nested.json')
     experiment.config.max_trial_number = 2000
 
     experiment.config.tuner.name = 'TPE'

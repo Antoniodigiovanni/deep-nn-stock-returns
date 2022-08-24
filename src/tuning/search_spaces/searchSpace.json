@@ -36,7 +36,7 @@
 
     "optimizer":{
         "_type": "choice",
-        "_value": ["SGD", "Adam", "RMSprop"]
+        "_value": ["Adam", "RMSprop", "Nadam", "Adagrad", "Adadelta"]
     },
 
     "loss":{

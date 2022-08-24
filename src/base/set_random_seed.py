@@ -14,7 +14,7 @@ def set_random_seed():
     import torch
     torch.manual_seed(seed_value)
 
-    print('Random seed set')
+    print(f'Random seed set at: {seed_value}')
 
 set_random_seed()
 

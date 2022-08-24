@@ -269,7 +269,7 @@ class Portfolio():
             print(self.returns.isna().sum())
 
             print('Cumulative returns:')
-            print(f'{((self.returns.iloc[:,-1]/100+1).cumprod()-1).iloc[-1]*100}%') # Remove dividing by 100 if using decimal percentages
+            print(f'{((self.returns.iloc[:,-1]+1).cumprod()-1).iloc[-1]*100}%') # Remove dividing by 100 if using decimal percentages
             print('Average monthly return')
-            print(f'{self.returns.iloc[:,-1].mean()}%') # Add *100 if using decimals
+            print(f'{self.returns.iloc[:,-1].mean()*100}%') # Add *100 if using decimals
         

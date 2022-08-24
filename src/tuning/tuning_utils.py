@@ -18,13 +18,26 @@ def map_act_func(af_name):
         sys.exit("Invalid activation function")
     return act_func
 
-def map_optimizer(opt_name, net_params, lr, momentum):
+def map_optimizer(params, net_params):
+    opt_name = params['optimizer']['_name']
+    lr = params['learning_rate']
+
     if opt_name == "SGD":
         opt = optim.SGD(net_params, lr=lr, momentum=momentum)
     elif opt_name == "Adam":
         opt = optim.Adam(net_params, lr=lr)
     elif opt_name == "RMSprop":
+        momentum = params['optimizer']['momentum']
+        print(f'In map optimizer, momentum is: {momentum}')
         opt = optim.RMSprop(net_params, lr=lr, momentum=momentum)
+    elif opt_name == "Adamax":
+        opt = optim.Adamax(net_params, lr=lr)
+    elif opt_name == "Adagrad":
+        opt = optim.Adagrad(net_params, lr=lr)
+    elif opt_name == "Adadelta":
+        opt = optim.Adadelta(net_params, lr=lr)
+    elif opt_name == "Nadam":
+        opt= optim.NAdam(net_params, lr=lr)
     else:
         sys.exit("Invalid optimizer")
     return opt

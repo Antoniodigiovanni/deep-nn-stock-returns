@@ -41,6 +41,7 @@ optimized_params = nni.get_next_parameter()
 params.update(optimized_params)
 
 print(params)
+print('\n\nCHECK IF THE RETURNS ARE DIVIDED BY 100!\n\n')
 
 # Load data
 if config.ForcePreProcessing == False and os.path.exists(config.paths['ProcessedDataPath']+'/dataset.csv'):
@@ -59,7 +60,8 @@ crsp.drop('melag', axis=1, inplace=True)
 crsp.drop('prc', axis=1, inplace=True)
 crsp.drop('me', axis=1, inplace=True)
 
-torch.manual_seed(2022)
+# Not used if the seed is set in set_random_seed.py
+# torch.manual_seed(2022)
 torch.use_deterministic_algorithms(True)
 
 

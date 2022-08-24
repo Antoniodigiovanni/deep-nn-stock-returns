@@ -1,5 +1,6 @@
 import os
 import torch
+import base.set_random_seed
 import torch.nn as nn
 from datetime import datetime as dt
 from argparse import ArgumentParser

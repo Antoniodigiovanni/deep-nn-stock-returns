@@ -3,8 +3,8 @@ import nni
 import visualization.plots as plots
 
 if config.args.expandingTuning or config.args.guNetworkTuning or config.args.guSimpleTuning or config.args.batchExperiment or config.args.normalTuning:
-    # import tuning.experiment_hpOptimization
-    import tuning.aml_experiment
+    import tuning.experiment_hpOptimization
+    # import tuning.aml_experiment
 
 
 # if config.args.resumeTuning:

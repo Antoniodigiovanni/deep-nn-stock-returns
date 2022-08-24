@@ -17,6 +17,7 @@ from pandas.tseries.offsets import DateOffset
 import datetime as dt
 from torch.utils.tensorboard import SummaryWriter
 from models.neural_net import metric
+import time
 
 
 class GeneralizedTrainer():
@@ -28,7 +29,7 @@ class GeneralizedTrainer():
         self.loss_fn = loss_fn
         self.device = config.device
         self.best_val_loss = np.inf
-        self.patience = self.params['patience']
+        self.patience = 10
         print(f'Patience is {self.patience}')
         self.nni_experiment = nni_experiment
 
@@ -42,7 +43,7 @@ class GeneralizedTrainer():
         # L1 Regularization
         self.l1_reg = l1_reg
         if self.l1_reg:
-            self.l1_lambda = self.params['l1_lambda1']
+            self.l1_lambda = self.params['use_l1_reg']['lambda']
         
         
         self.train_starting_year = dataset.yyyymm.min()
@@ -82,7 +83,8 @@ class GeneralizedTrainer():
     def fit(self, model, optimizer):
         self.model = model
         self.optimizer = optimizer
-        PATH = 'model.pt'
+        timestamp = int(time.time()*10000000)
+        PATH = 'model_'+str(timestamp)+'.pt'
         keep_training = 1
 
 
@@ -265,7 +267,7 @@ class GeneralizedTrainer():
             'R2': r2['R2']}
 
         print(r2)
-        
+        os.remove(PATH)
         if self.nni_experiment == True:
             nni.report_final_result(results)
 
