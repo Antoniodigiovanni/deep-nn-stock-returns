@@ -22,6 +22,8 @@ from trainer.trainer import GeneralizedTrainer
 import argparse
 from argparse import ArgumentParser
 from models.neural_net.Optimize_Net import OptimizeNet
+import base.set_random_seed
+
 
 logger = logging.getLogger('Tuning experiment')
 

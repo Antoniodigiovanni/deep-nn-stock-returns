@@ -94,6 +94,14 @@ print(f'Experiment ID: {experiment.id}')
 
 experiment.run(8081)
 
+# Event Loop
+# while True:
+#     if experiment.get_status() == 'DONE':
+#         search_data = experiment.export_data()
+#         search_metrics = experiment.get_job_metrics()
+#         input("Experiment is finished. Press any key to exit...")
+#         break
+
 # input() or signal.pause() can be used to block the web app from closing
 # after the experiment is finished
 

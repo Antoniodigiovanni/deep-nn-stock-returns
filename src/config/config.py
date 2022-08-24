@@ -1,6 +1,5 @@
 import os
 import torch
-import base.set_random_seed
 import torch.nn as nn
 from datetime import datetime as dt
 from argparse import ArgumentParser
@@ -65,7 +64,6 @@ SavedNetFileName = dt.now().strftime('/NeuralNetwork-%Y_%m_%d-%H_%M.pt')
 ###################################
 # Additional important parameters #
 ###################################
-parser.add_argument('--foo', action='store_true')
 
 parser.add_argument('--expandingTuning', action='store_true', help="Expanding Window training. Architecture and hyperparams from scratch")
 parser.add_argument('--normalTuning', action='store_true', help="Normal one-shot training. Architecture and hyperparams from scratch")
