@@ -35,6 +35,8 @@ class ReturnsPrediction():
             #print(f'loop n. {index+1}')
             #print(f'Test loader batch shape:')
             #print(data['X'].shape)
+            for k,v in data.items():
+                data[k] = v.to(config.device)
             correct, batch_prediction = metric.calc_accuracy_and_predict(self.__model, data, self.__pct)
             total += data['X'].size(0)
             total_correct += correct

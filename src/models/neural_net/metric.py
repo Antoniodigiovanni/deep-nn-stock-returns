@@ -9,8 +9,8 @@ def accuracy(truth, yhat, pct):
   
   yhat = yhat.reshape(yhat.shape[0])
   truth = truth.reshape(truth.shape[0])
-  abs_delta = np.abs(yhat-truth)
-  max_allow = np.abs(pct * truth)
+  abs_delta = torch.abs(yhat-truth)
+  max_allow = torch.abs(pct * truth)
 
   
   correct = torch.sum(abs_delta  <= max_allow).item()

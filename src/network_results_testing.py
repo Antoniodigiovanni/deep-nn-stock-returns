@@ -9,7 +9,7 @@ import base.set_random_seed
 import time
 start_time = time.time()
 
-torch.use_deterministic_algorithms(True)
+#torch.use_deterministic_algorithms(True)
 params = {
         'hidden_layer1':    1024,
         'hidden_layer2':    512,
