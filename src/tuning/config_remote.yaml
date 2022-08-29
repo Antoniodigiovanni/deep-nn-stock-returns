@@ -1,6 +1,6 @@
 experimentName: Hyperparameter_optimization (normal training)
 searchSpaceFile: search_spaces/searchSpace_nested.json
-trialCommand: python gunetworkOptimization.py --normalTraining
+trialCommand: python hp_tuning.py --normalTuning
 trialCodeDirectory: '.'
 trialGpuNumber: 1
 trialConcurrency: 1

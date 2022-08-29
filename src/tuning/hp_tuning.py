@@ -22,9 +22,9 @@ from trainer.trainer import GeneralizedTrainer
 import argparse
 from argparse import ArgumentParser
 from models.neural_net.Optimize_Net import OptimizeNet
-import base.set_random_seed
+#import base.set_random_seed
 
-
+torch.manual_seed(21)
 logger = logging.getLogger('Tuning experiment')
 
 # These are the hyperparameters that will be tuned.
@@ -59,8 +59,9 @@ params = {
         'hidden_layer5':    0,
         'act_func':         "ReLU",
         'learning_rate':    0.001,
-        'optimizer':        {"_name": "RMSprop", "momentum": 0},
-        'use_l1_reg':       {"_name": "True", "lambda": 1e-5}
+        'optimizer':        "Adam"
+        # 'optimizer':        {"_name": "RMSprop", "momentum": 0.5},
+        # 'use_l1_reg':       {"_name": "True", "lambda": 1e-5}
     }
 
 # Get optimized hyperparameters
@@ -113,10 +114,8 @@ else:
     crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)    
     del data
 
-crsp['ret'] = crsp['ret']/100
-crsp.drop('melag', axis=1, inplace=True)
-crsp.drop('prc', axis=1, inplace=True)
-crsp.drop('me', axis=1, inplace=True)
+# crsp['ret'] = crsp['ret']/100
+crsp.drop(['melag', 'prc', 'me','me_nyse20'], axis=1, inplace=True)
 
 parser = ArgumentParser()
 parser.add_argument('--expandingTuning', action='store_true')
@@ -134,12 +133,12 @@ if args.expandingTuning:
 elif args.normalTuning:
     method = 'normal'
 
-if params['use_l1_reg']['_name'] == 'True':
-    l1_reg = True
-else:
-    l1_reg = False
-print(f'l1_reg is of type: {type(l1_reg)} and is: {l1_reg}')    
-
+# if params['use_l1_reg']['_name'] == 'True':
+#     l1_reg = True
+# else:
+#     l1_reg = False
+# print(f'l1_reg is of type: {type(l1_reg)} and is: {l1_reg}')    
+l1_reg= False
 
 trainer = GeneralizedTrainer(crsp, params, loss_fn, methodology=method, l1_reg=l1_reg)
 n_inputs = trainer.n_inputs

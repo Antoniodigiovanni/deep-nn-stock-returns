@@ -55,13 +55,10 @@ else:
     del data
 
 # Added snippet to fix the NN results that were too good to be true
-crsp['ret'] = crsp['ret']/100
-crsp.drop('melag', axis=1, inplace=True)
-crsp.drop('prc', axis=1, inplace=True)
-crsp.drop('me', axis=1, inplace=True)
+# crsp['ret'] = crsp['ret']/100
+crsp.drop(['melag', 'prc', 'me','me_nyse20'], axis=1, inplace=True)
 
-# Not used if the seed is set in set_random_seed.py
-# torch.manual_seed(2022)
+torch.manual_seed(2022)
 torch.use_deterministic_algorithms(True)
 
 

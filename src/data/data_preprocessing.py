@@ -255,8 +255,8 @@ def merge_crsp_with_signals_chunks(df, SingalsPath, chunksize=50000):
 
 def merge_crsp_with_signals_no_loop(df, SingalsPath):
     """
-       Version without for loop of the above function
-    
+        Version without for loop of the above function
+        CURRENTLY NOT IN USE
      """
 
     print('Merging CRSP data with signals from Open Asset Pricing')
@@ -363,6 +363,8 @@ def sep_target(data):
         split dfs
     """
     X = data.drop(['permno', 'yyyymm', 'ret'], axis=1).to_numpy()
+    # X = data.drop(['permno', 'ret'], axis=1).to_numpy()
+
     Y = data['ret'].to_numpy().ravel()
 
     return X, Y

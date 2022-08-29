@@ -19,7 +19,8 @@ def map_act_func(af_name):
     return act_func
 
 def map_optimizer(params, net_params):
-    opt_name = params['optimizer']['_name']
+    #opt_name = params['optimizer']['_name']
+    opt_name = params['optimizer']
     lr = params['learning_rate']
 
     if opt_name == "SGD":

@@ -21,7 +21,7 @@ args, unknown = parser.parse_known_args() # Using this to avoid error with noteb
 
 def plot_cumulative_returns(predicted_ret_df):
     crsp = pd.read_csv(config.paths['CRSPretPath'])
-    crsp['ret'] = crsp['ret']/100
+    # crsp['ret'] = crsp['ret']/100
     crsp['pweight'] = ((crsp['melag'])/(crsp.groupby(['yyyymm'])['melag'].transform('sum')))
     crsp['pret'] = crsp['pweight'] * crsp['ret']
     df = crsp.groupby('yyyymm')['pret'].agg('sum')

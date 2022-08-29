@@ -34,7 +34,7 @@ def calc_accuracy_and_predict(model, data, pct):
 
 def r2_metric_calculation(df):
     crsp = pd.read_csv(config.paths['CRSPretPath'])
-    crsp['ret'] = crsp['ret']/100
+    # crsp['ret'] = crsp['ret']/100
     crsp.drop(['date'], axis=1, inplace=True)
     df_std = df.merge(crsp, on=['yyyymm', 'permno'], how='left')
     

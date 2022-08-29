@@ -43,7 +43,9 @@ class GeneralizedTrainer():
         # L1 Regularization
         self.l1_reg = l1_reg
         if self.l1_reg:
-            self.l1_lambda = self.params['use_l1_reg']['lambda']
+            print('Change Line 48 in trainer when using a nested')
+            self.l1_lambda = self.params['l1_lambda1']
+            # self.l1_lambda = self.params['use_l1_reg']['lambda']
         
         
         self.train_starting_year = dataset.yyyymm.min()
@@ -383,6 +385,7 @@ class GeneralizedTrainer():
                 .astype(int)
                 )
 
+
         self.val_dates = list(
             pd.period_range(
                 start = dt.datetime.strptime(
@@ -412,12 +415,13 @@ class GeneralizedTrainer():
                 .strftime('%Y%m')
                 .astype(int)
                 )
+        
 
     def subset_df(self):
         train = self.dataset.loc[self.dataset['yyyymm'].isin(self.train_dates)].copy()
         validation = self.dataset.loc[self.dataset['yyyymm'].isin(self.val_dates)].copy()
         test = self.dataset.loc[self.dataset['yyyymm'].isin(self.test_dates)].copy()
-
+        
         X_train, y_train = dp.sep_target(train)
         X_val, y_val = dp.sep_target(validation)
         X_test, y_test, test_index = dp.sep_target_idx(test)

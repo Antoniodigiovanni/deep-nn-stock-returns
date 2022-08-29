@@ -29,7 +29,7 @@ class Portfolio():
 
     def __load_pred_df(self):
         crsp = pd.read_csv(config.paths['CRSPretPath'])
-        crsp['ret'] = (crsp['ret']/100)
+        # crsp['ret'] = (crsp['ret']/100)
 
         # if self.__pred_df == None:        
             # if os.path.exists(config.paths['PredictedRetPath']):
@@ -268,8 +268,10 @@ class Portfolio():
             print('Portfolio Returns NaNs:')
             print(self.returns.isna().sum())
 
-            print('Cumulative returns:')
-            print(f'{((self.returns.iloc[:,-1]+1).cumprod()-1).iloc[-1]*100}%') # Remove dividing by 100 if using decimal percentages
-            print('Average monthly return')
-            print(f'{self.returns.iloc[:,-1].mean()*100}%') # Add *100 if using decimals
+
+            cum_ret = ((self.returns.iloc[:,-1]/100+1).cumprod()-1)*100
+            print(f'Cumulative return: {(cum_ret).iloc[-1]}%')
+            
+            avg_ret = self.returns.iloc[:,-1].mean()
+            print(f'Average monthly return: {avg_ret}%') # Add *100 if using decimals
         

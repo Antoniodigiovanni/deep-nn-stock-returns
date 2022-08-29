@@ -28,7 +28,7 @@ paths = dict (
     resultsPath = (currentPath + '/../../saved/results'),
     logsPath = (currentPath + '/../../saved/logs'),
     guTuningResultsPath = (currentPath + '/../../saved/results' + '/GuTuningResults'),
-    hpoResultsPath = (currentPath + '/../../saved/results' +'/tuningResults')
+    hpoResultsPath = (currentPath + '/../../saved/results' + '/tuningResults')
     )
 
 logFileName = dt.now().strftime('/TrainRun-%Y_%m_%d-%H_%M.log')
