@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 from models.neural_net.gu_et_al_NN4 import GuNN4
-from data.custom_dataset import CustomDataset, TestDataset
+from data.custom_dataset import CrspDataset, CustomDataset, TestDataset
 from data.data_preprocessing import *
 from torch.utils.data import DataLoader
 import torch.optim as optim
@@ -299,9 +299,9 @@ class GeneralizedTrainer():
             # print(f'Size = len(dataloader.dataset):{len(loader.dataset)}')
             # print(f'Batch size: {loader.batch_size}')
                 
-            for batch, data in enumerate(loader):
+            for i, (inputs, target, labels) in enumerate(loader):
                 
-                loss, correct = self.__process_one_step(data, mode)
+                loss, correct = self.__process_one_step(inputs, target, labels, mode)
                 # if batch % 1 == 0:
                 #     loss, current = loss.item(), batch * len(data['X'])
                 #     print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
@@ -311,8 +311,8 @@ class GeneralizedTrainer():
         # total_acc = total_acc / loader.batch_size * 100
         
         elif mode == 'val':
-            for data in loader:
-                loss, correct = self.__process_one_step(data, mode)
+            for i, (inputs, target, labels) in enumerate(loader):
+                loss, correct = self.__process_one_step(inputs, target, labels, mode)
                 val_loss += loss.item()
                 total_correct += correct
             # print(f'Total correct in validation:{total_correct}')              
@@ -326,29 +326,29 @@ class GeneralizedTrainer():
             return val_loss, val_acc
 
 
-    def __process_one_step(self, data, mode):
+    def __process_one_step(self, inputs, target, labels, mode):
         if mode == 'train':
             self.optimizer.zero_grad()
         
-        for k,v in data.items():
-            data[k] = v.to(self.device)
-
+        inputs = inputs.to(config.device)
+        target = target.to(config.device)
+        labels = labels.to(config.device)
+                
         if mode == 'train':
-            yhat = self.model(data['X'])
+            yhat = self.model(inputs.float())
             # Dummy acc, as it is not needed for training
             correct = 0
         elif mode == 'val':
             with torch.no_grad():
-                yhat = self.model(data['X'])
-                correct = metric.accuracy(data['Y'], yhat, 0.2)
+                yhat = self.model(inputs.float())
+                correct = metric.accuracy(target.float().squeeze(), yhat, 0.2)
         
-        loss = self.loss_fn(yhat.ravel(), data['Y'].ravel())
+        loss = self.loss_fn(yhat, target.float().squeeze())
         
         if self.l1_reg:
             l1_norm = sum(p.abs().sum()
                 for p in self.model.parameters())
-
-            loss = loss + l1_norm * self.l1_lambda
+            loss = loss.squeeze() + l1_norm.squeeze() * self.l1_lambda
 
 
         if mode == 'train':
@@ -422,18 +422,14 @@ class GeneralizedTrainer():
         validation = self.dataset.loc[self.dataset['yyyymm'].isin(self.val_dates)].copy()
         test = self.dataset.loc[self.dataset['yyyymm'].isin(self.test_dates)].copy()
         
-        X_train, y_train = dp.sep_target(train)
-        X_val, y_val = dp.sep_target(validation)
-        X_test, y_test, test_index = dp.sep_target_idx(test)
+        self.train = CrspDataset(train)
+        self.validation = CrspDataset(validation)
+        self.test = CrspDataset(test)
+        
 
-        self.train = CustomDataset(X_train, y_train)
-        self.val = CustomDataset(X_val, y_val)
-        self.test = TestDataset(X_test, y_test, test_index)
-
-        self.n_inputs = self.train.data.shape[1]
+        self.n_inputs = self.train.get_inputs()
         # Modify batch size to make it trainable with higher values
         # Modify dataloader args
         self.train_loader = DataLoader(self.train, batch_size=10000)
-        self.val_loader = DataLoader(self.val, batch_size=10000)
-        self.test_loader = DataLoader(self.test, batch_size=10000)
-        
+        self.val_loader = DataLoader(self.validation, batch_size=10000)
+        self.test_loader = DataLoader(self.test, batch_size=len(self.test))

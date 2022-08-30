@@ -19,35 +19,52 @@ class ReturnsPrediction():
 
         self.__test_loader = test_loader
 
-        acc, self.pred_df = self.prediction_loop()
+        self.pred_df = self.predict()
         
-        print(f'Avg accuracy over the test set at {self.__pct*100}% is: {round(acc)}%')
+        # print(f'Avg accuracy over the test set at {self.__pct*100}% is: {round(acc)}%')
 
         
-    def prediction_loop(self):
+    def predict(self):
         self.__model.eval()
-        prediction = {}
-        accuracies = []
-        total_correct = 0
-        total = 0
+        # prediction = {}
+        # total_correct = 0
+        # total = 0
         
-        for index, data in enumerate(self.__test_loader):
-            #print(f'loop n. {index+1}')
-            #print(f'Test loader batch shape:')
-            #print(data['X'].shape)
-            for k,v in data.items():
-                data[k] = v.to(config.device)
-            correct, batch_prediction = metric.calc_accuracy_and_predict(self.__model, data, self.__pct)
-            total += data['X'].size(0)
-            total_correct += correct
-            #accuracies.append(accuracy)
-            
-            for k in batch_prediction:
-                if index == 0:
-                    prediction[k] = []
-                prediction[k].extend(batch_prediction[k])
+        dataiter = iter(self.__test_loader)
+        inputs, target, labels = dataiter.next()
 
-        accuracy = 100.*total_correct/total   
-        pred_df = pd.DataFrame.from_dict(prediction) 
+        inputs = inputs.to(config.device)
+        target = target.to(config.device)
+        labels = labels.to(config.device)
+            
+        with torch.no_grad():
+            outputs = self.__model(inputs.float())
+            pred_df = pd.DataFrame(
+                {'permno': labels[:,1].numpy(),
+                'yyyymm': labels[:,0].numpy(),
+                #'ret': target.squeeze().numpy(),
+                'predicted_ret': outputs.squeeze().numpy()
+                }
+            )
+
+        # for i, (inputs, target, labels) in enumerate(self.__test_loader):
+        #     inputs = inputs.to(config.device)
+        #     target = target.to(config.device)
+        #     labels = labels.to(config.device)
+            
+        #     # Predict the batch
+        #     dataiter = iter()
+        #     correct, batch_prediction = metric.calc_accuracy_and_predict(self.__model, data, self.__pct)
+        #     total += inputs.size(0)
+        #     total_correct += correct
+            
+        #     for k in batch_prediction:
+        #         if index == 0:
+        #             prediction[k] = []
+        #         prediction[k].extend(batch_prediction[k])
+
+        # accuracy = 100.*total_correct/total   
+        # pred_df = pd.DataFrame.from_dict(prediction) 
         
-        return accuracy, pred_df
+        # return accuracy, pred_df
+        return pred_df

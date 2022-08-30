@@ -1,5 +1,6 @@
 trialConcurrency: 1
-searchSpace:
+searchSpaceFile: search_spaces/searchSpace_nested.json
+trialCodeDirectory: ./
 experimentName: Gu_et_al Optimization
 trainingService:
   platform: aml
@@ -8,3 +9,11 @@ trainingService:
   resourceGroup: Risorse1
   workspaceName: aml-test
   computeTarget: antoniodg981
+
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: minimize
+
+trialCommand: python hp_tuning.py --normalTuning
+  

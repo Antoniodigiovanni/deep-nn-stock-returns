@@ -30,4 +30,4 @@ class GuNN4(nn.Module):
     # forward propagate input
     def forward(self, features):
         X = self.net(features)
-        return X
+        return X.squeeze()

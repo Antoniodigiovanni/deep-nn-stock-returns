@@ -42,7 +42,7 @@ class OptimizeNet(nn.Module):
         if self.hidden_size_5:
             x = self.fc5(x)
         x = self.out(x)
-        return x
+        return x.squeeze()
     
     def _fc_block(self, in_c, out_c, act_func):
         block = nn.Sequential(
@@ -110,4 +110,4 @@ class OptimizeNet_v2(nn.Module):
         
     def forward(self, x):
         x = self.fc(x)
-        return x
+        return x.squeeze()

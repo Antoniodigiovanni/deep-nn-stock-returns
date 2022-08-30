@@ -5,10 +5,10 @@ import torch
 import torch.nn as nn
 from tuning.tuning_utils import *
 from models.neural_net.Optimize_Net import OptimizeNet
-import base.set_random_seed
+# import base.set_random_seed
 import time
 start_time = time.time()
-
+torch.manual_seed(21)
 #torch.use_deterministic_algorithms(True)
 params = {
         'hidden_layer1':    1024,

@@ -7,8 +7,8 @@ import config
 
 def accuracy(truth, yhat, pct):
   
-  yhat = yhat.reshape(yhat.shape[0])
-  truth = truth.reshape(truth.shape[0])
+  # yhat = yhat.reshape(yhat.shape[0])
+  # truth = truth.reshape(truth.shape[0])
   abs_delta = torch.abs(yhat-truth)
   max_allow = torch.abs(pct * truth)
 
@@ -17,8 +17,7 @@ def accuracy(truth, yhat, pct):
   return correct
 
 def calc_accuracy_and_predict(model, data, pct):
-  # assumes model.eval()
-
+  model.eval()
 
   with torch.no_grad():
     output = model(data['X'])
