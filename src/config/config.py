@@ -72,12 +72,15 @@ parser.add_argument('--guNetworkTuning', action='store_true', help="Expanding Wi
 # parser.add_argument('--resumeTuning', action='store_true')
 parser.add_argument('--guSimpleTuning', action='store_true', help="Normal one-shot training. Gu et al.'s NN4")
 parser.add_argument('--batchExperiment', action='store_true')
+parser.add_argument('--saveDirName', default='analysisResults', help='Specifies the path in which experiment results are saved' )
 
 
 
 #args = parser.parse_args()
 args, unknown = parser.parse_known_args() # Using this to avoid error with notebooks
 
+saveDir = paths['resultsPath'] + '/' + args.saveDirName
+print(f'Save Dir is: {saveDir}\nRemember to write the snippet to create the directory if that does not exist')
 
 
 import configparser

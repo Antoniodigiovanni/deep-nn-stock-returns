@@ -43,7 +43,7 @@ class GeneralizedTrainer():
         # L1 Regularization
         self.l1_reg = l1_reg
         if self.l1_reg:
-            print('Change Line 48 in trainer when using a nested')
+            print('Change Line 48 in trainer when using a nested search space')
             self.l1_lambda = self.params['l1_lambda1']
             # self.l1_lambda = self.params['use_l1_reg']['lambda']
         
@@ -85,8 +85,14 @@ class GeneralizedTrainer():
     def fit(self, model, optimizer):
         self.model = model
         self.optimizer = optimizer
-        timestamp = int(time.time()*10000000)
-        PATH = 'model_'+str(timestamp)+'.pt'
+        
+        timeStamp = int(time.time()*10000000)
+        
+        # Prepare for saving trained model
+        if os.path.exists(config.saveDir + '/models') == False:
+            os.makedirs(config.saveDir + '/models')
+        PATH = config.saveDir + '/models/model_'+str(timeStamp)+'.pt'
+        
         keep_training = 1
 
 
@@ -223,41 +229,72 @@ class GeneralizedTrainer():
         print(sharpe_ratio)
 
         # Modify folder structure for when not doing the nni_experiment.
-        
-        # Saving files
-        if os.path.exists(config.paths['hpoResultsPath'] + '/predicted_returns') == False:
-            os.makedirs(config.paths['hpoResultsPath'] + '/predicted_returns')
-        if os.path.exists(config.paths['hpoResultsPath'] + '/portfolio_returns') == False:
-            os.makedirs(config.paths['hpoResultsPath'] + '/portfolio_returns')
-        if os.path.exists(config.paths['hpoResultsPath'] + '/trial_info') == False:
-            os.makedirs(config.paths['hpoResultsPath'] + '/trial_info')
-        if os.path.exists(config.paths['hpoResultsPath'] + '/portfolio_weights') == False:
-            os.makedirs(config.paths['hpoResultsPath'] + '/portfolio_weights')
-        if os.path.exists(config.paths['hpoResultsPath'] + '/models') == False:
-            os.makedirs(config.paths['hpoResultsPath'] + '/models')
+        predictedRetDir = config.saveDir + '/predicted_returns'
+        portfolioRetDir = config.saveDir + '/portfolio_returns'
+        trialInfoDir = config.saveDir + '/trial_info'
+        portfolioWeightsDir = config.saveDir + '/portfolio_weights'
 
+        # Saving files
+        """
+        if os.path.exists(config.saveDir + '/predicted_returns') == False:
+            os.makedirs(config.saveDir + '/predicted_returns')
+        if os.path.exists(config.saveDir + '/portfolio_returns') == False:
+            os.makedirs(config.saveDir + '/portfolio_returns')
+        if os.path.exists(config.saveDir + '/trial_info') == False:
+            os.makedirs(config.saveDir + '/trial_info')
+        if os.path.exists(config.saveDir + '/portfolio_weights') == False:
+            os.makedirs(config.saveDir + '/portfolio_weights')
+        # if os.path.exists(config.saveDir + '/models') == False:
+        #     os.makedirs(config.saveDir + '/models')
+        """
+        if os.path.exists(predictedRetDir) == False:
+            os.makedirs(predictedRetDir)
+        if os.path.exists(portfolioRetDir) == False:
+            os.makedirs(portfolioRetDir)
+        if os.path.exists(trialInfoDir) == False:
+            os.makedirs(trialInfoDir)
+        if os.path.exists(portfolioWeightsDir) == False:
+            os.makedirs(portfolioWeightsDir)
+        
 
         from csv import DictWriter, writer
 
         field_names = ['timeStamp','information_ratio','alpha', 'r2', 'val_loss', 'Sharpe_Ratio']
-        summary_dict = {'timeStamp': timeStamp_id, 'information_ratio': information_ratio, 'alpha': alpha, 'r2': r2, 'val_loss': val_loss, 'Sharpe_Ratio': sharpe_ratio}
-        with open(config.paths['hpoResultsPath'] + '/experiment_summary.csv', 'a') as fp:          
+        summary_dict = {
+            # 'timeStamp': timeStamp_id,
+            'timeStamp': timeStamp,
+            'information_ratio': information_ratio, 
+            'alpha': alpha, 
+            'r2': r2, 
+            'val_loss': val_loss, 
+            # 'Sharpe_Ratio': sharpe_ratio
+            }
+
+        with open(config.saveDir + '/experiment_summary.csv', 'a') as fp:          
             writer_obj = writer(fp)
             if fp.tell() == 0:
                 writer_obj.writerow(field_names)
             dictwriter_object = DictWriter(fp, fieldnames=field_names)
             dictwriter_object.writerow(summary_dict)
   
-        self.prediction_df.to_csv(config.paths['hpoResultsPath'] + '/predicted_returns/' + timeStamp_id + ' - predicted_returns.csv')
-        returns.to_csv(config.paths['hpoResultsPath'] + '/portfolio_returns/' + timeStamp_id + ' - portfolio_returns.csv')
-        final_dict = {'params': self.params, 'information_ratio': information_ratio, 'alpha':alpha, 'r2': r2}
-        with open(config.paths['hpoResultsPath'] + '/trial_info/' + timeStamp_id + '- trial_full.json', 'w') as fp:
+        self.prediction_df.to_csv(predictedRetDir + '/' + timeStamp + '_predicted_returns.csv')
+        returns.to_csv(portfolioRetDir + '/' + timeStamp + '_portfolio_returns.csv')
+        
+        final_dict = {
+            'params': self.params,
+            'information_ratio': information_ratio,
+            'alpha':alpha, 
+            'r2': r2,
+            'Others': 'Think about adding other metrics (SR,Max_DD,...)'}
+
+        with open(trialInfoDir + '/' + timeStamp + '_trial_full.json', 'w') as fp:
             json.dump(final_dict, fp, indent=4)
-        portfolio_weights.to_csv(config.paths['hpoResultsPath'] + '/portfolio_weights/' + timeStamp_id + ' - portfolio_weights.csv')
+        
+        portfolio_weights.to_csv(portfolioWeightsDir + '/' + timeStamp + '_portfolio_weights.csv')
 
         # Saving model
-        torch.save(self.model, config.paths['hpoResultsPath'] + '/models/' + timeStamp_id + ' - model.pt')
-        torch.save(self.model.state_dict(), config.paths['hpoResultsPath'] + '/models/' + timeStamp_id + ' - model_state_dict.pt')
+        # torch.save(self.model, config.paths['hpoResultsPath'] + '/models/' + timeStamp_id + ' - model.pt')
+        # torch.save(self.model.state_dict(), config.paths['hpoResultsPath'] + '/models/' + timeStamp_id + ' - model_state_dict.pt')
 
         print('Portfolio returns calculation completed.')
        
