@@ -140,7 +140,7 @@ class Portfolio():
         # try:
         df_rebalancing_months['bin'] = (
             df_rebalancing_months.groupby('yyyymm')['predicted_ret']
-            .transform(lambda x: pd.qcut(x, q=self.n_cuts, labels = False, duplicates='drop'))
+            .transform(lambda x: pd.qcut(x, q=self.n_cuts, labels = False))#, duplicates='drop'))
             )
         #     df_rebalancing_months['predicted_ret_noise'] = df_rebalancing_months['predicted_ret'] + 0.0000001 * (np.random.rand(len(df_rebalancing_months)) - 0.5)
         #     df_rebalancing_months['bin_test'] = (
@@ -212,7 +212,6 @@ class Portfolio():
         # such that if some - Chen and Zimmermann do not do that in their code (maybe because I have dropped
         # rows with NaN as return)
         self.__pred_df.sort_values(['permno', 'yyyymm'], ascending=[True, True]) 
-        self.__pred_df['bin'] = self.__pred_df.groupby(['permno'])[['bin']].ffill()
         self.__pred_df['pweight'] = self.__pred_df.groupby(['permno','bin'])[['pweight']].ffill()
 
         if self.verbose == True:
@@ -274,4 +273,7 @@ class Portfolio():
             
             avg_ret = self.returns.iloc[:,-1].mean()
             print(f'Average monthly return: {avg_ret}%') # Add *100 if using decimals
-        
+    
+    def metrics_calculation(self):
+        self.metrics = {}
+        pass

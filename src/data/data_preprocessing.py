@@ -76,6 +76,7 @@ def remove_microcap_stocks(df, method=1):
         print(f'N. rows before filtering for microcap stocks: {df.shape[0]}')
         df = df.loc[df['me'] >= df['me_nyse20']]
         print(f'N. rows after filtering for microcap stocks: {df.shape[0]}')
+        print('Remember to include this number in the shortlist')
 
     # Method 2
     if method == 2:
@@ -227,7 +228,7 @@ def merge_crsp_with_signals_chunks(df, SingalsPath, chunksize=50000):
     colswithallnans = 0
     for chunk in pd.read_csv(SingalsPath, chunksize=chunksize):
 
-        colswithallnans += (chunk.iloc[:, 3:][chunk.isnull().all(axis=1)].shape[0])
+        colswithallnans += (chunk.iloc[:, 3:][chunk.isnull().all(axis=0)].shape[0])
         chunk = scale_predictors(chunk)
 
         # Converting columns to float32, to save memory

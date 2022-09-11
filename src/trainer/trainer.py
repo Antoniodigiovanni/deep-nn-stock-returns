@@ -153,7 +153,7 @@ class GeneralizedTrainer():
                     epoch_loss = checkpoint['epoch_loss']
                     val_loss = checkpoint['val_loss']
                     val_acc = checkpoint['val_acc']
-                    model.train()
+                    self.model.train()
 
                     break
                 
@@ -426,10 +426,13 @@ class GeneralizedTrainer():
         self.validation = CrspDataset(validation)
         self.test = CrspDataset(test)
         
-
+        if len(self.test) > 0:
+            bs = len(self.test)
+        else:
+            bs = 10000 
         self.n_inputs = self.train.get_inputs()
         # Modify batch size to make it trainable with higher values
         # Modify dataloader args
         self.train_loader = DataLoader(self.train, batch_size=10000)
         self.val_loader = DataLoader(self.validation, batch_size=10000)
-        self.test_loader = DataLoader(self.test, batch_size=len(self.test))
+        self.test_loader = DataLoader(self.test, batch_size=bs)
