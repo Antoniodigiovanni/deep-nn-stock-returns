@@ -12,11 +12,9 @@ import logging
 import torch.optim as optim
 import config
 import pandas as pd
-from data.base_dataset import BaseDataset
-from data.custom_dataset import CustomDataset
+from data.dataset import BaseDataset
 from data.data_preprocessing import *
 from torch.utils.data import DataLoader
-# from trainer.trainer import NeuralNetTrainer
 from tuning_utils import *
 from trainer.trainer import GeneralizedTrainer
 import argparse
@@ -27,21 +25,6 @@ from models.neural_net.Optimize_Net import OptimizeNet
 torch.manual_seed(21)
 logger = logging.getLogger('Tuning experiment')
 
-# These are the hyperparameters that will be tuned.
-# params = {
-#     'hidden_size_1': 4,
-#     'hidden_size_2': 8,
-#     'hidden_size_3': 0,
-#     'hidden_size_4': 0,
-#     'hidden_size_5': 0,
-#     'act_func': 'ReLu',
-#     'optimizer': 'Adam',
-#     'loss': 'MSELoss',
-#     'learning_rate': 0.001,
-#     'momentum': 0,
-#     'l1_lambda1': 1,
-#     "patience": 10
-# }
 
 """ Nested PARAMETERS"""
 params = {
@@ -85,37 +68,18 @@ def validate_params(params):
         return False
 
     return True
-# def validate_params(params):
-#     if params['hidden_layer2']["_name"] == 'empty' and (params['hidden_layer3']["_name"] == "linear" or params['hidden_layer4']["_name"] == "linear" or params['hidden_layer5']["_name"] == "linear"):
-#         return False
-#     if params['hidden_layer3']["_name"] == 'empty' and (params['hidden_layer4']["_name"] == "linear" or params['hidden_layer5']["_name"] == "linear"):
-#         return False
-#     if params['hidden_layer4']["_name"] == 'empty' and (params['hidden_layer5']["_name"] == "linear"):
-#         return False
-
-#     return True
-    
-
 
 if not validate_params(params): 
-# for invalid param combinations, report the worst possible result
-        print('Invalid Parameters set')
-        nni.report_final_result(np.inf)
+    # for invalid param combinations, report the worst possible result
+    print('Invalid Parameters set')
+    nni.report_final_result(np.inf)
         
 
 # Load data
-if config.ForcePreProcessing == False and os.path.exists(config.paths['ProcessedDataPath']+'/dataset.csv'):
-    print('Trying to load data')
-    crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)
-    print('Data Loaded')
-else:
-    print('Data Pre-processing will start soon')
-    data = BaseDataset().load_dataset_in_memory()
-    crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)    
-    del data
-
-# crsp['ret'] = crsp['ret']/100
-crsp.drop(['melag', 'prc', 'me','me_nyse20'], axis=1, inplace=True)
+dataset = BaseDataset()
+df = dataset.df
+    
+df.drop(['melag', 'prc', 'me','me_nyse20'], axis=1, inplace=True, errors='ignore')
 
 parser = ArgumentParser()
 parser.add_argument('--expandingTuning', action='store_true')
@@ -140,7 +104,7 @@ elif args.normalTuning:
 # print(f'l1_reg is of type: {type(l1_reg)} and is: {l1_reg}')    
 l1_reg= False
 
-trainer = GeneralizedTrainer(crsp, params, loss_fn, methodology=method, l1_reg=l1_reg)
+trainer = GeneralizedTrainer(df, params, loss_fn, methodology=method, l1_reg=l1_reg)
 n_inputs = trainer.n_inputs
 
 model = OptimizeNet(n_inputs, params).to(config.device)

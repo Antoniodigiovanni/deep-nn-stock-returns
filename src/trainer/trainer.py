@@ -1,22 +1,19 @@
-from tabnanny import check
+import config
+import pandas as pd
 import nni
 import torch
-import torch.nn as nn
 import numpy as np
-from models.neural_net.gu_et_al_NN4 import GuNN4
-from data.custom_dataset import CrspDataset, CustomDataset, TestDataset
-from data.data_preprocessing import *
+from data.crsp_dataset import CrspDataset
 from torch.utils.data import DataLoader
-import torch.optim as optim
 from portfolios.ReturnsPrediction import ReturnsPrediction
-from portfolios.PortfolioCreation import Portfolio
-import data.data_preprocessing as dp
+from portfolios.portfolio_new import Portfolio
 import os
 import json
 from pandas.tseries.offsets import DateOffset
 import datetime as dt
 from torch.utils.tensorboard import SummaryWriter
 from models.neural_net import metric
+from trainer.feature_importance import IntegratedGradients_importance
 import time
 
 
@@ -50,6 +47,7 @@ class GeneralizedTrainer():
         
         self.train_starting_year = dataset.yyyymm.min()
         self.df_end_date = dataset.yyyymm.max()
+        
 
         self.train_window = train_window_years
         self.val_window = val_window_years
@@ -93,11 +91,19 @@ class GeneralizedTrainer():
             os.makedirs(config.saveDir + '/models')
         PATH = config.saveDir + '/models/model_'+str(timeStamp)+'.pt'
         
-        keep_training = 1
+        if (self.train_dates[-1] > self.df_end_date | self.val_dates[-1] > self.df_end_date | self.test_dates[-1] > self.df_end_date):
+            print(self.train_dates[-1])
+            print(self.val_dates[-1])
+            print(self.test_dates[-1])
+            print('Dates out of bounds, exiting training...')
+            keep_training = 0
+            import sys
+            sys.exit()
+        else:
+            keep_training = 1
 
 
         while keep_training == 1:
-
             print(f'\n\nTraining from {self.train_dates[0]} to {self.train_dates[-1]}')
             print(f'Validating from {self.val_dates[0]} to {self.val_dates[-1]}')
             print(f'Testing from {self.test_dates[0]} to {self.test_dates[-1]}')
@@ -164,8 +170,12 @@ class GeneralizedTrainer():
                     break
                 
             pred_df = ReturnsPrediction(self.test_loader, self.model).pred_df
+            r2_temp = metric.normal_r2_calculation(pred_df)
+            print(f'R2 for this iteration is: {r2_temp}, annualized at {r2_temp*12}')
+            
             self.prediction_df = pd.concat([self.prediction_df, pred_df], ignore_index=True)
             
+
             self.writer.flush()
 
 
@@ -183,6 +193,8 @@ class GeneralizedTrainer():
                 keep_training = 0
                 print('Normal training completed.')
 
+        print(f'This is again the self.prediction_df columns on line 185: {self.prediction_df.columns}')
+            
         r2 = metric.r2_metric_calculation(self.prediction_df)
         print(r2)
 
@@ -206,11 +218,13 @@ class GeneralizedTrainer():
         print(null_values)
 
         print(f'Rebalancing is: {config.rebalancing_frequency}')
-        portfolio = Portfolio(pred_df=self.prediction_df, n_cuts=config.n_cuts, rebalancing_frequency=config.rebalancing_frequency, weighting = config.weighting)
-        information_ratio = portfolio.information_ratio
+        
+        portfolio = Portfolio(pred_df=self.prediction_df, rebalancing_frequency=config.rebalancing_frequency, weighting = config.weighting)
+        information_ratio_regression = portfolio.information_ratio_regression
         alpha = portfolio.alpha
         returns = portfolio.returns
-        portfolio_weights = portfolio.portfolio_weights
+        information_ratio = metric.information_ratio(returns)
+        # portfolio_weights = portfolio.portfolio_weights
 
         
 
@@ -227,12 +241,18 @@ class GeneralizedTrainer():
         sharpe_ratio = metric.calc_sharpe_ratio(returns)
         print(f'Sharpe Ratio of {config.rebalancing_frequency} {config.weighting} portfolio:')
         print(sharpe_ratio)
+        print(type(sharpe_ratio))
+
+
+
 
         # Modify folder structure for when not doing the nni_experiment.
         predictedRetDir = config.saveDir + '/predicted_returns'
         portfolioRetDir = config.saveDir + '/portfolio_returns'
         trialInfoDir = config.saveDir + '/trial_info'
         portfolioWeightsDir = config.saveDir + '/portfolio_weights'
+        cumulativeReturnsDir = config.saveDir + '/cumulative_log_returns'
+        plotsDir = config.saveDir + '/plots'
 
         # Saving files
         """
@@ -255,15 +275,27 @@ class GeneralizedTrainer():
             os.makedirs(trialInfoDir)
         if os.path.exists(portfolioWeightsDir) == False:
             os.makedirs(portfolioWeightsDir)
-        
+        if os.path.exists(cumulativeReturnsDir) == False:
+            os.makedirs(cumulativeReturnsDir)
+        if os.path.exists(plotsDir) == False:
+            os.makedirs(plotsDir)
+            
+ 
 
         from csv import DictWriter, writer
 
-        field_names = ['timeStamp','information_ratio','alpha', 'r2', 'val_loss', 'Sharpe_Ratio']
+        field_names = [
+            'timeStamp',
+            # 'information_ratio',
+            'alpha', 
+            'r2', 
+            'val_loss', 
+            # 'Sharpe_Ratio'
+            ]
         summary_dict = {
             # 'timeStamp': timeStamp_id,
             'timeStamp': timeStamp,
-            'information_ratio': information_ratio, 
+            # 'information_ratio': information_ratio, 
             'alpha': alpha, 
             'r2': r2, 
             'val_loss': val_loss, 
@@ -277,36 +309,47 @@ class GeneralizedTrainer():
             dictwriter_object = DictWriter(fp, fieldnames=field_names)
             dictwriter_object.writerow(summary_dict)
   
-        self.prediction_df.to_csv(predictedRetDir + '/' + timeStamp + '_predicted_returns.csv')
-        returns.to_csv(portfolioRetDir + '/' + timeStamp + '_portfolio_returns.csv')
+        self.prediction_df.to_csv(predictedRetDir + '/' + str(timeStamp) + '_predicted_returns.csv')
+        returns.to_csv(portfolioRetDir + '/' + str(timeStamp) + '_portfolio_returns.csv')
         
         final_dict = {
             'params': self.params,
-            'information_ratio': information_ratio,
             'alpha':alpha, 
             'r2': r2,
-            'Others': 'Think about adding other metrics (SR,Max_DD,...)'}
+            'Information Ratio': information_ratio,
+            'Regression-based Information Ratio': information_ratio_regression,
+            'Sharpe Ratio': sharpe_ratio,
+            'Others': 'Think about adding other metrics (Max_DD, turnover, ...)'}
 
-        with open(trialInfoDir + '/' + timeStamp + '_trial_full.json', 'w') as fp:
+        with open(trialInfoDir + '/' + str(timeStamp) + '_trial_full.json', 'w') as fp:
             json.dump(final_dict, fp, indent=4)
         
-        portfolio_weights.to_csv(portfolioWeightsDir + '/' + timeStamp + '_portfolio_weights.csv')
+        # Saving portfolio weights
+        # portfolio_weights.to_csv(portfolioWeightsDir + '/' + timeStamp + '_portfolio_weights.csv')
 
         # Saving model
         # torch.save(self.model, config.paths['hpoResultsPath'] + '/models/' + timeStamp_id + ' - model.pt')
         # torch.save(self.model.state_dict(), config.paths['hpoResultsPath'] + '/models/' + timeStamp_id + ' - model_state_dict.pt')
 
+        cumulative_log_returns = portfolio.cum_returns
+        cumulative_log_returns.to_csv(cumulativeReturnsDir + '/' + str(timeStamp) + '_cumulative_log_returns.csv')
+        plot_cum_ret_path = plotsDir + '/' + str(timeStamp) + '_cumulative_log_returns.png'
+        portfolio.plot_cumulative_returns(plot_cum_ret_path)
+
+        plot_feature_importance = plotsDir + '/' + str(timeStamp) + '_feature_importance.png'
+        IntegratedGradients_importance(self.model, plot_feature_importance)
+        
         print('Portfolio returns calculation completed.')
        
         results = {
             'default': float(val_loss), 
             'val_acc': val_acc,
             'alpha': float(alpha),
-            'information_ratio': float(information_ratio),
+            'information_ratio': float(information_ratio_regression),
             'R2': r2['R2']}
 
         print(r2)
-        os.remove(PATH)
+        # os.remove(PATH)
         if self.nni_experiment == True:
             nni.report_final_result(results)
 
@@ -462,6 +505,8 @@ class GeneralizedTrainer():
         self.train = CrspDataset(train)
         self.validation = CrspDataset(validation)
         self.test = CrspDataset(test)
+
+        print('Train/Val/Test split updated')
         
         if len(self.test) > 0:
             bs = len(self.test)

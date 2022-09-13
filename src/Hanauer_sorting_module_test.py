@@ -4,6 +4,7 @@ import config
 import pandas as pd
 
 crspret = pd.read_csv(config.paths['CRSPretPath'])
+crspret['ret'] = crspret['ret']/100
 crspinfo = pd.read_csv(config.paths['CRSPinfoPath'])
 # This file was created by CMPT_ME_PRIOR_RETS using the 202205 CRSP database.  It
 # contains a momentum factor, constructed from six value-weight portfolios formed
@@ -35,4 +36,5 @@ df_filtered['Median_Me'] = df_filtered.groupby('yyyymm')['melag'].transform('med
 
 # def Mom_ret(df):
 print(df.groupby('permno')['ret'].tail(12).cumprod())
+
 

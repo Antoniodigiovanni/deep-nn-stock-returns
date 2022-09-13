@@ -7,10 +7,5 @@
     "l1_lambda1":{ 
         "_type": "choice",
         "_value": [1e-5, 4.95e-4, 1e-3]
-    },
-        
-    "patience":{
-        "_type":"choice",
-        "_value": [10,15]
     }
 }

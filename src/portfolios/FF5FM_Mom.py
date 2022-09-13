@@ -1,10 +1,7 @@
 import pandas as pd
 import config
 import os
-from urllib.request import urlopen
-from io import BytesIO
-from zipfile import ZipFile
-from data.data_preprocessing import download_and_unzip
+from base.utils import download_and_unzip
 
 # Create a class containing the joint df?
 

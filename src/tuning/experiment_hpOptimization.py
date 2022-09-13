@@ -8,7 +8,7 @@ experiment = Experiment('local')
 # Trying to use the same file for tuning Gu et al's network and the self experiment (add grid search on best results of
 # self experiment afterwards)
 if config.args.expandingTuning:
-    print('Tuning Experiment to discover an optimal architecture from scratch')
+    print('Tuning Experiment to discover an optimal architecture from scratch (expanding train)')
     print('Minimising validation loss')
     experiment.config.experiment_name = 'Hyperparameter_optimization'
     experiment.config.trial_command = 'python hp_tuning.py --expandingTuning'
@@ -92,7 +92,7 @@ experiment.config.max_experiment_duration = '480h'
 # Add logger for experiment id - in order to be able to view the experiment afterwards
 print(f'Experiment ID: {experiment.id}')
 
-experiment.run(8082)
+experiment.run(8083)
 
 # Event Loop
 # while True:

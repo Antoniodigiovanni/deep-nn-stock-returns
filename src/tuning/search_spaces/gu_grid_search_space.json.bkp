@@ -1,0 +1,16 @@
+{
+    "learning_rate":{ 
+        "_type": "choice",
+        "_value": [0.001, 0.0045, 0.01]
+    },
+
+    "l1_lambda1":{ 
+        "_type": "choice",
+        "_value": [1e-5, 4.95e-4, 1e-3]
+    },
+        
+    "patience":{
+        "_type":"choice",
+        "_value": [10,15]
+    }
+}

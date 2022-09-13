@@ -14,5 +14,3 @@ if config.args.expandingTuning or config.args.guNetworkTuning or config.args.guS
 #     experiment.resume('ud1vlf93', 8081)
 
 # ...
-
-# plots.plot_cumulative_returns(0)

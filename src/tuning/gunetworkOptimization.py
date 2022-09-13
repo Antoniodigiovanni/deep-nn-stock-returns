@@ -14,8 +14,7 @@ import torch
 import logging
 import torch.optim as optim
 import pandas as pd
-from data.base_dataset import BaseDataset
-from data.custom_dataset import CustomDataset
+from data.dataset import BaseDataset
 from data.data_preprocessing import *
 from torch.utils.data import DataLoader
 from trainer.trainer import GeneralizedTrainer
@@ -28,9 +27,9 @@ logger = logging.getLogger('Grid search experiment')
 params = {
     'learning_rate': 0.0005,
     'l1_lambda1': 5e-6,
-    'patience': 2,
-    'adam_beta_1': 0.9,
-    'adam_beta_2': 0.999
+    # 'patience': 2,
+    # 'adam_beta_1': 0.9,
+    # 'adam_beta_2': 0.999
 }
 
 # Get optimized hyperparameters
@@ -41,25 +40,17 @@ optimized_params = nni.get_next_parameter()
 params.update(optimized_params)
 
 print(params)
-print('\n\nCHECK IF THE RETURNS ARE DIVIDED BY 100!\n\n')
 
 # Load data
-if config.ForcePreProcessing == False and os.path.exists(config.paths['ProcessedDataPath']+'/dataset.csv'):
-    print('Trying to load data')
-    crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)
-    print('Data Loaded')
-else:
-    print('Data Pre-processing will start soon')
-    data = BaseDataset().load_dataset_in_memory()
-    crsp = pd.read_csv(config.paths['ProcessedDataPath']+'/dataset.csv', index_col=0)    
-    del data
+# Load data
+dataset = BaseDataset()
+df = dataset.df
+    
+df.drop(['melag', 'prc', 'me','me_nyse20'], axis=1, inplace=True, errors='ignore')
 
-# Added snippet to fix the NN results that were too good to be true
-# crsp['ret'] = crsp['ret']/100
-crsp.drop(['melag', 'prc', 'me','me_nyse20'], axis=1, inplace=True)
 
 torch.manual_seed(2022)
-torch.use_deterministic_algorithms(True)
+# torch.use_deterministic_algorithms(True)
 
 
 # n_inputs = train.data.shape[1]
@@ -83,18 +74,18 @@ print('Starting Training process')
 loss_fn = nn.L1Loss()
 if args.ExpandingBatchTest:
     print('Expanding window - batches fixed in order to do the correlation test')
-    trainer = GeneralizedTrainer(crsp, params, loss_fn, methodology='expanding', l1_reg=True)
+    trainer = GeneralizedTrainer(df, params, loss_fn, methodology='expanding', l1_reg=True)
 elif args.normalTraining:
-    trainer = GeneralizedTrainer(crsp, params, loss_fn, methodology='normal', l1_reg=True)
+    trainer = GeneralizedTrainer(df, params, loss_fn, methodology='normal', l1_reg=True)
 elif args.expandingTraining:
-    trainer = GeneralizedTrainer(crsp, params, loss_fn, methodology='expanding', l1_reg=True)
+    trainer = GeneralizedTrainer(df, params, loss_fn, methodology='expanding', l1_reg=True)
 
 
 n_inputs = trainer.n_inputs
 
 model = GuNN4(n_inputs).to(config.device)
+
 def initialize_weights(m):
-    print(m)
     if isinstance(m, nn.Linear):
         print('Activation Function is ReLU')
         nn.init.kaiming_uniform_(m.weight, a=0, mode='fan_in', nonlinearity='relu')

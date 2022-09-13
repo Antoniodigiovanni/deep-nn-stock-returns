@@ -2,8 +2,6 @@ import sys,os
 import torch
 import numpy as np
 import pandas as pd
-from data.custom_dataset import TestDataset
-from data.data_preprocessing import sep_target_idx, split_data_test
 import models.neural_net.metric as metric
 from torch.utils.data import DataLoader
 import config
@@ -42,10 +40,13 @@ class ReturnsPrediction():
             pred_df = pd.DataFrame(
                 {'permno': labels[:,1].numpy(),
                 'yyyymm': labels[:,0].numpy(),
-                #'ret': target.squeeze().numpy(),
+                'ret': target.squeeze().numpy(),
                 'predicted_ret': outputs.squeeze().numpy()
                 }
             )
+    
+        # print(np.corrcoef(pred_df['ret'], pred_df['predicted_ret']))
+    
 
         # for i, (inputs, target, labels) in enumerate(self.__test_loader):
         #     inputs = inputs.to(config.device)

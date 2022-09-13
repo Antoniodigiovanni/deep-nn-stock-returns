@@ -1,7 +1,7 @@
 import torch
 import pandas as pd
 import numpy as np
-from portfolios.PortfolioCreation import Portfolio
+from portfolios.market_portfolio import MarketPortfolio
 from portfolios.FF5FM_Mom import FF5FM_Mom
 import config
 
@@ -31,22 +31,34 @@ def calc_accuracy_and_predict(model, data, pct):
   return correct, prediction
 
 
-def r2_metric_calculation(df):
+def r2_metric_calculation(pred_df):
+    df = pred_df.copy()
+    if 'ret' in df.columns:
+      df.drop('ret', axis=1, inplace=True, errors='ignore')
+      print('RET is dropped')
     crsp = pd.read_csv(config.paths['CRSPretPath'])
-    # crsp['ret'] = crsp['ret']/100
+    if 'ret' in crsp.columns:
+      print('ret in crsp columns')
+    else:
+      print('ret not in crsp')
+    crspinfo = pd.read_csv(config.paths['CRSPinfoPath'])
+    crsp = crsp.merge(crspinfo[['permno','yyyymm','me']], on=['permno','yyyymm'], how='left')
+    
+    
     crsp.drop(['date'], axis=1, inplace=True)
+    crsp = crsp[['yyyymm', 'permno', 'me', 'ret']]
     df_std = df.merge(crsp, on=['yyyymm', 'permno'], how='left')
     
-    df_std['rank'] = df_std.groupby('yyyymm')['melag'].rank(method= 'max', ascending=False)
+    df_std['rank'] = df_std.groupby('yyyymm')['me'].rank(method= 'max', ascending=False)
     df_top = df_std.loc[df_std['rank'] <= 1000].copy()
-    df_top.drop(['rank', 'melag'], axis=1, inplace=True)
+    df_top.drop(['rank', 'me'], axis=1, inplace=True)
 
     r2_top = calc_r2(df_top)
     del df_top
 
-    df_std['rank'] = df_std.groupby('yyyymm')['melag'].rank(method= 'max', ascending=True)
+    df_std['rank'] = df_std.groupby('yyyymm')['me'].rank(method= 'max', ascending=True)
     df_bottom = df_std.loc[df_std['rank'] <= 1000].copy()
-    df_bottom.drop(['rank', 'melag'], axis=1, inplace=True)
+    df_bottom.drop(['rank', 'me'], axis=1, inplace=True)
 
     r2_bottom = calc_r2(df_bottom)
     del df_bottom
@@ -67,19 +79,48 @@ def calc_r2(df):
     
     return r2
 
-def calc_portfolio_alpha():
+def normal_r2_calculation(pred_df):
   """
-    This function returns the portfolio alpha when the Long-Short returns are regressed on the Fama French
-    5 Factors Model + Momentum
-
-    Does it make sense to calculate the portfolio alpha during training? Maybe it is better to calculate
-    the accuracy only, and leave the loss function as measure for NNI.
-
-    Currently, the function loads a prediction df, this because the function was used only after testing and making
-    predictions. This has to be changed a bit. In order to take it from here.
-    
+    R2 is calculated as 1-(unexplained variation/total variation)
+    unexplained variation is the sum over i of (y_i - yPred_i)**2.
+    The total variation is the sum over i of the (y_i - the mean of the depeendent variable)**2
   """
-  pass
+  residual_e = pred_df['ret'] - pred_df['predicted_ret']
+  SSR = np.sum(residual_e**2)
+
+  mean_prediction = np.mean(pred_df['ret'])
+  SST = np.sum((pred_df['ret'] - mean_prediction)**2)
+
+  r2 = 1-(SSR/SST)
+
+  annualized_r2 = r2*12
+  
+  # Try to groupby year and then annualize (either with *12 or **12) 
+  # and then take the mean
+
+  # r2_dict = {'r2': r2, 'annualized_r2': annualized_r2}
+  # return r2_dict
+
+  return r2
+
+def information_ratio(portfolio_returns):
+    mp = MarketPortfolio()
+    mp.market_ret_calculation()
+    mkt_ret = mp.mkt_returns[['yyyymm','market_ret']]
+
+    print(mkt_ret)
+    portfolio_cols = portfolio_returns.iloc[:,1:].columns.tolist()
+    portfolio_returns = portfolio_returns.merge(mkt_ret, how='left', on=['yyyymm'])
+
+    portfolio_diff_rets = portfolio_returns.copy()
+    IR = {}
+    for col in portfolio_cols:
+        IR[col] = (
+            (portfolio_diff_rets[col].mean() - portfolio_diff_rets['market_ret'].mean())
+            / np.std(portfolio_diff_rets[col] - portfolio_diff_rets['market_ret'])
+            )
+    print(IR)
+    return IR
 
 def calc_sharpe_ratio(df, already_excess_returns=False):
   RF = FF5FM_Mom().RF

@@ -28,38 +28,14 @@ paths = dict (
     resultsPath = (currentPath + '/../../saved/results'),
     logsPath = (currentPath + '/../../saved/logs'),
     guTuningResultsPath = (currentPath + '/../../saved/results' + '/GuTuningResults'),
-    hpoResultsPath = (currentPath + '/../../saved/results' + '/tuningResults')
+    hpoResultsPath = (currentPath + '/../../saved/results' + '/tuningResults'),
+    finalDatasetPath=(dataPath + '/processed/dataset.csv')
     )
 
 logFileName = dt.now().strftime('/TrainRun-%Y_%m_%d-%H_%M.log')
 bestParamsFileName = dt.now().strftime('/BestNeuralNetworkParameters-%Y_%m_%d-%H_%M.json') 
 SavedNetFileName = dt.now().strftime('/NeuralNetwork-%Y_%m_%d-%H_%M.pt')
 
-
-# end_train = '198512' 
-# end_val = '199512'
-
-# parser.add_argument("--end_train", default=end_train, type=str)
-# parser.add_argument("--end_val", default=end_val, type=str)
-
-# batch_size_validation = 128
-# ep_log_interval = 5
-# epochs = 100
-
-# parser.add_argument('-e', '--epochs', default=epochs, type=int, help='Set the maximum number of epochs')
-# parser.add_argument('--batch_size_validation', default=batch_size_validation, type=int)
-# parser.add_argument('--ep_log_interval', default=ep_log_interval, type=int)
-
-
-
-""" Portfolio creation configs"""
-# n_cuts = 10 # Number of quantiles in which returns are divided to construct portfolios
-# rebalancing_frequency = 'yearly' # choose between yearly, monthly, and quarterly
-# weighting = 'VW' # choose between Value Weighting and Equal Weighting
-
-# parser.add_argument('--n_cuts_portfolio', default=n_cuts, type=int)
-# parser.add_argument('--rebalancing_frequency', default=rebalancing_frequency, type=str)
-# parser.add_argument('--weighting', default=weighting, type=str)
 
 ###################################
 # Additional important parameters #
@@ -80,7 +56,6 @@ parser.add_argument('--saveDirName', default='analysisResults', help='Specifies 
 args, unknown = parser.parse_known_args() # Using this to avoid error with notebooks
 
 saveDir = paths['resultsPath'] + '/' + args.saveDirName
-print(f'Save Dir is: {saveDir}\nRemember to write the snippet to create the directory if that does not exist')
 
 
 import configparser

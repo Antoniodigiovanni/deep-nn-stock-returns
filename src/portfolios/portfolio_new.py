@@ -153,5 +153,27 @@ class Portfolio():
         print('Cumulative Returns')
         print(self.cum_returns.tail())
 
-        self.cum_returns.to_csv('cum_returns.csv')
+    def plot_cumulative_returns(self, path):
+        from cycler import cycler
+        import matplotlib.pyplot as plt
+        from .market_portfolio import MarketPortfolio
+
+        mkt = MarketPortfolio()
+        cum_mkt_ret = mkt.cumulative_mkt_ret()
+
+        self.cum_returns.merge(cum_mkt_ret, on=['yyyymm'], how='left')
+        self.cum_returns['date'] = self.cum_returns['yyyymm'].apply(lambda x: dt.datetime.strptime(str(x), '%Y%m'))
+
+        linestyle_cycler = (cycler('color', ['deepskyblue','coral','magenta','royalblue', 'red','lime', 'crimson', 'cyan','springgreen','teal','gray','darkorange']) +
+                            cycler('linestyle',['-','--',':','-.',':','-','-.','--','-',':','-.','--']))
+
+
+        fig = plt.figure(figsize=(15, 5))
+        ax = plt.gca()
+        ax.set_prop_cycle(linestyle_cycler)
+        plt.plot(self.cum_returns['date'], self.cum_returns.iloc[:,1:-1]) # plt.plot(l, ret.iloc[:,1:])
+        plt.ylabel('Cumulative Log returns')
+        plt.legend(self.cum_returns.iloc[:,1:-1].columns)
+        plt.tight_layout()
+        plt.savefig(path)
         
