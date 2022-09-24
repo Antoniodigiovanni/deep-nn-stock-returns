@@ -2,6 +2,11 @@ import config
 from nni.experiment import Experiment
 import os
 
+print('In experiment declaration, save dir is:')
+print(config.saveDir)
+
+saveDir = config.saveDir.split('/')[-1]
+
 experiment = Experiment('local')
 
 
@@ -11,7 +16,7 @@ if config.args.expandingTuning:
     print('Tuning Experiment to discover an optimal architecture from scratch (expanding train)')
     print('Minimising validation loss')
     experiment.config.experiment_name = 'Hyperparameter_optimization'
-    experiment.config.trial_command = 'python hp_tuning.py --expandingTuning'
+    experiment.config.trial_command = 'python hp_tuning.py --saveDirName ' + saveDir + ' --expandingTuning'
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace_nested.json')
     experiment.config.max_trial_number = 2000
 
@@ -30,7 +35,7 @@ if config.args.normalTuning:
     print('Tuning Experiment to discover an optimal architecture from scratch')
     print('Minimising validation loss')
     experiment.config.experiment_name = 'Hyperparameter_optimization'
-    experiment.config.trial_command = 'python hp_tuning.py --normalTuning'
+    experiment.config.trial_command = 'python hp_tuning.py --saveDirName ' + saveDir + ' --normalTuning'
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace_nested.json')
     experiment.config.max_trial_number = 2000
 
@@ -49,7 +54,7 @@ if config.args.normalTuning:
 elif config.args.batchExperiment:
     experiment.config.experiment_name = 'Batch Experiment'
     # Finish to implement
-    experiment.config.trial_command = 'python gunetworkOptimization.py --ExpandingBatchTest'
+    experiment.config.trial_command = 'python gunetworkOptimization.py --saveDirName' + saveDir + ' --ExpandingBatchTest'
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/batch_correlation_test.json')
 
     experiment.config.tuner.name = 'BatchTuner'
@@ -57,7 +62,7 @@ elif config.args.batchExperiment:
 
 elif config.args.guNetworkTuning: #guExpandingGridSearch
     experiment.config.experiment_name = "Gu et al.'s NN4 Optimization"
-    experiment.config.trial_command = 'python gunetworkOptimization.py --expandingTraining'
+    experiment.config.trial_command = 'python gunetworkOptimization.py --saveDirName ' + saveDir + ' --expandingTraining'
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/gu_grid_search_space.json')
 
     experiment.config.tuner.name = 'GridSearch'
@@ -69,7 +74,7 @@ elif config.args.guNetworkTuning: #guExpandingGridSearch
 
 elif config.args.guSimpleTuning: #guSimpleGridSearch
     experiment.config.experiment_name = "Gu et al.'s NN4 - simple Optimization"
-    experiment.config.trial_command = 'python gunetworkOptimization.py --normalTraining'
+    experiment.config.trial_command = 'python gunetworkOptimization.py --saveDirName ' + saveDir + ' --normalTraining'
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/gu_grid_search_space_small.json')
 
     experiment.config.tuner.name = 'GridSearch'
@@ -87,12 +92,12 @@ experiment.config.trial_code_directory = './src/tuning'
 
 
 experiment.config.trial_concurrency = 2
-experiment.config.max_experiment_duration = '480h' 
+# experiment.config.max_experiment_duration = '480h' 
 
 # Add logger for experiment id - in order to be able to view the experiment afterwards
 print(f'Experiment ID: {experiment.id}')
 
-experiment.run(8083)
+experiment.run(8080)
 
 # Event Loop
 # while True:
