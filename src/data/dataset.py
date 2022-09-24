@@ -13,6 +13,7 @@ class BaseDataset:
         self.crspRetPath = crsp_ret_path
         self.crspInfoPath = crsp_info_path
         self.processedDatasetExists = None
+        self.force_crsp_download = config.ForceCrspDownload
 
         dataset_modes = ['none', 'train', 'test']
         if mode not in dataset_modes:
@@ -53,6 +54,8 @@ class BaseDataset:
             self.__load_dataset()
 
     def __create_dataset(self):
+        if (os.path.exists(config.paths['CRSPretPath']) == False) | (os.path.exists(config.paths['CRSPinfoPath']) == False) | (self.force_crsp_download == True):
+            df = dp.download_crsp()
         df = dp.load_crsp(crsp_ret_path = self.crspRetPath, crsp_info_path = self.crspInfoPath)
         df = dp.remove_microcap_stocks(df)
         df = dp.filter_exchange_code(df)
