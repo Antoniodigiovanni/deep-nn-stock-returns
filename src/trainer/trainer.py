@@ -85,12 +85,14 @@ class GeneralizedTrainer():
         self.optimizer = optimizer
         
         timeStamp = int(time.time()*10000000)
-        
+        print(f'Save Dir is: {config.saveDir}')
         # Prepare for saving trained model
         if os.path.exists(config.saveDir + '/models') == False:
             os.makedirs(config.saveDir + '/models')
         PATH = config.saveDir + '/models/model_'+str(timeStamp)+'.pt'
-        
+        print(f'PATH is: {PATH}')
+
+
         if (self.train_dates[-1] > self.df_end_date | self.val_dates[-1] > self.df_end_date | self.test_dates[-1] > self.df_end_date):
             print(self.train_dates[-1])
             print(self.val_dates[-1])
@@ -126,7 +128,9 @@ class GeneralizedTrainer():
                         'optimizer_state_dict': self.optimizer.state_dict(),
                         'epoch_loss': epoch_loss,
                         'val_loss': val_loss,
-                        'val_acc': val_acc
+                        'val_acc': val_acc,
+                        'params': self.params,
+                        'n_inputs': self.n_inputs
                         }, PATH)
                     # print('Saved new best model')
                     # if j != 0:
@@ -288,7 +292,7 @@ class GeneralizedTrainer():
             'timeStamp',
             # 'information_ratio',
             'alpha', 
-            'r2', 
+            'r2_oos', 
             'val_loss', 
             # 'Sharpe_Ratio'
             ]
@@ -297,7 +301,7 @@ class GeneralizedTrainer():
             'timeStamp': timeStamp,
             # 'information_ratio': information_ratio, 
             'alpha': alpha, 
-            'r2': r2, 
+            'r2_oos': r2['R2'], 
             'val_loss': val_loss, 
             # 'Sharpe_Ratio': sharpe_ratio
             }
@@ -336,7 +340,7 @@ class GeneralizedTrainer():
         plot_cum_ret_path = plotsDir + '/' + str(timeStamp) + '_cumulative_log_returns.png'
         portfolio.plot_cumulative_returns(plot_cum_ret_path)
 
-        plot_feature_importance = plotsDir + '/' + str(timeStamp) + '_feature_importance.png'
+        plot_feature_importance = plotsDir + '/' + str(timeStamp)
         IntegratedGradients_importance(self.model, plot_feature_importance)
         
         print('Portfolio returns calculation completed.')
@@ -515,6 +519,6 @@ class GeneralizedTrainer():
         self.n_inputs = self.train.get_inputs()
         # Modify batch size to make it trainable with higher values
         # Modify dataloader args
-        self.train_loader = DataLoader(self.train, batch_size=10000)
-        self.val_loader = DataLoader(self.validation, batch_size=10000)
+        self.train_loader = DataLoader(self.train, batch_size=10000, shuffle=True)
+        self.val_loader = DataLoader(self.validation, batch_size=10000, shuffle=True)
         self.test_loader = DataLoader(self.test, batch_size=bs)
