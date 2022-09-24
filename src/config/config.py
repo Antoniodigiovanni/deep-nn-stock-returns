@@ -65,17 +65,18 @@ configuration.read(currentPath + '/config.ini')
 
 # Variables
 ForcePreProcessing = configuration.get('Data', 'ForcePreProcessing') 
-ForceTraining = configuration.get('Data', 'ForceTraining')
+ForceCrspDownload = configuration.get('Data', 'ForceCrspDownload')
 
 if ForcePreProcessing == 'False':
     ForcePreProcessing = False
 elif ForcePreProcessing == 'True':
     ForcePreProcessing = True
 
-if ForceTraining == 'False':
-    ForceTraining = False
-elif ForceTraining == 'True':
-    ForceTraining = True
+if ForceCrspDownload == 'False':
+    ForceCrspDownload = False
+elif ForceCrspDownload == 'True':
+    ForceCrspDownload = True
+
 
 
 ep_log_interval = int(configuration.get('Training', 'ep_log_interval'))
