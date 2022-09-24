@@ -2,6 +2,10 @@ import pandas as pd
 import numpy as np
 from portfolios.FF5FM_Mom import FF5FM_Mom
 import config.config as config
+import os
+from pandas.tseries.offsets import *
+import datetime as dt
+
 
 def load_crsp(crsp_ret_path=config.paths['CRSPretPath'], crsp_info_path=config.paths['CRSPinfoPath'], Startyyyymm = 197001, Endyyyymm = 202112):
     crspret = pd.read_csv(crsp_ret_path)
@@ -91,7 +95,7 @@ def scale_features(df, features):
     
     reduced_cols = features[:-3]
     print(reduced_cols[-5:])
-    print(f'Shape of final_df before  scaling: {df.shape[0]}')
+    print(f'Shape of final_df before scaling: {df.shape[0]}')
 
     # print(features)
 
@@ -162,6 +166,99 @@ def __calculate_stock_sizes(df):
 
     return df
 
+def download_crsp():
+    import wrds
+    import configparser
+
+    configuration = configparser.ConfigParser()
+    if os.path.exists(config.dataPath + '/../src/data/credentials.ini'):
+        print('Reading configuration')
+        configuration.read(config.dataPath + '/../src/data/credentials.ini')
+        
+        username = configuration.get('credentials', 'username')
+        password = configuration.get('credentials', 'password')
+    
+    else:
+        raise FileNotFoundError()
+
+    
+    conn = wrds.Connection(
+        wrds_username = username,
+        wrds_password = password
+    )
+
+    crsp = conn.raw_sql(
+    """
+    select a.permno, a.permco, a.date, a.ret, a.retx, a.vol, a.shrout, a.prc, a.cfacshr, a.bidlo, a.askhi,
+    b.comnam, b.shrcd, b.exchcd, b.siccd, b.ticker, b.shrcls,          -- from identifying info table
+    c.dlstcd, c.dlret                                                  -- from delistings table
+    from crsp.msf as a
+    left join crsp.msenames as b
+    on a.permno=b.permno
+    and b.namedt<=a.date
+    and a.date<=b.nameendt
+    left join crsp.msedelist as c
+    on a.permno=c.permno
+    and date_trunc('month', a.date) = date_trunc('month', c.dlstdt)
+    """, 
+    date_cols=['date'])
+
+    # Exclude entries in which a good price is missing
+    crsp = crsp.dropna(subset='prc')
+
+    # Exclude months in which the share code is missing
+    crsp = crsp.dropna(subset='shrcd')
+
+    # Move date to end of the month
+    crsp['date']=crsp['date']+MonthEnd(0)
+
+    # Create yearmonth column
+    crsp['yyyymm'] =  crsp['date'].apply(lambda x: dt.datetime.strftime(x, '%Y%m')) 
+    crsp['yyyymm'] = crsp.yyyymm.astype(int)
+
+    # Deal with de-listing returns
+    crsp['dlret'] = crsp['dlret'].fillna(0)
+    crsp['ret'] = crsp['ret'].fillna(0)
+    crsp = crsp.loc[crsp['dlret'] != -1]
+    crsp['ret'] = (1+crsp['ret'])*(1+crsp['dlret'])-1
+
+    crsp=crsp.drop(['dlret'], axis=1)
+
+    # Transform ret to pct
+    crsp['ret'] = crsp['ret'] * 100
+
+    # Market equity calculation
+    crsp['me']=crsp['prc'].abs()*crsp['shrout'] 
+    crsp=crsp.sort_values(by=['date','permco','me'])
+
+    ### Aggregate Market Cap ###
+    # sum of me across different permno belonging to same permco in a given date
+    crsp_summe = crsp.groupby(['date','permco'])['me'].sum().reset_index()
+
+    # largest mktcap within a permco/date
+    crsp_maxme = crsp.groupby(['date','permco'])['me'].max().reset_index()
+
+    # join by jdate/maxme to find the permno
+    crsp1=pd.merge(crsp, crsp_maxme, how='inner', on=['date','permco','me'])
+
+    # drop me column and replace with the sum me
+    crsp1=crsp1.drop(['me'], axis=1)
+
+    # join with sum of me to get the correct market cap info
+    crsp2=pd.merge(crsp1, crsp_summe, how='inner', on=['date','permco'])
+
+    # sort by permno and date and also drop duplicates
+    crsp2=crsp2.sort_values(by=['permno','date']).drop_duplicates()
+    crsp = crsp2.copy()
+
+
+    # Calculate melag and adjust for first month
+    crsp['count']=crsp.groupby(['permno']).cumcount()
+    crsp['melag'] = crsp.groupby('permno')['me'].shift()
+    crsp['melag'] = np.where(crsp['count'] == 0, crsp['me']/(1+crsp['retx']), crsp['melag']) # ret or retx?
+
+    crsp_info = crsp[['permno','yyyymm','prc','exchcd','me','shrcd','siccd']].to_csv(config.paths['CRSPinfoPath'], index=False)
+    crsp_ret = crsp[['permno','yyyymm','ret','melag']].to_csv(config.paths['CRSPretPath'], index=False)
 
 
 
