@@ -1,0 +1,23 @@
+experimentName: Hyperparameter_optimization (normal training)
+searchSpaceFile: search_spaces/searchSpace_nested.json
+trialCommand: python hp_tuning.py --normalTuning
+trialCodeDirectory: '.'
+trialGpuNumber: 1
+trialConcurrency: 1
+maxTrialNumber: 2000
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: minimize
+assessor:
+  name: Medianstop
+  classArgs:
+    optimize_mode: minimize
+    start_step: 10
+trainingService:
+  platform: remote
+  machineList:
+    - host: 51.138.52.159
+      user: azureuser
+      ssh_key_file: ~/.ssh/azure-key1.pem
+      port: 50001

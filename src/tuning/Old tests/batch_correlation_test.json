@@ -1,0 +1,140 @@
+{
+    "combine_params": {
+        "_type": "choice",
+        "_value": [
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 0.00029699999999999996,
+                "patience": 6.0,
+                "adam_beta_1": 0.88,
+                "adam_beta_2": 0.996
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 9.9e-05,
+                "patience": 8.0,
+                "adam_beta_1": 0.85,
+                "adam_beta_2": 0.992
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 9.9e-05,
+                "patience": 8.0,
+                "adam_beta_1": 0.85,
+                "adam_beta_2": 0.994
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 0.00029699999999999996,
+                "patience": 6.0,
+                "adam_beta_1": 0.8200000000000001,
+                "adam_beta_2": 0.996
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 0.00029699999999999996,
+                "patience": 8.0,
+                "adam_beta_1": 0.85,
+                "adam_beta_2": 0.994
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 0.00029699999999999996,
+                "patience": 8.0,
+                "adam_beta_1": 0.85,
+                "adam_beta_2": 0.996
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 0.00029699999999999996,
+                "patience": 8.0,
+                "adam_beta_1": 0.88,
+                "adam_beta_2": 0.996
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 0.00029699999999999996,
+                "patience": 8.0,
+                "adam_beta_1": 0.88,
+                "adam_beta_2": 0.992
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 0.00029699999999999996,
+                "patience": 8.0,
+                "adam_beta_1": 0.8200000000000001,
+                "adam_beta_2": 0.996
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 0.00029699999999999996,
+                "patience": 6.0,
+                "adam_beta_1": 0.85,
+                "adam_beta_2": 0.994
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 0.00029699999999999996,
+                "patience": 6.0,
+                "adam_beta_1": 0.88,
+                "adam_beta_2": 0.992
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 0.00029699999999999996,
+                "patience": 8.0,
+                "adam_beta_1": 0.88,
+                "adam_beta_2": 0.994
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 9.9e-05,
+                "patience": 8.0,
+                "adam_beta_1": 0.85,
+                "adam_beta_2": 0.996
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 0.00029699999999999996,
+                "patience": 6.0,
+                "adam_beta_1": 0.8200000000000001,
+                "adam_beta_2": 0.994
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 9.9e-05,
+                "patience": 8.0,
+                "adam_beta_1": 0.8200000000000001,
+                "adam_beta_2": 0.994
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 0.00029699999999999996,
+                "patience": 8.0,
+                "adam_beta_1": 0.85,
+                "adam_beta_2": 0.992
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 0.00029699999999999996,
+                "patience": 6.0,
+                "adam_beta_1": 0.85,
+                "adam_beta_2": 0.992
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 0.00029699999999999996,
+                "patience": 6.0,
+                "adam_beta_1": 0.8200000000000001,
+                "adam_beta_2": 0.992
+            },
+            {
+                "learning_rate": 0.008,
+                "l1_lambda1": 0.00029699999999999996,
+                "patience": 6.0,
+                "adam_beta_1": 0.85,
+                "adam_beta_2": 0.996
+            }
+        ]
+    }
+}
