@@ -37,15 +37,12 @@ def r2_metric_calculation(pred_df):
       df.drop('ret', axis=1, inplace=True, errors='ignore')
       print('RET is dropped')
     crsp = pd.read_csv(config.paths['CRSPretPath'])
-    if 'ret' in crsp.columns:
-      print('ret in crsp columns')
-    else:
-      print('ret not in crsp')
+    
     crspinfo = pd.read_csv(config.paths['CRSPinfoPath'])
     crsp = crsp.merge(crspinfo[['permno','yyyymm','me']], on=['permno','yyyymm'], how='left')
     
     
-    crsp.drop(['date'], axis=1, inplace=True)
+    crsp.drop(['date'], errors='ignore',axis=1, inplace=True)
     crsp = crsp[['yyyymm', 'permno', 'me', 'ret']]
     df_std = df.merge(crsp, on=['yyyymm', 'permno'], how='left')
     
@@ -119,7 +116,6 @@ def information_ratio(portfolio_returns):
             (portfolio_diff_rets[col].mean() - portfolio_diff_rets['market_ret'].mean())
             / np.std(portfolio_diff_rets[col] - portfolio_diff_rets['market_ret'])
             )
-    print(IR)
     return IR
 
 def calc_sharpe_ratio(df, already_excess_returns=False):
