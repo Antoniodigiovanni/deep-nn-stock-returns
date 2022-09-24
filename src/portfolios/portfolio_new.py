@@ -98,8 +98,8 @@ class Portfolio():
             monthly_vw['l-s'] = monthly_vw.iloc[:,-1] - monthly_vw.iloc[:,1]
             # Temp, change 
             self.returns = monthly_vw
-            self.returns.to_csv('port_returns.csv')
-
+            
+            
     def regress_on_FF5FM(self):
         """ Taken from old portfolio class, change """
         FFMom = FF5FM_Mom().returns
@@ -161,9 +161,10 @@ class Portfolio():
         mkt = MarketPortfolio()
         cum_mkt_ret = mkt.cumulative_mkt_ret()
 
-        self.cum_returns.merge(cum_mkt_ret, on=['yyyymm'], how='left')
+        self.cum_returns = self.cum_returns.merge(cum_mkt_ret, on=['yyyymm'], how='left')
         self.cum_returns['date'] = self.cum_returns['yyyymm'].apply(lambda x: dt.datetime.strptime(str(x), '%Y%m'))
-
+        print('Self.cum_returns columns are:')
+        print(self.cum_returns.columns)
         linestyle_cycler = (cycler('color', ['deepskyblue','coral','magenta','royalblue', 'red','lime', 'crimson', 'cyan','springgreen','teal','gray','darkorange']) +
                             cycler('linestyle',['-','--',':','-.',':','-','-.','--','-',':','-.','--']))
 
