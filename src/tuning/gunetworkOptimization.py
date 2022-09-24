@@ -28,8 +28,8 @@ params = {
     'learning_rate': 0.0005,
     'l1_lambda1': 5e-6,
     # 'patience': 2,
-    # 'adam_beta_1': 0.9,
-    # 'adam_beta_2': 0.999
+    'adam_beta_1': 0.9,
+    'adam_beta_2': 0.999
 }
 
 # Get optimized hyperparameters
@@ -96,9 +96,9 @@ model.apply(initialize_weights)
 optimizer = optim.Adam(model.parameters(),
             params['learning_rate'],
             # Uncomment when will be using them as parameters
-            # betas=(
-            #     params['adam_beta_1'], 
-            #     params['adam_beta_2'])
+            betas=(
+                params['adam_beta_1'], 
+                params['adam_beta_2'])
                 )
 print('Starting Training process')
 trainer.fit(model, optimizer)
