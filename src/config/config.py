@@ -5,10 +5,20 @@ from datetime import datetime as dt
 from argparse import ArgumentParser
 import argparse
 
+# Try importing torch_xla
+try:
+    import torch_xla.core.xla_model as xm
+except:
+    pass
+
 parser = ArgumentParser()
 
-# Select training device - GPU or CPU based on availability
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+try:
+  device = xm.xla_device()
+except:
+  device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f'Device: {device}')
 
 
@@ -50,7 +60,7 @@ parser.add_argument('--guSimpleTuning', action='store_true', help="Normal one-sh
 parser.add_argument('--batchExperiment', action='store_true')
 parser.add_argument('--saveDirName', default='analysisResults', help='Specifies the path in which experiment results are saved' )
 parser.add_argument('--ensemblePrediction', action='store_true', help='Use the final network to predict portfolio returns using an ensemble method')
-parser.add_argument('--finalTuning', action='store_true', help='Used for performing the final operations when an optimal architecture is found (Grid search + Ensemble to create portfolios)')
+# parser.add_argument('--finalTuning', action='store_true', help='Used for performing the final operations when an optimal architecture is found (Grid search + Ensemble to create portfolios)')
 
 
 
