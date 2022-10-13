@@ -13,7 +13,6 @@ pip3 install wrds
 pip3 install statsmodels
 pip3 install captum
 
-pip3 install cloud-tpu-client==0.10 torch==1.12.0 https://storage.googleapis.com/tpu-pytorch/wheels/colab/torch_xla-1.12-cp37-cp37m-linux_x86_64.whl || pip3 install cloud-tpu-client==0.10 torch==1.12.0 https://storage.googleapis.com/tpu-pytorch/wheels/colab/torch_xla-1.12-cp37-cp37m-linux_x86_64.whl
 
 # Installation with CPU-only - comment the following line if a GPU is present
 #pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
@@ -21,5 +20,6 @@ pip3 install cloud-tpu-client==0.10 torch==1.12.0 https://storage.googleapis.com
 # If a GPU is present in the system, use this command instead:
 # pip3 install torch torchvision torchaudio
 
-python3 src/network_training_test.py || python src/network_training_test.py
+# pip3 install cloud-tpu-client==0.10 torch==1.12.0 https://storage.googleapis.com/tpu-pytorch/wheels/colab/torch_xla-1.12-cp37-cp37m-linux_x86_64.whl || pip3 install cloud-tpu-client==0.10 torch==1.12.0 https://storage.googleapis.com/tpu-pytorch/wheels/colab/torch_xla-1.12-cp37-cp37m-linux_x86_64.whl
+# python3 src/network_training_test.py || python src/network_training_test.py
 
