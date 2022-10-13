@@ -35,8 +35,8 @@ def visualize_importances(feature_names, importances, path, title="Average Featu
     importance_df = importance_df.reindex(importance_df.importance.abs().sort_values(ascending=False).index)
     importance_df_top = importance_df.head(20) 
 
-    for i in range(len(feature_names)):
-        print(feature_names[i], ": ", '%.3f'%(importances[i]*1000000000))
+    # for i in range(len(feature_names)):
+        # print(feature_names[i], ": ", '%.3f'%(importances[i]*1000000000))
     x_pos = (np.arange(len(feature_names)))
     if plot:
         # plt.figure(figsize=(12,6))
@@ -78,7 +78,7 @@ def visualize_importances(feature_names, importances, path, title="Average Featu
         ax = plt.axes()
         ax.set_title('Feature Importance - Top 20 (of '+str(len(feature_names))+')', fontsize=25)
         ax.set_xticks(x_pos)
-        ax.set_xticklabels(importance_df_top['feature'], rotation=45, ha='right', fontsize=14)
+        ax.set_xticklabels(importance_df_top['feature'], rotation=90, ha='right', fontsize=14)
         ax.bar(x_pos, importance_df_top['importance'],align='center',  zorder=3)
         ax.xaxis.grid(True, linestyle='--',  zorder=0)
         plt.axhline(y=0, color='grey', linestyle='-')
