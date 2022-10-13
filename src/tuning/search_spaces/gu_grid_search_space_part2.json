@@ -1,21 +1,21 @@
 {
     "learning_rate":{ 
-        "_type": "choice",
-        "_value": [0.001, 0.005, 0.01]
+        "_type": "quniform",
+        "_value": [0.01,0.1,0.01]
     },
 
     "l1_lambda1":{ 
         "_type": "choice",
-        "_value": [1e-5, 4.95e-4, 1e-3]
+        "_value": [1e-5]
     },
 
     "adam_beta_1":{
         "_type":"choice",
-        "_value":[0.8,0.9]
+        "_value":[0.9]
     },
 
     "adam_beta_2":{
     "_type":"choice",
-    "_value": [0.99,0.999]
+    "_value": [0.999]
     }
 }

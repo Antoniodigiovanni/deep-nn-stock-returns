@@ -1,0 +1,87 @@
+{
+    "learning_rate":{ 
+        "_type": "loguniform",
+        "_value": [
+            8.29368E-06,
+            9.67482E-06,
+            1.1286E-05,
+            1.31654E-05,
+            1.53578E-05,
+            1.79153E-05,
+            2.08988E-05,
+            2.4379E-05,
+            2.84388E-05,
+            3.31747E-05
+        ]
+    },
+
+    "hidden_layer1" : {
+        "_type": "choice",
+        "_value": [1024]            
+    },
+    
+    "hidden_layer2" : {
+        "_type": "choice",
+        "_value": [128]
+    },
+    
+    "hidden_layer3" : {
+        "_type": "choice",
+        "_value": [32]
+    },
+
+    "hidden_layer4" : {
+        "_type": "choice",
+        "_value": [512]
+    },
+
+    "hidden_layer5" : {
+        "_type": "choice",
+        "_value": [4]
+    },  
+
+    "hidden_layer6" : {
+        "_type": "choice",
+        "_value": [16]
+    },
+
+    "hidden_layer7" : {
+        "_type": "choice",
+        "_value": [16]
+    },
+
+    "hidden_layer8" : {
+        "_type": "choice",
+        "_value": [4]
+    },
+
+    "hidden_layer9" : {
+        "_type": "choice",
+        "_value": [4]
+    },
+
+    "hidden_layer10" : {
+        "_type": "choice",
+        "_value": [32]
+    },
+
+    "act_func":{ 
+        "_type": "choice",
+        "_value": ["LeakyReLU"]
+    },
+
+    "optimizer" : {
+        "_type": "choice",
+        "_value": ["Adadelta"]
+    },
+    
+    "l1_lambda1":{ 
+        "_type": "choice",
+        "_value": [0.001]
+    },
+
+    "dropout_prob":{
+        "_type": "choice",
+        "_value": [0.5089326250768902]
+    }
+}

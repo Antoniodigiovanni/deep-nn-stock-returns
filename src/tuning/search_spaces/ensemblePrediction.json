@@ -1,82 +1,81 @@
 {
+    "torch_seed":{
+        "_type": "randint",
+        "_value": [0,10001]
+    },
+
+    "learning_rate":{ 
+        "_type": "choice",
+        "_value": [0.0001]
+    },
+    
     "hidden_layer1" : {
         "_type": "choice",
-        "_value": [4096,2048,1024,512]            
+        "_value": [512]            
     },
     
     "hidden_layer2" : {
         "_type": "choice",
-        "_value": [0, 128,256,512,1024,2048]
+        "_value": [2048]
     },
     
     "hidden_layer3" : {
         "_type": "choice",
-        "_value": [0, 64,32,128, 256, 512, 1024]
+        "_value": [512]
     },
 
     "hidden_layer4" : {
         "_type": "choice",
-        "_value": [0, 32,16,64, 128, 256, 512]
+        "_value": [256]
     },
 
     "hidden_layer5" : {
         "_type": "choice",
-        "_value": [0,16,4,32, 64, 128, 256]
+        "_value": [0]
     },  
 
     "hidden_layer6" : {
         "_type": "choice",
-        "_value": [0,16,4,32, 64, 128]
+        "_value": [0]
     },
 
     "hidden_layer7" : {
         "_type": "choice",
-        "_value": [0,16,4,32, 64]
+        "_value": [0]
     },
 
     "hidden_layer8" : {
         "_type": "choice",
-        "_value": [0,16,4,32,64]
+        "_value": [0]
     },
 
     "hidden_layer9" : {
         "_type": "choice",
-        "_value": [0,4,16,32]
+        "_value": [0]
     },
 
     "hidden_layer10" : {
         "_type": "choice",
-        "_value": [0,16,4,32]
+        "_value": [0]
     },
 
     "act_func":{ 
         "_type": "choice",
-        "_value": ["ReLU", "LeakyReLU"]
-    },
-
-    "learning_rate":{ 
-        "_type": "loguniform",
-        "_value": [ 0.000001, 0.001 ]
+        "_value": ["Tanh"]
     },
 
     "optimizer" : {
         "_type": "choice",
-        "_value": ["Adam", "Nadam", "Adagrad", "Adadelta"]
+        "_value": ["Adam"]
     },
     
     "l1_lambda1":{ 
-        "_type": "uniform",
-        "_value": [0.00001,1]
-    },
-
-    "l2_lambda":{
-        "_type":"uniform",
-        "_value": [0.00001,1]
-
+        "_type": "choice",
+        "_value": [1e-5]
     },
 
     "dropout_prob":{
         "_type": "uniform",
-        "_value": [0, 0.7]
+        "_value": [0.75]
     }
 }
