@@ -120,7 +120,7 @@ def information_ratio(portfolio_returns):
 
 def calc_sharpe_ratio(df, already_excess_returns=False):
   RF = FF5FM_Mom().RF
-  RF['RF'] = RF['RF'] / 100
+  # RF['RF'] = RF['RF'] / 100
   
   SR = {}
   for column in df.iloc[:,1:].columns:
