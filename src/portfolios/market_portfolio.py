@@ -40,10 +40,12 @@ class MarketPortfolio():
         self.crsp = crsp
 
     def calc_metrics(self):
-        self.cum_lof_market_ret = self.cumulative_mkt_ret()
+        self.cum_log_market_ret = self.cumulative_mkt_ret()
         
 
     def cumulative_mkt_ret(self):
         cum_log_market_ret = self.mkt_returns.copy()
-        cum_log_market_ret['market_ret'] = (np.log(self.mkt_returns['market_ret']/100+1).cumsum())
+        print(self.mkt_returns)
+        cum_log_market_ret = cum_log_market_ret.loc[cum_log_market_ret.yyyymm >= 199501].copy()
+        cum_log_market_ret['market_ret'] = (np.log(cum_log_market_ret['market_ret']/100+1).cumsum())
         return cum_log_market_ret

@@ -2,11 +2,13 @@ credentials.ini
 
 /runs
 /saved
+# Uncomment next line to upload experiment results
+#!/saved
 
 # Notebooks
 *.ipynb
 /notebooks
-
+!FF_momentumReplicationTest_final.ipynb
 
 
 # WRDS scripts folder

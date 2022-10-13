@@ -135,6 +135,19 @@ class Portfolio():
             print(lm.tvalues)
         self.alpha = lm.params[0]
         self.t_value_alpha = lm.tvalues[0]
+
+        try:
+            print('Linear Regression summary:')
+            print(lm.summary())
+        except:
+            print("An exception when priting summary")
+
+
+        try:
+            print('Linear Regression R-squared:')
+            print(lm.rsquared)
+        except:
+            print("An exception occurred")
         
         year_min = self.returns['yyyymm'].min()//100
         month_min = self.returns['yyyymm'].min()%100

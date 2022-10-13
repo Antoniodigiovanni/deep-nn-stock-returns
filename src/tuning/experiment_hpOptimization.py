@@ -17,7 +17,7 @@ if config.args.expandingTuning:
     print('Minimising validation loss')
     experiment.config.experiment_name = 'Hyperparameter_optimization'
     experiment.config.trial_command = 'python hp_tuning.py --saveDirName ' + saveDir + ' --expandingTuning'
-    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace_nested.json')
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace.json')
     experiment.config.max_trial_number = 2000
 
     # experiment.config.tuner.name = 'Anneal'
@@ -36,7 +36,7 @@ if config.args.normalTuning:
     print('Minimising validation loss')
     experiment.config.experiment_name = 'Hyperparameter_optimization'
     experiment.config.trial_command = 'python hp_tuning.py --saveDirName ' + saveDir + ' --normalTuning'
-    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace_nested.json')
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace.json')
     experiment.config.max_trial_number = 2000
 
     # experiment.config.tuner.name = 'TPE'
@@ -63,13 +63,13 @@ elif config.args.batchExperiment:
 elif config.args.guNetworkTuning: #guExpandingGridSearch
     experiment.config.experiment_name = "Gu et al.'s NN4 Optimization"
     experiment.config.trial_command = 'python gunetworkOptimization.py --saveDirName ' + saveDir + ' --expandingTraining'
-    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/gu_grid_search_space.json')
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/gu_grid_search_space_part2.json')
 
     experiment.config.tuner.name = 'GridSearch'
 
     experiment.config.assessor.name = 'Medianstop'
     experiment.config.assessor.class_args['optimize_mode'] ='minimize'
-    experiment.config.assessor.class_args['start_step'] = 10
+    experiment.config.assessor.class_args['start_step'] = 100
 
 
 elif config.args.guSimpleTuning: #guSimpleGridSearch
@@ -82,6 +82,17 @@ elif config.args.guSimpleTuning: #guSimpleGridSearch
     experiment.config.assessor.name = 'Medianstop'
     experiment.config.assessor.class_args['optimize_mode'] ='minimize'
     experiment.config.assessor.class_args['start_step'] = 10
+
+elif config.args.finalTuning:
+    experiment.config.experiment_name = "Final Tuning of best network"
+    experiment.config.trial_command = 'python hp_tuning.py --saveDirName ' + saveDir + ' --expandingTuning'
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/best_architecture_grid_search.json')
+
+    experiment.config.tuner.name = 'GridSearch'
+
+    experiment.config.assessor.name = 'Medianstop'
+    experiment.config.assessor.class_args['optimize_mode'] ='minimize'
+    experiment.config.assessor.class_args['start_step'] = 100
 
 
 experiment.config.trial_code_directory = './src/tuning'

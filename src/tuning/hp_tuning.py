@@ -30,21 +30,22 @@ logger = logging.getLogger('Tuning experiment')
 params = {
     
         # 'hidden_layer1':    {"_name": "linear", "size":2048},
-        # 'hidden_layer2':    {"_name": "linear", "size":512},
-        # 'hidden_layer3':    {"_name": "linear", "size":128},
-        # 'hidden_layer4':    {"_name": "linear", "size":64},
-        # 'hidden_layer5':    {"_name": "linear", "size":32},
-        # 'use_dropout':      {'_name': 1, 'rate': 0.5},
+    
         'hidden_layer1':    1024,
         'hidden_layer2':    512,
         'hidden_layer3':    128,
         'hidden_layer4':    0,
         'hidden_layer5':    0,
+        'hidden_layer6':    0,
+        'hidden_layer7':    0,
+        'hidden_layer8':    0,
+        'hidden_layer9':    0,
+        'hidden_layer10':    0,
         'act_func':         "ReLU",
         'learning_rate':    0.001,
-        'optimizer':        "Adam"
-        # 'optimizer':        {"_name": "RMSprop", "momentum": 0.5},
-        # 'use_l1_reg':       {"_name": "True", "lambda": 1e-5}
+        'optimizer':        "Adam",
+        'l1_lambda1':       0,
+        'dropout_prob':     0.1
     }
 
 # Get optimized hyperparameters
@@ -59,59 +60,32 @@ params.update(optimized_params)
 
 print(params)
 
+# def validate_params(params):
+#     if params['hidden_layer2'] == 0 and (params['hidden_layer3'] != 0 or params['hidden_layer4'] != 0 or params['hidden_layer5'] != 0):
+#         return False
+#     if params['hidden_layer3'] == 0 and (params['hidden_layer4'] != 0 or params['hidden_layer5'] != 0):
+#         return False
+#     if params['hidden_layer4'] == 0 and params['hidden_layer5'] != 0:
+#         return False
+
+#     return True
 def validate_params(params):
-    if params['hidden_layer2'] == 0 and (params['hidden_layer3'] != 0 or params['hidden_layer4'] != 0 or params['hidden_layer5'] != 0):
-        return False
-    if params['hidden_layer3'] == 0 and (params['hidden_layer4'] != 0 or params['hidden_layer5'] != 0):
-        return False
-    if params['hidden_layer4'] == 0 and params['hidden_layer5'] != 0:
-        return False
+        hidden_layers = [None]*10
 
-    return True
+        for param in params.keys():
+            result = ''.join([i for i in param if not i.isdigit()])
+            n_layer = ''.join([i for i in param if i.isdigit()])
+            if result == 'hidden_layer':
+                hidden_layers[int(n_layer)-1] = params[param]
 
-if not validate_params(params): 
-    # for invalid param combinations, report the worst possible result
-    print('Invalid Parameters set')
-    nni.report_final_result(np.inf)
-        
+        non_zero_layers = [i for i, e in enumerate(hidden_layers) if e != 0]
+        invalid_parameters = False
+        for i,_ in enumerate(non_zero_layers[:-1]):
+            if (non_zero_layers[i+1] != non_zero_layers[i]+1):
+                invalid_parameters = True
 
-# Load data
-dataset = BaseDataset()
-df = dataset.df
-    
-df.drop(['melag', 'prc', 'me','me_nyse20'], axis=1, inplace=True, errors='ignore')
+        return invalid_parameters
 
-parser = ArgumentParser()
-parser.add_argument('--expandingTuning', action='store_true')
-parser.add_argument('--normalTuning', action='store_true')
-
-
-args, unknown = parser.parse_known_args() # Using this to avoid error with notebooks
-
-
-
-# loss_fn = map_loss_func(params['loss'])
-loss_fn = nn.MSELoss()
-if args.expandingTuning:
-    method = 'expanding'
-elif args.normalTuning:
-    method = 'normal'
-
-# if params['use_l1_reg']['_name'] == 'True':
-#     l1_reg = True
-# else:
-#     l1_reg = False
-# print(f'l1_reg is of type: {type(l1_reg)} and is: {l1_reg}')    
-l1_reg= False
-
-trainer = GeneralizedTrainer(df, params, loss_fn, methodology=method, l1_reg=l1_reg)
-n_inputs = trainer.n_inputs
-
-model = OptimizeNet(n_inputs, params).to(config.device)
-print(f'Device from config: {config.device}')
-print(f'N. of epochs set at {config.epochs}')
-
-print('Initializing weights')
 def initialize_weights(m):
     # print(m)
     if isinstance(m, nn.Linear):
@@ -125,10 +99,60 @@ def initialize_weights(m):
             # print('Xavier Uniform for other activation functions')
             nn.init.xavier_uniform_(m.weight)
         m.bias.data.fill_(0.01)
+    
+invalid_params = validate_params(params)
 
-model.apply(initialize_weights)
 
-optimizer = map_optimizer(params, model.parameters())
+if invalid_params: 
+    # for invalid param combinations, report the worst possible result
+    print('Invalid Parameters set')
+    nni.report_final_result(np.inf)
 
-print('Starting Training process')
-trainer.fit(model, optimizer)
+else:     
+
+    # Load data
+    dataset = BaseDataset()
+    df = dataset.df
+        
+    df.drop(['melag', 'prc', 'me','me_nyse20'], axis=1, inplace=True, errors='ignore')
+
+    parser = ArgumentParser()
+    parser.add_argument('--expandingTuning', action='store_true')
+    parser.add_argument('--normalTuning', action='store_true')
+
+
+    args, unknown = parser.parse_known_args() # Using this to avoid error with notebooks
+
+
+
+    # loss_fn = map_loss_func(params['loss'])
+    loss_fn = nn.MSELoss()
+    # loss_fn = nn.L1Loss()
+    
+    if args.expandingTuning:
+        method = 'expanding'
+    elif args.normalTuning:
+        method = 'normal'
+
+    # if params['use_l1_reg']['_name'] == 'True':
+    #     l1_reg = True
+    # else:
+    #     l1_reg = False
+    # print(f'l1_reg is of type: {type(l1_reg)} and is: {l1_reg}')    
+    l1_reg= True
+    l2_reg = True
+
+    trainer = GeneralizedTrainer(df, params, loss_fn, methodology=method, l1_reg=l1_reg, l2_reg=l2_reg)
+    n_inputs = trainer.n_inputs
+
+    model = OptimizeNet(n_inputs, params).to(config.device)
+    print(f'Device from config: {config.device}')
+    print(f'N. of epochs set at {config.epochs}')
+
+    print('Initializing weights')
+    model.apply(initialize_weights)
+
+    optimizer = map_optimizer(params, model.parameters())
+
+    print('Starting Training process')
+    trainer.fit(model, optimizer)
