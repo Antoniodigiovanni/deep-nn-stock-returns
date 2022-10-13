@@ -23,6 +23,8 @@ except:
 
 def _map_fn(index, flags):
     import config
+
+    config.epochs = 1
     try:
         xm.master_print(f'Device is: {config.device} ')
         xm.master_print('TPU works!!')
@@ -110,9 +112,9 @@ def _map_fn(index, flags):
     dataset = BaseDataset()
     crsp = dataset.df
 
-    train = dataset.loc[dataset['yyyymm'] <= 198401].copy()
-    validation = dataset.loc[(dataset['yyyymm'] >= 198501) & (dataset['yyyymm'] <= 199412)].copy()
-    test = dataset.loc[dataset['yyyymm'] >= 199501].copy()
+    train = crsp.loc[crsp['yyyymm'] <= 198401].copy()
+    validation = crsp.loc[(crsp['yyyymm'] >= 198501) & (crsp['yyyymm'] <= 199412)].copy()
+    test = crsp.loc[crsp['yyyymm'] >= 199501].copy()
         
     train = CrspDataset(train)
     validation = CrspDataset(validation)
@@ -179,8 +181,8 @@ def _map_fn(index, flags):
 
     train_start = time.time()
     num_batches = len(train_loader)
-    for epoch in range(config.epochs):
-        xm.master_print('Here there may be an error with config.device')
+    for epoch in range(flags['num_epochs']):
+        # xm.master_print('Here there may be an error with config.device')
         para_train_loader = pl.ParallelLoader(train_loader, [config.device]).per_device_loader(config.device)
         total_loss = 0
         for i, (inputs, target, labels) in enumerate(para_train_loader):
@@ -215,7 +217,7 @@ if __name__ == '__main__':
     flags['num_epochs'] = 1
     flags['seed'] = 1234
 
-    xmp.spawn(_map_fn, args=(flags,), nprocs=8)
+    xmp.spawn(_map_fn, args=(flags,), nprocs=1)
 
 """
     ###### Old portion ######

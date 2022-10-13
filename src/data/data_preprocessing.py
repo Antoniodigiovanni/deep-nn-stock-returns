@@ -204,10 +204,12 @@ def download_crsp():
     date_cols=['date'])
 
     # Exclude entries in which a good price is missing
-    crsp = crsp.dropna(subset='prc')
+    if 'prc' in crsp.columns:
+        crsp = crsp.dropna(subset=['prc'])
 
     # Exclude months in which the share code is missing
-    crsp = crsp.dropna(subset='shrcd')
+    if 'shrcd' in crsp.columns:
+        crsp = crsp.dropna(subset=['shrcd'])
 
     # Move date to end of the month
     crsp['date']=crsp['date']+MonthEnd(0)
@@ -259,6 +261,8 @@ def download_crsp():
 
     crsp_info = crsp[['permno','yyyymm','prc','exchcd','me','shrcd','siccd']].to_csv(config.paths['CRSPinfoPath'], index=False)
     crsp_ret = crsp[['permno','yyyymm','ret','melag']].to_csv(config.paths['CRSPretPath'], index=False)
+
+    print('CRSP download completed, files saved...')
 
 
 
