@@ -1,6 +1,6 @@
 
 echo Running the network results test
-wget -O data.zip --no-check-certificate "https://onedrive.live.com/download?cid=9053A48EF4F6502C&resid=9053A48EF4F6502C%21114&authkey=AOx86j--ddZwl74"
+wget -O data.zip --no-check-certificate "https://onedrive.live.com/download?cid=9053A48EF4F6502C&resid=9053A48EF4F6502C%21128&authkey=ALogyVRe180RboQ"
 unzip data.zip
 pip install nni
 #pip install matplotlib
