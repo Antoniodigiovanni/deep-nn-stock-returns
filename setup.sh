@@ -1,6 +1,6 @@
 
 echo \n\n\nPreparing data for experiments and running a first test without NNI\n\n\n
-wget -O data.zip --no-check-certificate "https://onedrive.live.com/download?cid=9053A48EF4F6502C&resid=9053A48EF4F6502C%21128&authkey=ALogyVRe180RboQ"
+wget -O data.zip --no-check-certificate "https://onedrive.live.com/download?cid=9053A48EF4F6502C&resid=9053A48EF4F6502C%21129&authkey=ACwFbiwWDeuqnm4"
 sudo apt update
 sudo apt install unzip
 unzip data.zip
