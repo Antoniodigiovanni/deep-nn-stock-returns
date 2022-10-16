@@ -1,0 +1,76 @@
+{
+    "hidden_layer1" : {
+        "_type": "choice",
+        "_value": [512]            
+    },
+    
+    "hidden_layer2" : {
+        "_type": "choice",
+        "_value": [256]
+    },
+    
+    "hidden_layer3" : {
+        "_type": "choice",
+        "_value": [64]
+    },
+
+    "hidden_layer4" : {
+        "_type": "choice",
+        "_value": [0]
+    },
+
+    "hidden_layer5" : {
+        "_type": "choice",
+        "_value": [0]
+    },  
+
+    "hidden_layer6" : {
+        "_type": "choice",
+        "_value": [0]
+    },
+
+    "hidden_layer7" : {
+        "_type": "choice",
+        "_value": [0]
+    },
+
+    "hidden_layer8" : {
+        "_type": "choice",
+        "_value": [0]
+    },
+
+    "hidden_layer9" : {
+        "_type": "choice",
+        "_value": [0]
+    },
+
+    "hidden_layer10" : {
+        "_type": "choice",
+        "_value": [0]
+    },
+
+    "act_func":{ 
+        "_type": "choice",
+        "_value": ["ReLU"]
+    },
+
+    "learning_rate":{ 
+        "_type": "loguniform",
+        "_value": [ 0.000001, 0.001]
+    },
+
+    "optimizer" : {
+        "_type": "choice",
+        "_value": ["Nadam"]
+    },
+    
+    "l1_lambda1":{ 
+        "_type": "choice",
+        "_value": [0.00001]
+    },
+
+    "dropout_prob":{
+        "_type": "choice",
+        "_value": [0.702337]
+    }
+}

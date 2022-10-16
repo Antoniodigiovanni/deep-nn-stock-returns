@@ -20,6 +20,7 @@ if config.args.expandingTuning:
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace.json')
     experiment.config.max_trial_number = 2000
     experiment.config.trial_gpu_number = 1
+   
     # experiment.config.tuner.name = 'Anneal'
     # experiment.config.tuner.class_args['optimize_mode'] = 'minimize'
 
@@ -84,7 +85,7 @@ elif config.args.guSimpleTuning: #guSimpleGridSearch
     experiment.config.assessor.class_args['optimize_mode'] ='minimize'
     experiment.config.assessor.class_args['start_step'] = 10
 
-elif config.args.finalTuning:
+elif config.args.expandingLearningRateTuning:
     experiment.config.experiment_name = "Final Tuning of best network"
     experiment.config.trial_command = 'python hp_tuning.py --saveDirName ' + saveDir + ' --expandingTuning'
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/best_architecture_grid_search.json')
@@ -101,7 +102,7 @@ elif config.args.guEnsemblePrediction: #guExpandingGridSearch
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/gu_ensemblePrediction.json')
     experiment.config.max_trial_number = 10
     experiment.config.trial_gpu_number = 1
-
+    experiment.config.training_service.use_active_gpu = True
     experiment.config.tuner.name = 'RandomSearch'
 
 
