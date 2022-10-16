@@ -103,7 +103,7 @@ elif config.args.guEnsemblePrediction: #guExpandingGridSearch
     experiment.config.max_trial_number = 10
     experiment.config.trial_gpu_number = 1
     experiment.config.training_service.use_active_gpu = True
-    experiment.config.tuner.name = 'RandomSearch'
+    experiment.config.tuner.name = 'Random'
 
 
 experiment.config.trial_code_directory = './src/tuning'
