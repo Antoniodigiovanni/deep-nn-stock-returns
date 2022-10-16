@@ -55,7 +55,7 @@ class Portfolio():
         self.rebalancing_df = self.rebalancing_df.drop(['predicted_ret', 'ret', 'date', 'melag'], axis=1, errors='ignore')
 
         self.pred_df = self.pred_df.merge(self.rebalancing_df, on=['permno','yyyymm'], how='outer')
-        print(self.pred_df.head())
+        # print(self.pred_df.head())
 
         crsp = dp.load_crsp()
         crsp = crsp[['permno','yyyymm', 'me']]
@@ -73,7 +73,7 @@ class Portfolio():
             monthly_ew = self.pred_df.groupby(['yyyymm','decile'])['ret'].mean()
             monthly_ew.unstack('decile')
             monthly_ew = monthly_ew.reset_index(drop=False)
-            print(monthly_ew.head())
+            # print(monthly_ew.head())
         else:
             print('Inserted weighting method is not valid.\nUse EW for equal weighted or VW for value weighted')
 
@@ -93,8 +93,8 @@ class Portfolio():
             # print('Monthly VW after indexing:')
             # print(monthly_vw.head(20))
 
-            print(monthly_vw.iloc[:,-1].mean())
-            print((monthly_vw.iloc[:,-1]-monthly_vw.iloc[:,1]).mean())
+            print(f'Top decile average return: {monthly_vw.iloc[:,-1].mean()}')
+            print(f'Long-short average return: {(monthly_vw.iloc[:,-1]-monthly_vw.iloc[:,1]).mean()}')
             monthly_vw['l-s'] = monthly_vw.iloc[:,-1] - monthly_vw.iloc[:,1]
             # Temp, change 
             self.returns = monthly_vw
@@ -113,8 +113,8 @@ class Portfolio():
         columns_to_keep.extend(self.returns.columns[-2:])
         df = self.returns[columns_to_keep]
         if self.verbose == True:
-            print('IR & alpha calculation:')
-            print(df.head())
+            print('IR & alpha calculation...')
+            # print(df.head())
         df = df.merge(FFMom, on=['yyyymm'], how='left')
         
         
@@ -144,7 +144,7 @@ class Portfolio():
 
 
         try:
-            print('Linear Regression R-squared:')
+            print('\nLinear Regression R-squared:')
             print(lm.rsquared)
         except:
             print("An exception occurred")
@@ -163,7 +163,7 @@ class Portfolio():
         for col in self.cum_returns.iloc[:,1:].columns:
             self.cum_returns[col] = (np.log(self.cum_returns[col]/100+1).cumsum())
 
-        print('Cumulative Returns')
+        print('Cumulative Returns (tail):')
         print(self.cum_returns.tail())
 
     def plot_cumulative_returns(self, path):
@@ -176,8 +176,8 @@ class Portfolio():
 
         self.cum_returns = self.cum_returns.merge(cum_mkt_ret, on=['yyyymm'], how='left')
         self.cum_returns['date'] = self.cum_returns['yyyymm'].apply(lambda x: dt.datetime.strptime(str(x), '%Y%m'))
-        print('Self.cum_returns columns are:')
-        print(self.cum_returns.columns)
+        # print('Self.cum_returns columns are:')
+        # print(self.cum_returns.columns)
         linestyle_cycler = (cycler('color', ['deepskyblue','coral','magenta','royalblue', 'red','lime', 'crimson', 'cyan','springgreen','teal','gray','darkorange']) +
                             cycler('linestyle',['-','--',':','-.',':','-','-.','--','-',':','-.','--']))
 

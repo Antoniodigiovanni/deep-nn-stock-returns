@@ -82,11 +82,11 @@ def normal_r2_calculation(pred_df):
     unexplained variation is the sum over i of (y_i - yPred_i)**2.
     The total variation is the sum over i of the (y_i - the mean of the depeendent variable)**2
   """
-  residual_e = pred_df['ret'] - pred_df['predicted_ret']
-  SSR = np.sum(residual_e**2)
 
-  mean_prediction = np.mean(pred_df['ret'])
-  SST = np.sum((pred_df['ret'] - mean_prediction)**2)
+  SSR = np.sum((pred_df['ret'] - pred_df['predicted_ret'])**2)
+
+  mean_ret = np.mean(pred_df['ret'])
+  SST = np.sum((pred_df['ret'] - mean_ret)**2)
 
   r2 = 1-(SSR/SST)
 
@@ -131,3 +131,9 @@ def calc_sharpe_ratio(df, already_excess_returns=False):
     SR[column] = mean_ret/std_dev
 
   return SR
+
+def calc_spearman(preds, target):
+  from torchmetrics import SpearmanCorrCoef
+  spearman = SpearmanCorrCoef()
+
+  return spearman(preds, target)

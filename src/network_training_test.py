@@ -1,7 +1,7 @@
 import config
 import pandas as pd
-from trainer.overfit_test_trainer import GeneralizedTrainer
-# from trainer.trainer import GeneralizedTrainer
+# from trainer.overfit_test_trainer import GeneralizedTrainer
+from trainer.trainer import GeneralizedTrainer
 import torch
 import torch.nn as nn
 from tuning.tuning_utils import *
@@ -26,8 +26,8 @@ params = {
         'optimizer':        "Adam", #, "momentum": 0},
         'batch_norm':       0,
         'dropout_prob':     0.7,
-        'use_l1_reg':       {"_name": "False"}#, "lambda": 1e-5}
-
+        'l1_lambda1':       0.6,
+        'l2_lambda':        0.65
     }
 
 class Flexible_Sequential_Net(nn.Module):
@@ -209,7 +209,7 @@ print('Time until the dataset is loaded')
 print("--- %s seconds ---" % (time.time() - start_time))
 
 
-trainer = GeneralizedTrainer(crsp, params, loss_fn, methodology='normal', l1_reg=False, nni_experiment=False, train_window_years=config.n_train_years, val_window_years=config.n_val_years)
+trainer = GeneralizedTrainer(crsp, params, loss_fn, methodology='normal', l1_reg=True, l2_reg=True, nni_experiment=False, train_window_years=config.n_train_years, val_window_years=config.n_val_years)
 n_inputs = trainer.n_inputs
 
 model = Flexible_Sequential_Net(n_inputs).to(config.device)

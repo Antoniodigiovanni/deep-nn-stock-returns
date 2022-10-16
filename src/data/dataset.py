@@ -56,6 +56,7 @@ class BaseDataset:
     def __create_dataset(self):
         if (os.path.exists(config.paths['CRSPretPath']) == False) | (os.path.exists(config.paths['CRSPinfoPath']) == False) | (self.force_crsp_download == True):
             df = dp.download_crsp()
+        print('Data pre-processing...')
         df = dp.load_crsp(crsp_ret_path = self.crspRetPath, crsp_info_path = self.crspInfoPath)
         df = dp.remove_microcap_stocks(df)
         df = dp.filter_exchange_code(df)
@@ -63,10 +64,10 @@ class BaseDataset:
         df = dp.calculate_excess_returns(df)
         df = dp.winsorize_returns(df)
         df = dp.de_mean_returns(df)
-        print('Merging...')
+        print('Merging returns information with signals...')
         df, features = dp.merge_crsp_with_signals(df)    
         
-        print('Scaling...')
+        print('Scaling features...')
         df = dp.scale_features(df, features)
         df = dp.drop_extra_columns(df)
         

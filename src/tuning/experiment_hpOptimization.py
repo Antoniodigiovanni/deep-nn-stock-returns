@@ -19,7 +19,7 @@ if config.args.expandingTuning:
     experiment.config.trial_command = 'python hp_tuning.py --saveDirName ' + saveDir + ' --expandingTuning'
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace.json')
     experiment.config.max_trial_number = 2000
-
+    experiment.config.trial_gpu_number = 1
     # experiment.config.tuner.name = 'Anneal'
     # experiment.config.tuner.class_args['optimize_mode'] = 'minimize'
 
@@ -29,7 +29,8 @@ if config.args.expandingTuning:
     
     experiment.config.assessor.name = 'Medianstop'
     experiment.config.assessor.class_args['optimize_mode'] ='minimize'
-    experiment.config.assessor.class_args['start_step'] = 100
+    experiment.config.assessor.class_args['start_step'] = 50
+    
 
 if config.args.normalTuning:
     print('Tuning Experiment to discover an optimal architecture from scratch')
@@ -94,6 +95,15 @@ elif config.args.finalTuning:
     experiment.config.assessor.class_args['optimize_mode'] ='minimize'
     experiment.config.assessor.class_args['start_step'] = 100
 
+elif config.args.guEnsemblePrediction: #guExpandingGridSearch
+    experiment.config.experiment_name = "Gu et al.'s NN4 Ensemble Prediction"
+    experiment.config.trial_command = 'python gu_esnemblePrediction.py --saveDirName ' + saveDir + ' --expandingTraining'
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/gu_ensemblePrediction.json')
+    experiment.config.max_trial_number = 10
+    experiment.config.trial_gpu_number = 1
+
+    experiment.config.tuner.name = 'RandomSearch'
+
 
 experiment.config.trial_code_directory = './src/tuning'
 
@@ -102,7 +112,8 @@ experiment.config.trial_code_directory = './src/tuning'
 
 
 
-experiment.config.trial_concurrency = 2
+experiment.config.trial_concurrency = 1
+
 # experiment.config.max_experiment_duration = '480h' 
 
 # Add logger for experiment id - in order to be able to view the experiment afterwards

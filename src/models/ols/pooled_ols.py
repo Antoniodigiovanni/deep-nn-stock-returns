@@ -2,7 +2,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 import statsmodels.api as sm
 import numpy as np
-import config 
+import config
 
 class PooledOLS():
 

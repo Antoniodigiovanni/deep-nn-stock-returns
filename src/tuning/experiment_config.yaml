@@ -1,0 +1,17 @@
+trialConcurrency: 1
+searchSpaceFile: search_spaces/best_architecture_grid_search.json
+trialCodeDirectory: ./
+experimentName: Gu_et_al Optimization
+trainingService:
+  platform: local
+  useActiveGpu: True
+
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: minimize
+
+
+trialCommand: python hp_tuning.py --expandingTuning
+trialCodeDirectory: .
+trialGpuNumber: 1

@@ -1,0 +1,26 @@
+{
+    "torch_seed":{
+        "_type": "randint",
+        "_value": [0,10001]
+    },
+
+    "learning_rate":{ 
+        "_type": "choice",
+        "_value": [0.1]
+    },
+
+    "l1_lambda1":{ 
+        "_type": "choice",
+        "_value": [1e-5]
+    },
+
+    "adam_beta_1":{
+        "_type":"choice",
+        "_value":[0.9]
+    },
+
+    "adam_beta_2":{
+    "_type":"choice",
+    "_value": [0.999]
+    }
+}

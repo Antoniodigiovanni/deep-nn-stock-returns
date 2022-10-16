@@ -97,6 +97,8 @@ class GeneralizedTrainer():
         print(f'PATH is: {PATH}')
 
         iteration_r2 = []
+        cum_epoch = 0
+        val_iteration_losses = []
 
         if (self.train_dates[-1] > self.df_end_date | self.val_dates[-1] > self.df_end_date | self.test_dates[-1] > self.df_end_date):
             print(self.train_dates[-1])
@@ -118,11 +120,18 @@ class GeneralizedTrainer():
             # Reset parameters for early stopping 
             j = 0
             self.best_val_loss = np.inf
-            
+            epochs_train_spearman = []
+            epochs_val_spearman = []
             for epoch in range(config.epochs):
-                
-                epoch_loss = self.__process_one_epoch('train')
-                val_loss, val_acc = self.__process_one_epoch('val')
+        
+                cum_epoch +=1 # Used for Tensorboard charts, in order to have all the epochs of all the iterations with different numbers.
+                val_epoch_losses = [] # Used to keep track of all the losses of the epoch (only the ones passing early stopping test)
+
+                epoch_loss, epoch_train_spearman = self.__process_one_epoch('train')
+                val_loss, val_acc, epoch_val_spearman = self.__process_one_epoch('val')
+
+                epochs_train_spearman.append(np.mean(epoch_train_spearman))
+                epochs_val_spearman.append(np.mean(epoch_val_spearman))
 
                 # Early stopping logic:
                 if val_loss < self.best_val_loss:
@@ -141,16 +150,19 @@ class GeneralizedTrainer():
                     # if j != 0:
                         #print(f'j set back to 0, best val_loss is: {self.best_val_loss}')
                     j = 0
+                    val_epoch_losses.append(val_loss)
                     
                 else:
                     j+=1
                     # print(f'j incremented to {j}!')
                 # print(f'Epoch loss is of type: {type(epoch_loss)}, Validation loss is of type: {type(val_loss)},  Validation accuracy is of type: {type(val_acc)}')
                 epoch_loss = epoch_loss.item()
-                self.writer.add_scalar("Loss/train", float(epoch_loss), epoch)
-                self.writer.add_scalar("Loss/validation", float(val_loss), epoch)
-                self.writer.add_scalar("Loss/divergence", float(val_loss) - epoch_loss, epoch)
-                self.writer.add_scalar("Accuracy/Validation", val_acc, epoch)
+                # self.writer.add_scalars('loss', {'train': float(epoch_loss)}, cum_epoch)
+                # self.writer.add_scalars('loss', {'validation': float(val_loss)}, cum_epoch)
+                self.writer.add_scalar("Loss/train", float(epoch_loss), cum_epoch)
+                self.writer.add_scalar("Loss/validation", float(val_loss), cum_epoch)
+                self.writer.add_scalar("Loss/divergence", float(val_loss) - epoch_loss, cum_epoch)
+                self.writer.add_scalar("Accuracy/Validation", val_acc, cum_epoch)
 
 
                 results = {'default': float(val_loss), 'val_acc': val_acc}
@@ -160,6 +172,8 @@ class GeneralizedTrainer():
                 if epoch%config.ep_log_interval == 0:
                     print(f'Epoch n. {epoch+1} [of #{config.epochs}]')
                     print(f'Training loss: {round(epoch_loss, 4)} | Val loss: {round(val_loss,4)}')
+                    print(f'Train spearman: {np.mean(epoch_train_spearman)}')
+                    print(f'Val spearman: {np.mean(epoch_val_spearman)}')
                     print(f'Validation accuracy: {round(100*val_acc,2)}%')
                 
                 if j >= self.patience:
@@ -177,7 +191,12 @@ class GeneralizedTrainer():
                     self.model.train()
 
                     break
-                
+            mean_train_spearman = np.mean(epochs_train_spearman)
+            mean_val_spearman = np.mean(epochs_val_spearman)
+            print(f'The average spearman across epochs in this iteration are:\nTrain: {mean_train_spearman} | \tVal: {mean_val_spearman}')
+            train_r2 = metric.normal_r2_calculation(ReturnsPrediction(self.train_loader, self.model).pred_df)
+            val_r2 = metric.normal_r2_calculation(ReturnsPrediction(self.val_loader, self.model).pred_df)
+            print(f'\n\nR2:\tTrain: {train_r2:.2f}\tVal: {val_r2:.2f}')    
             pred_df = ReturnsPrediction(self.test_loader, self.model).pred_df
             r2_temp = metric.normal_r2_calculation(pred_df)
             print(f'R2 for this iteration is: {r2_temp}, annualized at {r2_temp*12}')
@@ -192,7 +211,9 @@ class GeneralizedTrainer():
             # print(f'Check for  prediction df, min:{self.prediction_df.yyyymm.min()}, max: {self.prediction_df.yyyymm.max()}\n shape:{self.prediction_df.shape}')
             # print(f'\n Tail:\n {self.prediction_df.tail()}')
             #
-
+            print('Validation epoch losses are:')
+            print(val_epoch_losses)
+            val_iteration_losses.append(np.mean(val_epoch_losses))
             if self.methodology == 'expanding':
                 self.__update_years()
                 if self.test_dates[-1] > self.df_end_date:
@@ -203,7 +224,9 @@ class GeneralizedTrainer():
                 print('Normal training completed.')
 
         # print(f'This is again the self.prediction_df columns on line 185: {self.prediction_df.columns}')
-            
+        
+        print('Training is over...')
+        print(f'Mean Validation losses for each iteration are:\n{val_iteration_losses}')
         r2 = metric.r2_metric_calculation(self.prediction_df)
         print(f'R2 calculated using metric.r2_metric_calculation is {r2}')
 
@@ -352,8 +375,9 @@ class GeneralizedTrainer():
         
         print('Portfolio returns calculation completed.')
        
+        best_val_loss = min(val_iteration_losses)
         results = {
-            'default': float(val_loss), 
+            'default': float(best_val_loss), 
             'val_acc': val_acc,
             'alpha': float(alpha),
             'information_ratio': float(information_ratio_regression),
@@ -384,7 +408,8 @@ class GeneralizedTrainer():
 
         size = len(loader.dataset)
         num_batches = len(loader)
-
+        epoch_train_spearman = []
+        epoch_val_spearman = []
         if mode == 'train':
             # print(f'num_batches = len(dataloader): {len(loader)}')
             # print(f'Size = len(dataloader.dataset):{len(loader.dataset)}')
@@ -392,18 +417,17 @@ class GeneralizedTrainer():
                 
             for i, (inputs, target, labels) in enumerate(loader):
                 
-                loss, correct = self.__process_one_step(inputs, target, labels, mode)
-                # if batch % 1 == 0:
-                #     loss, current = loss.item(), batch * len(data['X'])
-                #     print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+                loss, correct, train_spearman = self.__process_one_step(inputs, target, labels, mode)
                 total_loss += loss
+                epoch_train_spearman.append(train_spearman)
             total_loss /= num_batches
         
         # total_acc = total_acc / loader.batch_size * 100
         
         elif mode == 'val':
             for i, (inputs, target, labels) in enumerate(loader):
-                loss, correct = self.__process_one_step(inputs, target, labels, mode)
+                loss, correct, val_spearman = self.__process_one_step(inputs, target, labels, mode)
+                epoch_val_spearman.append(val_spearman)
                 val_loss += loss.item()
                 total_correct += correct
             # print(f'Total correct in validation:{total_correct}')              
@@ -412,15 +436,15 @@ class GeneralizedTrainer():
             # print(f"Validation Error: \n Accuracy: {(100*val_acc):>0.1f}%, Avg loss: {val_loss:>8f} \n")
 
         if mode == 'train':
-            return total_loss
+            return total_loss, epoch_train_spearman
         else:
-            return val_loss, val_acc
+            return val_loss, val_acc, epoch_val_spearman
 
 
     def __process_one_step(self, inputs, target, labels, mode):
-        if mode == 'train':
+        if mode =='train':
             self.optimizer.zero_grad()
-        
+
         inputs = inputs.to(config.device)
         target = target.to(config.device)
         labels = labels.to(config.device)
@@ -434,6 +458,7 @@ class GeneralizedTrainer():
                 yhat = self.model(inputs.float())
                 correct = metric.accuracy(target.float().squeeze(), yhat, 0.2)
         
+        spearman = metric.calc_spearman(yhat, target.float().squeeze())
         loss = self.loss_fn(yhat, target.float().squeeze())
         
         if self.l1_reg:
@@ -449,14 +474,15 @@ class GeneralizedTrainer():
             l2 = l2_norm.squeeze() * self.l2_lambda
         else:
             l2 = 0
-            loss = loss.squeeze() + l1 + l2
+        
+        loss = loss.squeeze() + l1 + l2
 
 
         if mode == 'train':
             loss.backward()
             self.optimizer.step()
 
-        return loss, correct
+        return loss, correct, spearman
 
 
     def __update_years(self):

@@ -31,9 +31,9 @@ class ReturnsPrediction():
         dataiter = iter(self.__test_loader)
         inputs, target, labels = dataiter.next()
 
-        inputs = inputs.to(config.device)
-        target = target.to(config.device)
-        labels = labels.to(config.device)
+        inputs = inputs.to('cpu')
+        target = target.to('cpu')
+        labels = labels.to('cpu')
             
         with torch.no_grad():
             outputs = self.__model(inputs.float())
@@ -45,27 +45,5 @@ class ReturnsPrediction():
                 }
             )
     
-        # print(np.corrcoef(pred_df['ret'], pred_df['predicted_ret']))
-    
-
-        # for i, (inputs, target, labels) in enumerate(self.__test_loader):
-        #     inputs = inputs.to(config.device)
-        #     target = target.to(config.device)
-        #     labels = labels.to(config.device)
-            
-        #     # Predict the batch
-        #     dataiter = iter()
-        #     correct, batch_prediction = metric.calc_accuracy_and_predict(self.__model, data, self.__pct)
-        #     total += inputs.size(0)
-        #     total_correct += correct
-            
-        #     for k in batch_prediction:
-        #         if index == 0:
-        #             prediction[k] = []
-        #         prediction[k].extend(batch_prediction[k])
-
-        # accuracy = 100.*total_correct/total   
-        # pred_df = pd.DataFrame.from_dict(prediction) 
         
-        # return accuracy, pred_df
         return pred_df
