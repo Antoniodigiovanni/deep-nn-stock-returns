@@ -25,6 +25,7 @@ logger = logging.getLogger('Grid search experiment')
 
 # These are the hyperparameters that will be tuned.
 params = {
+    'torch_seed': 2022,
     'learning_rate': 0.0005,
     'l1_lambda1': 5e-6,
     # 'patience': 2,
@@ -49,7 +50,7 @@ df = dataset.df
 df.drop(['melag', 'prc', 'me','me_nyse20'], axis=1, inplace=True, errors='ignore')
 
 
-torch.manual_seed(2022)
+torch.manual_seed(params['torch_seed'])
 # torch.use_deterministic_algorithms(True)
 
 

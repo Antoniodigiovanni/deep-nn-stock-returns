@@ -98,11 +98,11 @@ elif config.args.expandingLearningRateTuning:
 
 elif config.args.guEnsemblePrediction: #guExpandingGridSearch
     experiment.config.experiment_name = "Gu et al.'s NN4 Ensemble Prediction"
-    experiment.config.trial_command = 'python gu_esnemblePrediction.py --saveDirName ' + saveDir + ' --expandingTraining'
+    experiment.config.trial_command = 'python gu_ensemblePrediction.py --saveDirName ' + saveDir + ' --expandingTraining'
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/gu_ensemblePrediction.json')
     experiment.config.max_trial_number = 10
-    experiment.config.trial_gpu_number = 1
-    experiment.config.training_service.use_active_gpu = True
+    # experiment.config.trial_gpu_number = 1
+    # experiment.config.training_service.use_active_gpu = True
     experiment.config.tuner.name = 'Random'
 
 

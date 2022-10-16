@@ -13,7 +13,7 @@ if os.path.exists(config.paths['resultsPath']) == False:
 with open(config.paths['resultsPath'] + '/../readme.txt', 'w') as f:
    f.write('readme')
 
-if config.args.expandingTuning or config.args.guNetworkTuning or config.args.guSimpleTuning or config.args.batchExperiment or config.args.normalTuning or config.args.finalTuning or config.args.gueEnsemblePrediction:
+if config.args.expandingLearningRateTuning or config.args.expandingTuning or config.args.guNetworkTuning or config.args.guSimpleTuning or config.args.batchExperiment or config.args.normalTuning or config.args.finalTuning or config.args.guEnsemblePrediction:
     import tuning.experiment_hpOptimization
 
 if config.args.ensemblePrediction:
