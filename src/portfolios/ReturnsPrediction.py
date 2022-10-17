@@ -37,6 +37,8 @@ class ReturnsPrediction():
             
         with torch.no_grad():
             outputs = self.__model(inputs.float())
+            
+            outputs = outputs.to('cpu')
             labels = labels.to('cpu')
             target = target.to('cpu')
             inputs = inputs.to('cpu')
