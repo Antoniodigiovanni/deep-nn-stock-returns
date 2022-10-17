@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import pandas as pd
+import config
 
 def IntegratedGradients_importance(model, path):
     ig = IntegratedGradients(model)
@@ -21,11 +22,15 @@ def IntegratedGradients_importance(model, path):
 
     dataiter = iter(test_loader)
     inputs, target, labels = dataiter.next()
+    inputs = inputs.to(config.device)
+    target = target.to(config.device)
+    labels = labels.to(config.device)
+
     print(f'Inputs has type: {type(inputs)} and shape {inputs.size()}')
     test_input_tensor = inputs.float()
     test_input_tensor.requires_grad_()
     attr, delta = ig.attribute(test_input_tensor, return_convergence_delta=True)
-    attr = attr.detach().numpy()
+    attr = attr.to('cpu').detach().numpy()
 
     visualize_importances(feature_names, np.mean(attr, axis=0), path)
 

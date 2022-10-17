@@ -372,8 +372,11 @@ class GeneralizedTrainer():
         portfolio.plot_cumulative_returns(plot_cum_ret_path)
 
         plot_feature_importance = plotsDir + '/' + str(timeStamp)
-        IntegratedGradients_importance(self.model, plot_feature_importance)
-        
+        try:
+            IntegratedGradients_importance(self.model, plot_feature_importance)
+        except:
+            pass
+            
         print('Portfolio returns calculation completed.')
        
         best_val_loss = min(val_iteration_losses)
