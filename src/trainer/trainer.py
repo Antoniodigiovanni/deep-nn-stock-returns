@@ -461,7 +461,6 @@ class GeneralizedTrainer():
                 yhat = self.model(inputs.float())
                 correct = metric.accuracy(target.float().squeeze(), yhat, 0.2)
         
-        spearman = metric.calc_spearman(yhat, target.float().squeeze())
         loss = self.loss_fn(yhat, target.float().squeeze())
         
         if self.l1_reg:
@@ -479,6 +478,9 @@ class GeneralizedTrainer():
             l2 = 0
         
         loss = loss.squeeze() + l1 + l2
+
+        spearman = metric.calc_spearman(yhat, target.float().squeeze())
+        spearman.to('cpu')
 
 
         if mode == 'train':

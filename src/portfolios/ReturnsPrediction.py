@@ -31,12 +31,15 @@ class ReturnsPrediction():
         dataiter = iter(self.__test_loader)
         inputs, target, labels = dataiter.next()
 
-        inputs = inputs.to('cpu')
-        target = target.to('cpu')
-        labels = labels.to('cpu')
+        inputs = inputs.to(config.device)
+        target = target.to(config.device)
+        labels = labels.to(config.device)
             
         with torch.no_grad():
             outputs = self.__model(inputs.float())
+            labels = labels.to('cpu')
+            target = target.to('cpu')
+            inputs = inputs.to('cpu')
             pred_df = pd.DataFrame(
                 {'permno': labels[:,1].numpy(),
                 'yyyymm': labels[:,0].numpy(),
