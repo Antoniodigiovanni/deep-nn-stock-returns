@@ -88,21 +88,23 @@ elif config.args.guSimpleTuning: #guSimpleGridSearch
 elif config.args.expandingLearningRateTuning:
     experiment.config.experiment_name = "Final Tuning of best network"
     experiment.config.trial_command = 'python hp_tuning.py --saveDirName ' + saveDir + ' --expandingTuning'
-    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/best_architecture_grid_search.json')
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace_gridTuningNN3.json')
+    # experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace_gridTuningNN9.json')
 
     experiment.config.tuner.name = 'GridSearch'
 
-    experiment.config.assessor.name = 'Medianstop'
-    experiment.config.assessor.class_args['optimize_mode'] ='minimize'
-    experiment.config.assessor.class_args['start_step'] = 100
+    # experiment.config.assessor.name = 'Medianstop'
+    # experiment.config.assessor.class_args['optimize_mode'] ='minimize'
+    # experiment.config.assessor.class_args['start_step'] = 100
 
 elif config.args.guEnsemblePrediction: #guExpandingGridSearch
     experiment.config.experiment_name = "Gu et al.'s NN4 Ensemble Prediction"
     experiment.config.trial_command = 'python gu_ensemblePrediction.py --saveDirName ' + saveDir + ' --expandingTraining'
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/gu_ensemblePrediction.json')
     experiment.config.max_trial_number = 10
-    # experiment.config.trial_gpu_number = 1
-    # experiment.config.training_service.use_active_gpu = True
+    if config.device != 'cpu':
+        experiment.config.trial_gpu_number = 1
+        experiment.config.training_service.use_active_gpu = True
     experiment.config.tuner.name = 'Random'
 
 

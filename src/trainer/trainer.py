@@ -122,11 +122,12 @@ class GeneralizedTrainer():
             self.best_val_loss = np.inf
             epochs_train_spearman = []
             epochs_val_spearman = []
+            val_epoch_losses = [] # Used to keep track of all the losses of the epoch (only the ones passing early stopping test)
+
             for epoch in range(config.epochs):
         
                 cum_epoch +=1 # Used for Tensorboard charts, in order to have all the epochs of all the iterations with different numbers.
-                val_epoch_losses = [] # Used to keep track of all the losses of the epoch (only the ones passing early stopping test)
-
+                
                 epoch_loss, epoch_train_spearman = self.__process_one_epoch('train')
                 val_loss, val_acc, epoch_val_spearman = self.__process_one_epoch('val')
 
@@ -419,6 +420,7 @@ class GeneralizedTrainer():
                 
                 loss, correct, train_spearman = self.__process_one_step(inputs, target, labels, mode)
                 total_loss += loss
+                train_spearman = train_spearman.to('cpu')
                 epoch_train_spearman.append(train_spearman)
             total_loss /= num_batches
         
@@ -427,6 +429,7 @@ class GeneralizedTrainer():
         elif mode == 'val':
             for i, (inputs, target, labels) in enumerate(loader):
                 loss, correct, val_spearman = self.__process_one_step(inputs, target, labels, mode)
+                val_spearman = val_spearman.to('cpu')
                 epoch_val_spearman.append(val_spearman)
                 val_loss += loss.item()
                 total_correct += correct

@@ -44,6 +44,7 @@ params = {
         'learning_rate':    0.001,
         'optimizer':        "Adam",
         'l1_lambda1':       0,
+        'l2_lambda':        0,
         'dropout_prob':     0.1
     }
 
@@ -138,9 +139,15 @@ else:
     # else:
     #     l1_reg = False
     # print(f'l1_reg is of type: {type(l1_reg)} and is: {l1_reg}')    
-    l1_reg= True
-    l2_reg = True
-
+    if 'l1_lambda1' in params:
+        l1_reg= True
+    else:
+        l1_reg = False
+        
+    if 'l2_lambda' in params:
+        l2_reg = True
+    else:
+        l2_reg = False
     trainer = GeneralizedTrainer(df, params, loss_fn, methodology=method, l1_reg=l1_reg, l2_reg=l2_reg)
     n_inputs = trainer.n_inputs
 
