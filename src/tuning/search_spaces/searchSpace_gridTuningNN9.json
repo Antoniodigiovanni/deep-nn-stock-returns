@@ -1,0 +1,86 @@
+{
+    "hidden_layer1" : {
+        "_type": "choice",
+        "_value": [512]            
+    },
+    
+    "hidden_layer2" : {
+        "_type": "choice",
+        "_value": [512]
+    },
+    
+    "hidden_layer3" : {
+        "_type": "choice",
+        "_value": [256]
+    },
+
+    "hidden_layer4" : {
+        "_type": "choice",
+        "_value": [512]
+    },
+
+    "hidden_layer5" : {
+        "_type": "choice",
+        "_value": [64]
+    },  
+
+    "hidden_layer6" : {
+        "_type": "choice",
+        "_value": [32]
+    },
+
+    "hidden_layer7" : {
+        "_type": "choice",
+        "_value": [64]
+    },
+
+    "hidden_layer8" : {
+        "_type": "choice",
+        "_value": [32]
+    },
+
+    "hidden_layer9" : {
+        "_type": "choice",
+        "_value": [4]
+    },
+
+    "hidden_layer10" : {
+        "_type": "choice",
+        "_value": [0]
+    },
+
+    "act_func":{ 
+        "_type": "choice",
+        "_value": ["LeakyReLU"]
+    },
+
+    "learning_rate":{ 
+        "_type": "choice",
+        "_value": [0.0005,
+        0.000583265,
+        0.000680395,
+        0.000793701,
+        0.000925875,
+        0.00108006,
+        0.001259921,
+        0.001469734,
+        0.001714488,
+        0.002            
+        ]
+    },
+
+    "optimizer" : {
+        "_type": "choice",
+        "_value": ["Adam"]
+    },
+    
+    "l1_lambda1":{ 
+        "_type": "choice",
+        "_value": [0.001]
+    },
+
+    "dropout_prob":{
+        "_type": "choice",
+        "_value": [0.018219]
+    }
+}
