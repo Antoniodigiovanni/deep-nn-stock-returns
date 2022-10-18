@@ -128,7 +128,7 @@ class GeneralizedTrainer():
             val_epoch_losses = [] # Used to keep track of all the losses of the epoch (only the ones passing early stopping test)
 
             for epoch in range(config.epochs):
-        
+                start_time_epoch = time.time()
                 cum_epoch +=1 # Used for Tensorboard charts, in order to have all the epochs of all the iterations with different numbers.
                 
                 epoch_loss, epoch_train_spearman = self.__process_one_epoch('train')
@@ -191,7 +191,11 @@ class GeneralizedTrainer():
                     print(f'Train spearman: {np.mean(epoch_train_spearman)}')
                     print(f'Val spearman: {np.mean(epoch_val_spearman)}')
                     print(f'Validation accuracy: {round(100*val_acc,2)}%')
-                
+                    try:
+                        print(f'Elapsed time for last epoch is: {elapsed_epoch_time:.2f}')
+                    except:
+                        first_epoch_time = time.time() - start_time_epoch
+                        print(f'First epoch time is: {first_epoch_time:.2f}')
                 if j >= self.patience:
                     print(f'Early stopping at epoch {epoch+1}!')
                     
@@ -207,6 +211,8 @@ class GeneralizedTrainer():
                     self.model.train()
 
                     break
+                elapsed_epoch_time = time.time() - start_time_epoch
+
             mean_train_spearman = np.mean(epochs_train_spearman)
             mean_val_spearman = np.mean(epochs_val_spearman)
             iteration_val_spearman.append(mean_val_spearman)
