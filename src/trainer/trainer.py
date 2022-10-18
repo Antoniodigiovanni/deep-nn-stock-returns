@@ -138,7 +138,7 @@ class GeneralizedTrainer():
                 epochs_val_spearman.append(np.mean(epoch_val_spearman))
 
                 # Early stopping logic:
-                if val_loss < self.best_val_loss and epoch_val_spearman > self.best_val_spearman:
+                if val_loss < self.best_val_loss and np.mean(epoch_val_spearman) > self.best_val_spearman:
                     self.best_val_loss = val_loss
                     self.best_val_spearman = epoch_val_spearman
                     torch.save({
