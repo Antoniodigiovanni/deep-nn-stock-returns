@@ -99,6 +99,8 @@ class GeneralizedTrainer():
         iteration_r2 = []
         cum_epoch = 0
         val_iteration_losses = []
+        iteration_val_spearman = []
+        iteration_train_spearman = []
 
         if (self.train_dates[-1] > self.df_end_date | self.val_dates[-1] > self.df_end_date | self.test_dates[-1] > self.df_end_date):
             print(self.train_dates[-1])
@@ -194,6 +196,9 @@ class GeneralizedTrainer():
                     break
             mean_train_spearman = np.mean(epochs_train_spearman)
             mean_val_spearman = np.mean(epochs_val_spearman)
+            iteration_val_spearman.append(mean_val_spearman)
+            iteration_train_spearman.append(mean_train_spearman)
+
             print(f'The average spearman across epochs in this iteration are:\nTrain: {mean_train_spearman} | \tVal: {mean_val_spearman}')
             train_r2 = metric.normal_r2_calculation(ReturnsPrediction(self.train_loader, self.model).pred_df)
             val_r2 = metric.normal_r2_calculation(ReturnsPrediction(self.val_loader, self.model).pred_df)
@@ -227,6 +232,13 @@ class GeneralizedTrainer():
         # print(f'This is again the self.prediction_df columns on line 185: {self.prediction_df.columns}')
         
         print('Training is over...')
+
+        val_spearman_correlation = np.mean(iteration_val_spearman)
+        train_spearman_correlation = np.mean(iteration_train_spearman)
+        
+        out_of_sample_spearman = metric.calc_spearman(torch.tensor(self.prediction_df['predicted_ret'], device='cpu'), torch.tensor(self.prediction_df['ret'], device='cpu'))
+        out_of_sample_spearman.to('cpu').item()
+
         print(f'Mean Validation losses for each iteration are:\n{val_iteration_losses}')
         r2 = metric.r2_metric_calculation(self.prediction_df)
         print(f'R2 calculated using metric.r2_metric_calculation is {r2}')
@@ -290,18 +302,7 @@ class GeneralizedTrainer():
         plotsDir = config.saveDir + '/plots'
 
         # Saving files
-        """
-        if os.path.exists(config.saveDir + '/predicted_returns') == False:
-            os.makedirs(config.saveDir + '/predicted_returns')
-        if os.path.exists(config.saveDir + '/portfolio_returns') == False:
-            os.makedirs(config.saveDir + '/portfolio_returns')
-        if os.path.exists(config.saveDir + '/trial_info') == False:
-            os.makedirs(config.saveDir + '/trial_info')
-        if os.path.exists(config.saveDir + '/portfolio_weights') == False:
-            os.makedirs(config.saveDir + '/portfolio_weights')
-        # if os.path.exists(config.saveDir + '/models') == False:
-        #     os.makedirs(config.saveDir + '/models')
-        """
+        
         if os.path.exists(predictedRetDir) == False:
             os.makedirs(predictedRetDir)
         if os.path.exists(portfolioRetDir) == False:
@@ -324,7 +325,10 @@ class GeneralizedTrainer():
             # 'information_ratio',
             'alpha', 
             'r2_oos', 
-            'val_loss', 
+            'train_spearman',
+            'val_spearman',
+            'val_loss',
+             
             # 'Sharpe_Ratio'
             ]
         summary_dict = {
@@ -333,6 +337,8 @@ class GeneralizedTrainer():
             # 'information_ratio': information_ratio, 
             'alpha': alpha, 
             'r2_oos': r2['R2'], 
+            'train_spearman': train_spearman_correlation,
+            'val_spearman': val_spearman_correlation,
             'val_loss': val_loss, 
             # 'Sharpe_Ratio': sharpe_ratio
             }
@@ -354,6 +360,8 @@ class GeneralizedTrainer():
             'Information Ratio': information_ratio,
             'Regression-based Information Ratio': information_ratio_regression,
             'Sharpe Ratio': sharpe_ratio,
+            'Train Spearman': train_spearman_correlation,
+            'Val Spearman': val_spearman_correlation,
             'Others': 'Think about adding other metrics (Max_DD, turnover, ...)'}
 
         with open(trialInfoDir + '/' + str(timeStamp) + '_trial_full.json', 'w') as fp:
@@ -383,6 +391,8 @@ class GeneralizedTrainer():
         results = {
             'default': float(best_val_loss), 
             'val_acc': val_acc,
+            'Train Spearman': train_spearman_correlation,
+            'Val Spearman': val_spearman_correlation,
             'alpha': float(alpha),
             'information_ratio': float(information_ratio_regression),
             'R2': r2['R2']}
