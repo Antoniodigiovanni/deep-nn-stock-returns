@@ -20,6 +20,7 @@ if config.args.expandingTuning:
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace.json')
     experiment.config.max_trial_number = 2000
     experiment.config.trial_gpu_number = 2
+    experiment.config.training_service.use_active_gpu = True
    
     # experiment.config.tuner.name = 'Anneal'
     # experiment.config.tuner.class_args['optimize_mode'] = 'minimize'
