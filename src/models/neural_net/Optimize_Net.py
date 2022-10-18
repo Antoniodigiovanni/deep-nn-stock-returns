@@ -4,6 +4,10 @@ from tuning.tuning_utils import *
 class OptimizeNet(nn.Module):
     def __init__(self, n_inputs, params):
         super(OptimizeNet, self).__init__()
+        self.batch_norm = None
+        if 'batch_norm' in params:
+            self.batch_norm = params['barch_norm']
+        
         self.hidden_size_1 = params['hidden_layer1']
         self.hidden_size_2 = params['hidden_layer2']
         self.hidden_size_3 = params['hidden_layer3']
@@ -45,10 +49,17 @@ class OptimizeNet(nn.Module):
         return x.squeeze()
     
     def _fc_block(self, in_c, out_c, act_func):
-        block = nn.Sequential(
-            nn.Linear(in_c, out_c),
-            act_func
-        )
+        if self.batch_norm == None:
+            block = nn.Sequential(
+                nn.Linear(in_c, out_c),
+                act_func
+            )
+        elif self.batch_norm != None:
+            block = nn.Sequential(
+                nn.Linear(in_c, out_c),
+                act_func,
+                nn.BatchNorm1d(out_c)
+            )
         return block
 
 

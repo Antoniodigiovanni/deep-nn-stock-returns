@@ -79,7 +79,7 @@
         "_type": "uniform",
         "_value": [0, 0.7]
     },
-    "batc_norm":{
+    "batch_norm":{
         "_type": "choice",
         "_value": [0,1]
     }
