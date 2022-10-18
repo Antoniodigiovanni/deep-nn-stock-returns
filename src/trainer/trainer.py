@@ -143,9 +143,7 @@ class GeneralizedTrainer():
                 epochs_train_spearman.append(epoch_train_spearman)
                 epochs_val_spearman.append(epoch_val_spearman)
 
-                print(type(epoch_val_spearman))
-                print(epoch_val_spearman)
-
+                
                 # Early stopping logic:
                 if (val_loss < self.best_val_loss) and (epoch_val_spearman > self.best_val_spearman):
                     self.best_val_loss = val_loss
@@ -192,7 +190,7 @@ class GeneralizedTrainer():
                     print(f'Val spearman: {np.mean(epoch_val_spearman)}')
                     print(f'Validation accuracy: {round(100*val_acc,2)}%')
                     try:
-                        print(f'Elapsed time for last epoch is: {elapsed_epoch_time:.2f}')
+                        print(f'Elapsed time for last epoch is: {elapsed_epoch_time:.2f} seconds')
                     except:
                         first_epoch_time = time.time() - start_time_epoch
                         print(f'First epoch time is: {first_epoch_time:.2f}')
