@@ -122,6 +122,7 @@ class GeneralizedTrainer():
             # Reset parameters for early stopping 
             j = 0
             self.best_val_loss = np.inf
+            self.best_val_spearman = -np.inf
             epochs_train_spearman = []
             epochs_val_spearman = []
             val_epoch_losses = [] # Used to keep track of all the losses of the epoch (only the ones passing early stopping test)
@@ -137,8 +138,9 @@ class GeneralizedTrainer():
                 epochs_val_spearman.append(np.mean(epoch_val_spearman))
 
                 # Early stopping logic:
-                if val_loss < self.best_val_loss:
+                if val_loss < self.best_val_loss or epoch_val_spearman > self.best_val_spearman:
                     self.best_val_loss = val_loss
+                    self.best_val_spearman = epoch_val_spearman
                     torch.save({
                         'epoch': epoch,
                         'model_state_dict': self.model.state_dict(),
@@ -146,6 +148,8 @@ class GeneralizedTrainer():
                         'epoch_loss': epoch_loss,
                         'val_loss': val_loss,
                         'val_acc': val_acc,
+                        'train_spearman': epoch_train_spearman,
+                        'val_spearman': epoch_val_spearman,
                         'params': self.params,
                         'n_inputs': self.n_inputs
                         }, PATH)

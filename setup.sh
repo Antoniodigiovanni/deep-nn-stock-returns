@@ -14,6 +14,7 @@ pip3 install statsmodels
 pip3 install captum
 pip3 install seaborn
 pip3 install tensorboard
+pip3 install torchmetrics
 
 # Installation with CPU-only - comment the following line if a GPU is present
 #pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
