@@ -137,7 +137,10 @@ else:
     trainer = GeneralizedTrainer(df, params, loss_fn, methodology=method, l1_reg=l1_reg, l2_reg=l2_reg)
     n_inputs = trainer.n_inputs
 
-    model = OptimizeNet(n_inputs, params).to(config.device)
+    model = OptimizeNet(n_inputs, params)#.to(config.device)
+    model= nn.DataParallel(model)
+    model.to(config.device)
+    
     print(f'Device from config: {config.device}')
     print(f'N. of epochs set at {config.epochs}')
 
