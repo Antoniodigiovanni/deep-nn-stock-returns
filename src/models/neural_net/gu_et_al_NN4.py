@@ -7,8 +7,6 @@ class GuNN4(nn.Module):
     # define model elements
     def __init__(self, n_inputs):
         super(GuNN4, self).__init__()
-        # Change to traditional method in order to set the 
-        # weights and biases initialization method
         
         self.net = nn.Sequential (
             nn.Linear(n_inputs, 32),

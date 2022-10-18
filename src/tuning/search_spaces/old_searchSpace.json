@@ -1,52 +1,52 @@
 {
     "hidden_layer1" : {
         "_type": "choice",
-        "_value": [4096,2048,1024,512,256,64,32]            
+        "_value": [4096,2048,1024,512]            
     },
     
     "hidden_layer2" : {
         "_type": "choice",
-        "_value": [0,16,32,64,128,256,512,1024,2048]
+        "_value": [0, 128,256,512,1024,2048]
     },
     
     "hidden_layer3" : {
         "_type": "choice",
-        "_value": [0,4,8,16,32,64,32,128, 256, 512, 1024]
+        "_value": [0, 64,32,128, 256, 512, 1024]
     },
 
     "hidden_layer4" : {
         "_type": "choice",
-        "_value": [0,2,4,8,16,32,64,128,256,512]
+        "_value": [0, 32,16,64, 128, 256, 512]
     },
 
     "hidden_layer5" : {
         "_type": "choice",
-        "_value": [0,2,4,8,16,32,64,128,256]
+        "_value": [0,16,4,32, 64, 128, 256]
     },  
 
     "hidden_layer6" : {
         "_type": "choice",
-        "_value": [0,2,4,8,16,32,64,128]
+        "_value": [0,16,4,32, 64, 128]
     },
 
     "hidden_layer7" : {
         "_type": "choice",
-        "_value": [0,2,4,16,32,64]
+        "_value": [0,16,4,32, 64]
     },
 
     "hidden_layer8" : {
         "_type": "choice",
-        "_value": [0,2,4,16,32,64]
+        "_value": [0,16,4,32,64]
     },
 
     "hidden_layer9" : {
         "_type": "choice",
-        "_value": [0,2,4,8,16,32]
+        "_value": [0,4,16,32]
     },
 
     "hidden_layer10" : {
         "_type": "choice",
-        "_value": [0,2,4,16,32]
+        "_value": [0,16,4,32]
     },
 
     "act_func":{ 
@@ -78,9 +78,5 @@
     "dropout_prob":{
         "_type": "uniform",
         "_value": [0, 0.7]
-    },
-    "batc_norm":{
-        "_type": "choice",
-        "_value": [0,1]
     }
 }

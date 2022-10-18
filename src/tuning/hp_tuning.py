@@ -45,7 +45,8 @@ params = {
         'optimizer':        "Adam",
         'l1_lambda1':       0,
         'l2_lambda':        0,
-        'dropout_prob':     0.1
+        'dropout_prob':     0.1,
+        "batch_norm":       0
     }
 
 # Get optimized hyperparameters
@@ -60,15 +61,6 @@ params.update(optimized_params)
 
 print(params)
 
-# def validate_params(params):
-#     if params['hidden_layer2'] == 0 and (params['hidden_layer3'] != 0 or params['hidden_layer4'] != 0 or params['hidden_layer5'] != 0):
-#         return False
-#     if params['hidden_layer3'] == 0 and (params['hidden_layer4'] != 0 or params['hidden_layer5'] != 0):
-#         return False
-#     if params['hidden_layer4'] == 0 and params['hidden_layer5'] != 0:
-#         return False
-
-#     return True
 def validate_params(params):
         hidden_layers = [None]*10
 
@@ -87,7 +79,6 @@ def validate_params(params):
         return invalid_parameters
 
 def initialize_weights(m):
-    # print(m)
     if isinstance(m, nn.Linear):
         if params['act_func'] == 'LeakyReLU':
             # print('Activation Function is LeakyReLU')
@@ -134,11 +125,6 @@ else:
     elif args.normalTuning:
         method = 'normal'
 
-    # if params['use_l1_reg']['_name'] == 'True':
-    #     l1_reg = True
-    # else:
-    #     l1_reg = False
-    # print(f'l1_reg is of type: {type(l1_reg)} and is: {l1_reg}')    
     if 'l1_lambda1' in params:
         l1_reg= True
     else:
