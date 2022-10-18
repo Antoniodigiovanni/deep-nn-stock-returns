@@ -5,7 +5,7 @@ class OptimizeNet(nn.Module):
     def __init__(self, n_inputs, params):
         super(OptimizeNet, self).__init__()
         self.batch_norm = None
-        if 'batch_norm' in params:
+        if params['batch_norm'] in params:
             self.batch_norm = params['batch_norm']
         
         self.hidden_size_1 = params['hidden_layer1']
@@ -49,17 +49,18 @@ class OptimizeNet(nn.Module):
         return x.squeeze()
     
     def _fc_block(self, in_c, out_c, act_func):
-        if self.batch_norm == None:
-            block = nn.Sequential(
-                nn.Linear(in_c, out_c),
-                act_func
-            )
-        elif self.batch_norm != None:
+        if self.batch_norm == 1:
             block = nn.Sequential(
                 nn.Linear(in_c, out_c),
                 act_func,
                 nn.BatchNorm1d(out_c)
             )
+        else:
+            block = nn.Sequential(
+                nn.Linear(in_c, out_c),
+                act_func
+            )
+            
         return block
 
 

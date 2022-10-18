@@ -97,6 +97,12 @@ elif config.args.expandingLearningRateTuning:
     # experiment.config.assessor.name = 'Medianstop'
     # experiment.config.assessor.class_args['optimize_mode'] ='minimize'
     # experiment.config.assessor.class_args['start_step'] = 100
+elif config.args.ensemblePrediction:
+    experiment.config.experiment_name = "NN3 Ensemble Prediction"
+    experiment.config.trial_command = 'python ensemblePrediction.py --saveDirName ' + saveDir + ' --expandingTraining'
+    experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/NN3_ensemble_prediction.json')
+    experiment.config.max_trial_number = 10
+    experiment.config.tuner.name = 'Random'
 
 elif config.args.guEnsemblePrediction: #guExpandingGridSearch
     experiment.config.experiment_name = "Gu et al.'s NN4 Ensemble Prediction"

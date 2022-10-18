@@ -253,7 +253,7 @@ class GeneralizedTrainer():
         val_spearman_correlation = np.mean(iteration_val_spearman)
         train_spearman_correlation = np.mean(iteration_train_spearman)
         
-        out_of_sample_spearman = metric.calc_spearman(torch.tensor(self.prediction_df['predicted_ret'], device='cpu'), torch.tensor(self.prediction_df['ret'], device='cpu'))
+        out_of_sample_spearman = metric.calc_spearman(torch.tensor(self.prediction_df['predicted_ret'], device='cpu', dtype=torch.float32), torch.tensor(self.prediction_df['ret'], device='cpu', dtype=torch.float32))
         out_of_sample_spearman.to('cpu').item()
 
         print(f'Mean Validation losses for each iteration are:\n{val_iteration_losses}')

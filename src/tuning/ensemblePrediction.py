@@ -37,7 +37,8 @@ params = {
         'optimizer':        "Adam",
         'l1_lambda1':       0,
         'dropout_prob':     0.1,
-        'toch_seed':        0
+        'toch_seed':        0,
+        'batch_norm':       0
     }
 
 optimized_params = nni.get_next_parameter()
@@ -74,7 +75,8 @@ args, unknown = parser.parse_known_args() # Using this to avoid error with noteb
 
 
 # loss_fn = map_loss_func(params['loss'])
-loss_fn = nn.L1Loss()
+# loss_fn = nn.L1Loss()
+loss_fn = nn.MSELoss()
 if args.expandingTuning:
     method = 'expanding'
 elif args.normalTuning:
