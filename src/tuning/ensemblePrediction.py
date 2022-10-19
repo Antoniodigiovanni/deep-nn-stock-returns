@@ -85,10 +85,21 @@ if args.expandingTuning:
     method = 'expanding'
 elif args.normalTuning:
     method = 'normal'
+method='expanding'
 
-l1_reg= True
 
-trainer = GeneralizedTrainer(df, params, loss_fn, methodology=method, l1_reg=l1_reg)
+if 'l1_lambda1' in params:
+    l1_reg= True
+else:
+    l1_reg = False
+    
+if 'l2_lambda' in params:
+    l2_reg = True
+else:
+    l2_reg = False
+
+
+trainer = GeneralizedTrainer(df, params, loss_fn, methodology=method, l1_reg=l1_reg, l2_reg=l2_reg)
 n_inputs = trainer.n_inputs
 
 model = OptimizeNet(n_inputs, params).to(config.device)

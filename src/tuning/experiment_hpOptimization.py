@@ -101,7 +101,7 @@ elif config.args.ensemblePrediction:
     print(os.getcwd())
     print('in experiment setup')
     experiment.config.experiment_name = "NN3 Ensemble Prediction"
-    experiment.config.trial_command = 'python ensemblePrediction.py --saveDirName ' + saveDir + ' --expandingTraining'
+    experiment.config.trial_command = 'python ensemblePrediction.py --saveDirName ' + saveDir + ' --expandingTuning'
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/NN3_ensemble_prediction.json')
     experiment.config.max_trial_number = 10
     experiment.config.tuner.name = 'Random'
