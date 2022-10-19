@@ -1,5 +1,9 @@
 import sys,os
 
+# To import config from top_level folder
+currentPath = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(currentPath+'/../')
+
 import nni
 from torch import nn
 import torch

@@ -53,7 +53,6 @@ parser.add_argument('--batchExperiment', action='store_true')
 parser.add_argument('--saveDirName', default='analysisResults', help='Specifies the path in which experiment results are saved' )
 parser.add_argument('--ensemblePrediction', action='store_true', help='Use the final network to predict portfolio returns using an ensemble method')
 parser.add_argument('--guEnsemblePrediction', action='store_true', help='')
-parser.add_argument('--ensemblePrediction', action='store_true', help='')
 parser.add_argument('--finalTuning', action='store_true', help='Used for performing the final operations when an optimal architecture is found (Grid search + Ensemble to create portfolios)')
 parser.add_argument('--expandingLearningRateTuning', action='store_true', help='')
 
