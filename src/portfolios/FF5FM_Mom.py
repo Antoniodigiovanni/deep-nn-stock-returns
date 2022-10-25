@@ -1,3 +1,4 @@
+from ast import Str
 import pandas as pd
 import config
 import os
@@ -11,7 +12,7 @@ class FF5FM_Mom():
 
         FF5FMurl = 'https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_5_Factors_2x3_CSV.zip'
         FFMomurl = 'https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Momentum_Factor_CSV.zip'
-
+        FFstReversal_url = 'https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_ST_Reversal_Factor_CSV.zip'
 
         if os.path.isfile(config.paths['FFPath']) == False:
             download_and_unzip(FF5FMurl, config.dataPath+'/external')    
@@ -21,17 +22,23 @@ class FF5FM_Mom():
             download_and_unzip(FFMomurl, config.dataPath+'/external')
             print('Momentum returns downloaded from Kenneth French\'s library')
 
+        if os.path.isfile(config.paths['FFSTRevPath']) == False:
+            download_and_unzip(FFstReversal_url, config.dataPath+'/external')    
+            print('Fama French Short Term reversal returns downloaded from Kenneth French\'s library')
+
         FF5FM = pd.read_csv(config.paths['FFPath'], skiprows=3, skipfooter=60, engine='python')
         FFMom = pd.read_csv(config.paths['FFMomPath'], skiprows=13, skipfooter=100, engine='python')
-
+        STrev = pd.read_csv(config.paths['FFSTRevPath'], skiprows=13, skipfooter=100, engine='python')
 
         FF5FM = FF5FM.rename(columns={'Unnamed: 0': 'yyyymm'})
         FFMom = FFMom.rename(columns={'Unnamed: 0': 'yyyymm'})
-        
+        self.STrev = STrev.rename(columns={'Unnamed: 0': 'yyyymm'})
+
         self.RF = FF5FM[['yyyymm', 'RF']]
         
         FF5FM.drop('RF', axis=1, inplace=True)
         self.returns = FF5FM.merge(FFMom, on=['yyyymm'])
+        self.returns = self.returns.merge(self.STrev, on=['yyyymm'])
         # self.returns.iloc[:,1:] = self.returns.iloc[:,1:]/100
         
         del FF5FM, FFMom

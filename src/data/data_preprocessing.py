@@ -32,11 +32,11 @@ def filter_share_code(df, shrcd=None):
     df = df.loc[df['shrcd'].isin(shrcd)].drop('shrcd', axis=1).copy()
     return df
 
-def remove_microcap_stocks(df):
+def remove_microcap_stocks(df, stocks_to_keep=['Medium','Big']):
     
     df = __calculate_stock_sizes(df)
     
-    df = df.loc[df['StockSize'] != 'Micro']
+    df = df.loc[df['StockSize'].isin(stocks_to_keep)]
     
     return df
 
@@ -91,7 +91,18 @@ def merge_crsp_with_signals(df, signalspath=config.paths['SignalsPath']):
 def rank_scale (x):
     return ((x.rank(method='max') / x.count()) - 0.5)
 
-def scale_features(df, features):
+def standard_scale (x):
+    return (((x- x.mean()) / x.std()))
+
+
+def scale_returns(df, method=None):
+    if method == None or method == 'rank':
+        df['ret'] = df.groupby('yyyymm')['ret'].transform(lambda x: rank_scale(x))
+    elif method == 'standard':
+        df['ret'] = df.groupby('yyyymm')['ret'].transform(lambda x: standard_scale(x))
+    return df
+    
+def scale_features(df, features, method=None):
     
     reduced_cols = features[:-3]
     print(reduced_cols[-5:])
@@ -99,10 +110,18 @@ def scale_features(df, features):
 
     # print(features)
 
-    df[features] = (
-        df.groupby('yyyymm')[features]
-        .transform(lambda x: rank_scale(x))
-        )
+    if method == None or method == 'rank':
+        df[features] = (
+            df.groupby('yyyymm')[features]
+            .transform(lambda x: rank_scale(x))
+            )
+    elif method == 'standard':
+            df[features] = (
+                df.groupby('yyyymm')[features]
+                .transform(lambda x: standard_scale(x))
+                )
+    else:
+        print('Scaling method should either be not passed as an argument, "rank" or "standard", other options are not available')
     
     # Removing rows with missing signals (where all are missing apart from STreverse, price and size)
     missing_signals = df.loc[df[reduced_cols].isna().all(axis=1)][['permno','yyyymm']]

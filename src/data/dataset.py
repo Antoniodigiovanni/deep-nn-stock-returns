@@ -45,6 +45,10 @@ class BaseDataset:
         if (self.processedDatasetExists == 1) & (self.forcePreProcessing == False):
             print('Loading the dataset...')
             self.df = pd.read_csv(config.paths['finalDatasetPath'], index_col=0)
+            AA_mean = round(self.df['AbnormalAccruals'].mean(),2)
+            AA_std = round(self.df['AbnormalAccruals'].std(),2)
+            AA_median = round(self.df['AbnormalAccruals'].median(),2)
+            print(f'Features stats:\nMean: {AA_mean}\tStd: {AA_std}\tMedian: {AA_median}')
 
             # Removing features for testing
             # self.df = self.df.drop(['STreversal', 'High52', 'MaxRet', 'Price'], axis=1)
@@ -64,11 +68,12 @@ class BaseDataset:
         df = dp.calculate_excess_returns(df)
         df = dp.winsorize_returns(df)
         df = dp.de_mean_returns(df)
+        df = dp.scale_returns(df, method='rank')
         print('Merging returns information with signals...')
         df, features = dp.merge_crsp_with_signals(df)    
         
         print('Scaling features...')
-        df = dp.scale_features(df, features)
+        df = dp.scale_features(df, features, method='rank')
         df = dp.drop_extra_columns(df)
         
         # Save dataset

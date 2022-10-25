@@ -16,8 +16,7 @@ with open(config.paths['resultsPath'] + '/../readme.txt', 'w') as f:
 if config.args.expandingLearningRateTuning or config.args.expandingTuning \
     or config.args.guNetworkTuning or config.args.guSimpleTuning \
         or config.args.batchExperiment or config.args.normalTuning \
-            or config.args.finalTuning or config.args.guEnsemblePrediction\
-                or config.args.ensemblePrediction:
+            or config.args.guEnsemblePrediction or config.args.ensemblePrediction:
     import tuning.experiment_hpOptimization
 
 

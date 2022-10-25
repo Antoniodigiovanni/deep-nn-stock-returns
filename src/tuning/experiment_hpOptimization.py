@@ -31,7 +31,7 @@ if config.args.expandingTuning:
     
     experiment.config.assessor.name = 'Medianstop'
     experiment.config.assessor.class_args['optimize_mode'] ='minimize'
-    experiment.config.assessor.class_args['start_step'] = 50
+    experiment.config.assessor.class_args['start_step'] = 500
     
 
 if config.args.normalTuning:

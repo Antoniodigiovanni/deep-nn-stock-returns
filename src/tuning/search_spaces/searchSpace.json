@@ -82,5 +82,9 @@
     "batch_norm":{
         "_type": "choice",
         "_value": [0,1]
+    },
+    "batch_size":{
+        "_type": "randint",
+        "_value": [100,10001]
     }
 }

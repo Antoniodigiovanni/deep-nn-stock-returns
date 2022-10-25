@@ -23,6 +23,7 @@ paths = dict (
     CRSPinfoPath=(dataPath+'/external/crspminfo.csv'),
     FFPath = (dataPath + '/external/F-F_Research_Data_5_Factors_2x3.csv'),
     FFMomPath = (dataPath + '/external/F-F_Momentum_Factor.CSV'), 
+    FFSTRevPath = (dataPath + '/external/F-F_ST_Reversal_Factor.CSV'),
     SignalsPath = (dataPath + '/external/signed_predictors_dl_wide.csv'), 
     ProcessedDataPath = (dataPath + '/processed'),
     PredictedRetPath = (dataPath + '/processed/predicted_ret.csv'),
@@ -31,7 +32,8 @@ paths = dict (
     logsPath = (currentPath + '/../../saved/logs'),
     guTuningResultsPath = (currentPath + '/../../saved/results' + '/GuTuningResults'),
     hpoResultsPath = (currentPath + '/../../saved/results' + '/tuningResults'),
-    finalDatasetPath=(dataPath + '/processed/dataset.csv')
+    finalDatasetPath=(dataPath + '/processed/dataset.csv'),
+    FF10MomPortfoliosPath = (dataPath + '/external/10_Portfolios_Prior_12_2.CSV')
     )
 
 logFileName = dt.now().strftime('/TrainRun-%Y_%m_%d-%H_%M.log')
@@ -53,7 +55,7 @@ parser.add_argument('--batchExperiment', action='store_true')
 parser.add_argument('--saveDirName', default='analysisResults', help='Specifies the path in which experiment results are saved' )
 parser.add_argument('--ensemblePrediction', action='store_true', help='Use the final network to predict portfolio returns using an ensemble method')
 parser.add_argument('--guEnsemblePrediction', action='store_true', help='')
-parser.add_argument('--finalTuning', action='store_true', help='Used for performing the final operations when an optimal architecture is found (Grid search + Ensemble to create portfolios)')
+# parser.add_argument('--finalTuning', action='store_true', help='Used for performing the final operations when an optimal architecture is found (Grid search + Ensemble to create portfolios)')
 parser.add_argument('--expandingLearningRateTuning', action='store_true', help='')
 
 

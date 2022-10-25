@@ -52,8 +52,8 @@ class OptimizeNet(nn.Module):
         if self.batch_norm == 1:
             block = nn.Sequential(
                 nn.Linear(in_c, out_c),
+                nn.BatchNorm1d(out_c),
                 act_func,
-                nn.BatchNorm1d(out_c)
             )
         else:
             block = nn.Sequential(

@@ -1,10 +1,12 @@
 import pandas as pd
 import datetime as dt
 import numpy as np
-import config.config as config
 import data.data_preprocessing as dp
 import statsmodels.api as sm
 from portfolios.FF5FM_Mom import FF5FM_Mom
+import models.neural_net.metric as metrics
+from .market_portfolio import MarketPortfolio
+
 
 
 class Portfolio():
@@ -12,7 +14,8 @@ class Portfolio():
         self.pred_df = pred_df
         self.weighting = weighting
         self.rebalancing_frequency = rebalancing_frequency
-    
+        
+        self.mkt = MarketPortfolio()
         self._split_predicted_returns()
         self._calculate_weights()
         self._calculate_portfolio_returns()
@@ -34,13 +37,39 @@ class Portfolio():
         
         return rebalancing_months
 
-    def _split_predicted_returns(self, nyse_breakpoints=False):
+    def _split_predicted_returns(self, use_breakpoints = True, nyse_breakpoints=False):
         rebalancing_months = self._list_rebalancing_months()
-        
+        self.rebalancing_df = self.pred_df.loc[self.pred_df['yyyymm'].isin(rebalancing_months)]
+
         if nyse_breakpoints:
             pass
+        elif use_breakpoints:
+            deciles = [.1,.2,.3,.4,.5,.6,.7,.8,.9]
+            for i,decile in enumerate(deciles):
+                if i == 0:
+                    breakpoints = self.rebalancing_df.groupby('yyyymm')['predicted_ret'].quantile(.1).reset_index(drop=False).copy()
+                    breakpoints = breakpoints.rename({'predicted_ret': "predRet_10"}, axis=1)
+                else:
+                    breakpoints['predRet_'+str(int(decile*100))] = self.rebalancing_df.groupby('yyyymm')['predicted_ret'].quantile(decile).reset_index(drop=True)
+            self.rebalancing_df = self.rebalancing_df.merge(breakpoints, on='yyyymm', how='left')
+
+            conditions =[
+                (self.rebalancing_df['predicted_ret'] < self.rebalancing_df['predRet_10']),
+                ((self.rebalancing_df['predicted_ret'] >= self.rebalancing_df['predRet_10']) & (self.rebalancing_df['predicted_ret'] < self.rebalancing_df['predRet_20'])),
+                ((self.rebalancing_df['predicted_ret'] >= self.rebalancing_df['predRet_20']) & (self.rebalancing_df['predicted_ret'] < self.rebalancing_df['predRet_30'])),
+                ((self.rebalancing_df['predicted_ret'] >= self.rebalancing_df['predRet_30']) & (self.rebalancing_df['predicted_ret'] < self.rebalancing_df['predRet_40'])),
+                ((self.rebalancing_df['predicted_ret'] >= self.rebalancing_df['predRet_40']) & (self.rebalancing_df['predicted_ret'] < self.rebalancing_df['predRet_50'])),
+                ((self.rebalancing_df['predicted_ret'] >= self.rebalancing_df['predRet_50']) & (self.rebalancing_df['predicted_ret'] < self.rebalancing_df['predRet_60'])),
+                ((self.rebalancing_df['predicted_ret'] >= self.rebalancing_df['predRet_60']) & (self.rebalancing_df['predicted_ret'] < self.rebalancing_df['predRet_70'])),
+                ((self.rebalancing_df['predicted_ret'] >= self.rebalancing_df['predRet_70']) & (self.rebalancing_df['predicted_ret'] < self.rebalancing_df['predRet_80'])),
+                ((self.rebalancing_df['predicted_ret'] >= self.rebalancing_df['predRet_80']) & (self.rebalancing_df['predicted_ret'] < self.rebalancing_df['predRet_90'])),
+                (self.rebalancing_df['predicted_ret'] >= self.rebalancing_df['predRet_90'])
+            ]
+            values = [1,2,3,4,5,6,7,8,9,10]
+
+            self.rebalancing_df['decile'] = np.select(conditions, values)
+
         else:
-            self.rebalancing_df = self.pred_df.loc[self.pred_df['yyyymm'].isin(rebalancing_months)]
             self.rebalancing_df['rank'] = self.rebalancing_df.groupby('yyyymm')['predicted_ret'].rank(pct = True)
             self.rebalancing_df['decile'] = np.nan
 
@@ -52,35 +81,34 @@ class Portfolio():
             # print(self.rebalancing_df[pd.isnull(self.rebalancing_df.decile)])
             self.rebalancing_df.loc[pd.isnull(self.rebalancing_df['decile']), 'decile'] = 1 
             
-        self.rebalancing_df = self.rebalancing_df.drop(['predicted_ret', 'ret', 'date', 'melag'], axis=1, errors='ignore')
-
+        self.rebalancing_df = self.rebalancing_df.drop(['predicted_ret', 'ret', 'date'], axis=1, errors='ignore')
+        
         self.pred_df = self.pred_df.merge(self.rebalancing_df, on=['permno','yyyymm'], how='outer')
-        # print(self.pred_df.head())
 
         crsp = dp.load_crsp()
-        crsp = crsp[['permno','yyyymm', 'me']]
+        crsp = crsp[['permno','yyyymm', 'me', 'melag']]
 
         self.pred_df = self.pred_df.merge(crsp, on=['yyyymm','permno'], how='left')
         # Add ffill part for yearly and quarterly rebalance
 
     def _calculate_weights(self):
         if self.weighting == 'VW':
-            weight = pd.DataFrame(self.pred_df.groupby(['yyyymm','decile'])['me'].sum()).reset_index(drop=False)
-            weight = weight.rename(columns={'me':'total_me'})
+            weight = pd.DataFrame(self.pred_df.groupby(['yyyymm','decile'])['melag'].sum()).reset_index(drop=False)
+            weight = weight.rename(columns={'melag':'total_melag'})
             self.pred_df = self.pred_df.merge(weight, on=['yyyymm', 'decile'], how='inner')
-            self.pred_df['weight'] = self.pred_df['me']/self.pred_df['total_me']
+            self.pred_df['weight'] = self.pred_df['melag']/self.pred_df['total_melag']
         elif self.weighting == 'EW':
-            monthly_ew = self.pred_df.groupby(['yyyymm','decile'])['ret'].mean()
-            monthly_ew.unstack('decile')
-            monthly_ew = monthly_ew.reset_index(drop=False)
-            # print(monthly_ew.head())
+            pass
+            # monthly_ew = self.pred_df.groupby(['yyyymm','decile'])['ret'].mean()
+            # monthly_ew.unstack('decile')
+            # monthly_ew = monthly_ew.reset_index(drop=False)
         else:
             print('Inserted weighting method is not valid.\nUse EW for equal weighted or VW for value weighted')
 
     def _calculate_portfolio_returns(self):
         if self.weighting == 'VW':
             self.pred_df = (self.pred_df.sort_values(by=['permno','yyyymm'])).reset_index(drop=True)
-            self.pred_df['vw_ret'] = self.pred_df['ret'] * self.pred_df['weight'].shift()
+            self.pred_df['vw_ret'] = self.pred_df['ret'] * self.pred_df['weight']
             self.pred_df.loc[self.pred_df['permno'] != self.pred_df['permno'].shift(), 'vw_ret'] = np.nan
             # self.pred_df.vw_ret[self.pred_df.permno != self.pred_df.permno.shift()] = np.nan
             monthly_vw = self.pred_df.groupby(['yyyymm','decile'])['vw_ret'].sum()
@@ -93,14 +121,17 @@ class Portfolio():
             # print('Monthly VW after indexing:')
             # print(monthly_vw.head(20))
 
-            print(f'Top decile average return: {monthly_vw.iloc[:,-1].mean()}')
-            print(f'Long-short average return: {(monthly_vw.iloc[:,-1]-monthly_vw.iloc[:,1]).mean()}')
             monthly_vw['l-s'] = monthly_vw.iloc[:,-1] - monthly_vw.iloc[:,1]
             # Temp, change 
             self.returns = monthly_vw
+        elif self.weighting == 'EW':
+            monthly_ew = self.pred_df.groupby(['yyyymm','decile'])['ret'].mean()
+            monthly_ew.unstack('decile')
+            monthly_ew = monthly_ew.reset_index(drop=False)
+            self.returns = monthly_vw
             
             
-    def regress_on_FF5FM(self):
+    def regress_on_FF5FM(self, method='long-short'):
         """ Taken from old portfolio class, change """
         FFMom = FF5FM_Mom().returns
         """
@@ -123,7 +154,12 @@ class Portfolio():
 
         # Column 1 is long returns on max quantile, 
         # Column 2 is long-short returns
-        y = df.iloc[:,2]
+        if method == 'long-short':
+            y = df.iloc[:,2]
+        elif method == 'long':
+            y = df.iloc[:,1]
+        else:
+            print('Error, regression methodology should be either "long-short" or "long"')
 
         X = sm.add_constant(X)
         lm = sm.OLS(y, X).fit()
@@ -157,24 +193,57 @@ class Portfolio():
 
         n_months =  ((year_max - year_min) + (month_max-month_min+1)/12)*12 
         self.information_ratio_regression = self.t_value_alpha / np.sqrt(n_months)
+        print(f'Informatio Ratio based on FF5FM+Mom regression: {self.information_ratio_regression:.2f} ({method})')
 
     def _calculate_metrics(self):
+        
         self.cum_returns = self.returns.copy()
         for col in self.cum_returns.iloc[:,1:].columns:
             self.cum_returns[col] = (np.log(self.cum_returns[col]/100+1).cumsum())
 
-        print('Cumulative Returns (tail):')
-        print(self.cum_returns.tail())
+        # print('Cumulative Returns (tail):')
+        # print(self.cum_returns.tail())
+        print(f'Average return:\n\tLong: {self.returns.iloc[:,-2].mean():.2f}%\tLong-short: {(self.returns.iloc[:,-1]).mean():.2f}%')
+           
+        try:
+            T = self.returns.count()[1]
+            print(f'T is {T}')
+        except:
+            print('Error in calculating T')
+            
+        self.annualized_return_long = np.prod((1+self.returns.iloc[:,-2]/100)**(12/T))-1
+        self.annualized_return_long_short = np.prod((1+self.returns.iloc[:,-1]/100)**(12/T))-1
+        self.annualized_return_long = self.annualized_return_long * 100
+        self.annualized_return_long_short = self.annualized_return_long_short * 100
+        print(f'Annualized returns:\n\tLong: {self.annualized_return_long:.2f}%\tLong-short:{self.annualized_return_long_short:.2f}%')
+
+        self.std_dev_long = np.std(self.returns.iloc[:,-2])     
+        self.std_dev_long_short = np.std(self.returns.iloc[:,-1])
+        print(f'Standard deviation on returns:\n\tLong: {self.std_dev_long:.2f}\tLong-short:{self.std_dev_long_short:.2f}')
+
+        self.sharpe_ratio_long = self.annualized_return_long/self.std_dev_long
+        self.sharpe_ratio_long_short = self.annualized_return_long_short/self.std_dev_long_short
+        print(f'Sharpe ratio:\n\tLong: {self.sharpe_ratio_long:.2f}\tLong-short:{self.sharpe_ratio_long_short:.2f}')
+        
+        IR = metrics.information_ratio(self.returns)
+        market_returns = self.mkt.mkt_returns
+        returns = self.returns.merge(market_returns, on=['yyyymm'],how='left')
+        self.alpha_market_long = ((((returns.iloc[:,-3] - returns.iloc[:,-1])/100+1)**(12/T)).prod())-1
+        alpha_market_long_short = ((((returns.iloc[:,-2] - returns.iloc[:,-1])/100+1)**(12/T)).prod())-1
+        print(f'Alpha over market:\tLong:{self.alpha_market_long}\tLong-short:{alpha_market_long_short}')
+        # TN^L=\frac{12}{2l(T/l-1)}\sum^{T/l-1}_{t=1}\sum_{i\in L_t\cup L_t+1} ||w^L_{i,t+l}-w^{L+}_{i,t}||_1
+        # TN_L = 12/(2*(T-1))*
+
 
     def plot_cumulative_returns(self, path):
         from cycler import cycler
         import matplotlib.pyplot as plt
-        from .market_portfolio import MarketPortfolio
+        
+        mkt_ret = self.mkt.mkt_returns
 
-        mkt = MarketPortfolio()
-        cum_mkt_ret = mkt.cumulative_mkt_ret()
+        self.cum_returns = self.cum_returns.merge(mkt_ret, on=['yyyymm'], how='left')
+        self.cum_returns.iloc[:,-1] = (np.log(self.cum_returns.iloc[:,-1]/100+1).cumsum())
 
-        self.cum_returns = self.cum_returns.merge(cum_mkt_ret, on=['yyyymm'], how='left')
         self.cum_returns['date'] = self.cum_returns['yyyymm'].apply(lambda x: dt.datetime.strptime(str(x), '%Y%m'))
         # print('Self.cum_returns columns are:')
         # print(self.cum_returns.columns)
@@ -189,5 +258,7 @@ class Portfolio():
         plt.ylabel('Cumulative Log returns')
         plt.legend(self.cum_returns.iloc[:,1:-1].columns)
         plt.tight_layout()
-        plt.savefig(path)
-        
+        try:
+            plt.savefig(path)
+        except:
+            pass    

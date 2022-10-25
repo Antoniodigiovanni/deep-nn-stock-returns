@@ -41,7 +41,7 @@ params = {
         'optimizer':        "Adam",
         'l1_lambda1':       0,
         'dropout_prob':     0.1,
-        'toch_seed':        0,
+        'torch_seed':        0,
         'batch_norm':       0
     }
 

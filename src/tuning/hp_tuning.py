@@ -117,8 +117,8 @@ else:
 
 
     # loss_fn = map_loss_func(params['loss'])
-    loss_fn = nn.MSELoss()
-    # loss_fn = nn.L1Loss()
+    # loss_fn = nn.MSELoss()
+    loss_fn = nn.L1Loss()
     
     if args.expandingTuning:
         method = 'expanding'
@@ -134,7 +134,7 @@ else:
         l2_reg = True
     else:
         l2_reg = False
-    trainer = GeneralizedTrainer(df, params, loss_fn, methodology=method, l1_reg=l1_reg, l2_reg=l2_reg)
+    trainer = GeneralizedTrainer(df, params, loss_fn, methodology=method, l1_reg=l1_reg, l2_reg=l2_reg, train_window_years=config.n_train_years, val_window_years=config.n_val_years)
     n_inputs = trainer.n_inputs
 
     model = OptimizeNet(n_inputs, params)#.to(config.device)

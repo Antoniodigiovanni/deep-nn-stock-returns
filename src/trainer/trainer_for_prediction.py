@@ -54,16 +54,15 @@ class GeneralizedTrainer():
         
 
         self.train_window = train_window_years
-        self.val_window = val_window_years
-        self.val_starting_year = int((dt.datetime.strptime(
+        # self.val_window = val_window_years
+        # self.val_starting_year = int((dt.datetime.strptime(
+        #     str(self.train_starting_year), '%Y%m') + 
+        #     DateOffset(years=self.train_window)).strftime('%Y%m'))
+        self.prediction_window = prediction_window_months
+        
+        self.end_train = int((dt.datetime.strptime(
             str(self.train_starting_year), '%Y%m') + 
             DateOffset(years=self.train_window)).strftime('%Y%m'))
-        
-        # Subtracting one month from the start of the validation period
-        # gives us the end of the training period
-        self.end_train = int((dt.datetime.strptime(
-            str(self.val_starting_year), '%Y%m') - 
-            DateOffset(months=1)).strftime('%Y%m'))
         
 
         self.train_dates, self.val_dates, self.test_dates = None, None, None
@@ -96,14 +95,6 @@ class GeneralizedTrainer():
         PATH = config.saveDir + '/models/model_'+str(timeStamp)+'.pt'
         print(f'PATH is: {PATH}')
 
-        # Saving non-trained model to re-load it every iteration
-        initial_path = config.saveDir + '/models/model_'+str(timeStamp)+'_not-trained.pt'
-        print(f'Initial model saved at: {initial_path}')
-        torch.save({
-                        'model_state_dict': self.model.state_dict(),
-                        'optimizer_state_dict': self.optimizer.state_dict(),
-                        }, initial_path)
-
         iteration_r2 = []
         cum_epoch = 0
         val_iteration_losses = []
@@ -126,13 +117,6 @@ class GeneralizedTrainer():
             print(f'\n\nTraining from {self.train_dates[0]} to {self.train_dates[-1]}')
             print(f'Validating from {self.val_dates[0]} to {self.val_dates[-1]}')
             print(f'Testing from {self.test_dates[0]} to {self.test_dates[-1]}')
-            
-            # # Re-load initial model checkpoint
-            # initial_model = torch.load(initial_path)
-            # print('Loading untrained model...')
-            # self.model.load_state_dict(initial_model['model_state_dict'])
-            # self.optimizer.load_state_dict(initial_model['optimizer_state_dict'])
-            # self.model.train()
             
             # Reset parameters for early stopping 
             j = 0
@@ -160,10 +144,9 @@ class GeneralizedTrainer():
 
                 
                 # Early stopping logic:
-                if (val_loss < self.best_val_loss):# and (epoch_val_spearman > self.best_val_spearman):
+                if (val_loss < self.best_val_loss) and (epoch_val_spearman > self.best_val_spearman):
                     self.best_val_loss = val_loss
-                    if epoch_val_spearman > self.best_val_spearman:
-                        self.best_val_spearman = epoch_val_spearman
+                    self.best_val_spearman = epoch_val_spearman
                     torch.save({
                         'epoch': epoch,
                         'model_state_dict': self.model.state_dict(),
@@ -239,14 +222,11 @@ class GeneralizedTrainer():
             print(f'\n\nR2:\tTrain: {train_r2:.2f}\tVal: {val_r2:.2f}')    
             pred_df = ReturnsPrediction(self.test_loader, self.model).pred_df
             r2_temp = metric.normal_r2_calculation(pred_df)
-            oos_spearman_corr = metric.calc_spearman(torch.tensor(pred_df['predicted_ret'], device='cpu', dtype=torch.float32), torch.tensor(pred_df['ret'], device='cpu', dtype=torch.float32))
-            oos_spearman_corr.to('cpu').item()
-
-            print(f'Out-of-sample stats for this last iteration:\nR2:{r2_temp}\tSpearman Correlation Coefficient:{oos_spearman_corr}')
+            print(f'R2 for this iteration is: {r2_temp}, annualized at {r2_temp*12}')
             iteration_r2.append(r2_temp)
             self.prediction_df = pd.concat([self.prediction_df, pred_df], ignore_index=True)
             
-            
+
             self.writer.flush()
 
 
@@ -254,8 +234,8 @@ class GeneralizedTrainer():
             # print(f'Check for  prediction df, min:{self.prediction_df.yyyymm.min()}, max: {self.prediction_df.yyyymm.max()}\n shape:{self.prediction_df.shape}')
             # print(f'\n Tail:\n {self.prediction_df.tail()}')
             #
-            # print('Validation epoch losses are:')
-            # print(val_epoch_losses)
+            print('Validation epoch losses are:')
+            print(val_epoch_losses)
             val_iteration_losses.append(np.mean(val_epoch_losses))
             if self.methodology == 'expanding':
                 self.__update_years()
@@ -365,7 +345,7 @@ class GeneralizedTrainer():
             'train_spearman',
             'val_spearman',
             'val_loss',
-             'long_alpha_on_market'
+             
             # 'Sharpe_Ratio'
             ]
         summary_dict = {
@@ -376,8 +356,7 @@ class GeneralizedTrainer():
             'r2_oos': r2['R2'], 
             'train_spearman': train_spearman_correlation,
             'val_spearman': val_spearman_correlation,
-            'val_loss': val_loss,
-            'long_alpha_on_market': portfolio.alpha_market_long
+            'val_loss': val_loss, 
             # 'Sharpe_Ratio': sharpe_ratio
             }
 
@@ -428,7 +407,6 @@ class GeneralizedTrainer():
         best_val_loss = min(val_iteration_losses)
         results = {
             'default': float(best_val_loss), 
-            'long_alpha_on_market': portfolio.alpha_market_long,
             'val_acc': val_acc,
             'Train Spearman': train_spearman_correlation,
             'Val Spearman': val_spearman_correlation,
@@ -619,6 +597,6 @@ class GeneralizedTrainer():
         self.n_inputs = self.train.get_inputs()
         # Modify batch size to make it trainable with higher values
         # Modify dataloader args
-        self.train_loader = DataLoader(self.train, batch_size=self.params['batch_size'], shuffle=True)
-        self.val_loader = DataLoader(self.validation, batch_size=self.params['batch_size'], shuffle=True)
+        self.train_loader = DataLoader(self.train, batch_size=10000, shuffle=True)
+        self.val_loader = DataLoader(self.validation, batch_size=10000, shuffle=True)
         self.test_loader = DataLoader(self.test, batch_size=bs)

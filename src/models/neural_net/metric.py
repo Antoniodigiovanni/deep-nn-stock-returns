@@ -102,7 +102,7 @@ def normal_r2_calculation(pred_df):
 
 def information_ratio(portfolio_returns):
     mp = MarketPortfolio()
-    mp.market_ret_calculation()
+    # mp.market_ret_calculation()
     mkt_ret = mp.mkt_returns[['yyyymm','market_ret']]
 
     print(mkt_ret)
