@@ -14,7 +14,6 @@ class ReturnsPrediction():
 
         self.__model = model
         self.__model.eval()
-
         self.__test_loader = test_loader
 
         self.pred_df = self.predict()

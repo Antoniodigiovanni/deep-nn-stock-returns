@@ -75,6 +75,21 @@ def calc_r2(df):
     r2 = 1-(num/den)
     
     return r2
+def alternative_r2(df):
+  num = sum((df['ret'] - df['predicted_ret'])**2)
+  den = sum((df['ret'] - np.mean(df['ret']))**2)
+
+  r2 = 1-(num/den)
+  return r2
+
+
+def r2_in_training(prediction, target):
+  num = sum((target - prediction)**2)
+  den = sum(target**2)
+  r2 = 1-(num/den)
+  
+  return r2
+  
 
 def normal_r2_calculation(pred_df):
   """
@@ -137,3 +152,10 @@ def calc_spearman(preds, target):
   spearman = SpearmanCorrCoef()
 
   return spearman(preds, target)
+
+def mean_directional_accuracy(preds, target):
+  size = preds.shape[0]
+  mda = np.sum(np.sign(target) == np.sign(preds))/size
+  
+  return mda
+  # return np.mean((np.sign(actual[1:]-actual[:-1]) == np.sign(predicted[1:] - predicted[:-1])).astype(int))

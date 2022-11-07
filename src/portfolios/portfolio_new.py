@@ -128,7 +128,7 @@ class Portfolio():
             monthly_ew = self.pred_df.groupby(['yyyymm','decile'])['ret'].mean()
             monthly_ew.unstack('decile')
             monthly_ew = monthly_ew.reset_index(drop=False)
-            self.returns = monthly_vw
+            self.returns = monthly_ew
             
             
     def regress_on_FF5FM(self, method='long-short'):
@@ -204,19 +204,26 @@ class Portfolio():
         # print('Cumulative Returns (tail):')
         # print(self.cum_returns.tail())
         print(f'Average return:\n\tLong: {self.returns.iloc[:,-2].mean():.2f}%\tLong-short: {(self.returns.iloc[:,-1]).mean():.2f}%')
-           
-        try:
-            T = self.returns.count()[1]
-            print(f'T is {T}')
-        except:
-            print('Error in calculating T')
-            
+        T = self.returns['yyyymm'].count()
+        print(f'T is {T}')        
+        
+
         self.annualized_return_long = np.prod((1+self.returns.iloc[:,-2]/100)**(12/T))-1
         self.annualized_return_long_short = np.prod((1+self.returns.iloc[:,-1]/100)**(12/T))-1
         self.annualized_return_long = self.annualized_return_long * 100
         self.annualized_return_long_short = self.annualized_return_long_short * 100
         print(f'Annualized returns:\n\tLong: {self.annualized_return_long:.2f}%\tLong-short:{self.annualized_return_long_short:.2f}%')
-
+        
+        market_returns = self.mkt.mkt_returns
+        returns = self.returns.merge(market_returns, on=['yyyymm'],how='left')
+        
+        self.annualized_market_return = np.prod((returns.iloc[:,-1]/100+1)**(12/T))-1
+        print(f'Annualized Market Returns {self.annualized_market_return:.2f}%')
+        self.alpha_market_long = ((((returns.iloc[:,-3] - returns.iloc[:,-1])/100+1)**(12/T)).prod())-1
+        alpha_market_long_short = ((((returns.iloc[:,-2] - returns.iloc[:,-1])/100+1)**(12/T)).prod())-1
+        print(f'Alpha over market:\tLong:{self.alpha_market_long:.2f}%\tLong-short:{alpha_market_long_short:.2f}%')
+                
+    
         self.std_dev_long = np.std(self.returns.iloc[:,-2])     
         self.std_dev_long_short = np.std(self.returns.iloc[:,-1])
         print(f'Standard deviation on returns:\n\tLong: {self.std_dev_long:.2f}\tLong-short:{self.std_dev_long_short:.2f}')
@@ -226,14 +233,15 @@ class Portfolio():
         print(f'Sharpe ratio:\n\tLong: {self.sharpe_ratio_long:.2f}\tLong-short:{self.sharpe_ratio_long_short:.2f}')
         
         IR = metrics.information_ratio(self.returns)
-        market_returns = self.mkt.mkt_returns
-        returns = self.returns.merge(market_returns, on=['yyyymm'],how='left')
-        self.alpha_market_long = ((((returns.iloc[:,-3] - returns.iloc[:,-1])/100+1)**(12/T)).prod())-1
-        alpha_market_long_short = ((((returns.iloc[:,-2] - returns.iloc[:,-1])/100+1)**(12/T)).prod())-1
-        print(f'Alpha over market:\tLong:{self.alpha_market_long}\tLong-short:{alpha_market_long_short}')
+
+        try:
+            print('Average Return per decile')
+            print(self.returns.iloc[:,1:].mean(axis=0))
+        except:
+            print('Could not calculate avg return per decile')
         # TN^L=\frac{12}{2l(T/l-1)}\sum^{T/l-1}_{t=1}\sum_{i\in L_t\cup L_t+1} ||w^L_{i,t+l}-w^{L+}_{i,t}||_1
         # TN_L = 12/(2*(T-1))*
-
+         
 
     def plot_cumulative_returns(self, path):
         from cycler import cycler
@@ -241,10 +249,10 @@ class Portfolio():
         
         mkt_ret = self.mkt.mkt_returns
 
-        self.cum_returns = self.cum_returns.merge(mkt_ret, on=['yyyymm'], how='left')
-        self.cum_returns.iloc[:,-1] = (np.log(self.cum_returns.iloc[:,-1]/100+1).cumsum())
+        cum_returns = self.cum_returns.merge(mkt_ret, on=['yyyymm'], how='left')
+        cum_returns.iloc[:,-1] = (np.log(cum_returns.iloc[:,-1]/100+1).cumsum())
 
-        self.cum_returns['date'] = self.cum_returns['yyyymm'].apply(lambda x: dt.datetime.strptime(str(x), '%Y%m'))
+        cum_returns['date'] = cum_returns['yyyymm'].apply(lambda x: dt.datetime.strptime(str(x), '%Y%m'))
         # print('Self.cum_returns columns are:')
         # print(self.cum_returns.columns)
         linestyle_cycler = (cycler('color', ['deepskyblue','coral','magenta','royalblue', 'red','lime', 'crimson', 'cyan','springgreen','teal','gray','darkorange']) +
@@ -254,9 +262,9 @@ class Portfolio():
         fig = plt.figure(figsize=(15, 5))
         ax = plt.gca()
         ax.set_prop_cycle(linestyle_cycler)
-        plt.plot(self.cum_returns['date'], self.cum_returns.iloc[:,1:-1]) # plt.plot(l, ret.iloc[:,1:])
+        plt.plot(cum_returns['date'], cum_returns.iloc[:,1:-1]) # plt.plot(l, ret.iloc[:,1:])
         plt.ylabel('Cumulative Log returns')
-        plt.legend(self.cum_returns.iloc[:,1:-1].columns)
+        plt.legend(cum_returns.iloc[:,1:-1].columns)
         plt.tight_layout()
         try:
             plt.savefig(path)

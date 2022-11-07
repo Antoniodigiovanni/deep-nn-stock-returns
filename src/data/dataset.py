@@ -7,26 +7,17 @@ import datetime as dt
 
 
 class BaseDataset:
-    def __init__(self, mode = 'none', crsp_ret_path=config.paths['CRSPretPath'], crsp_info_path=config.paths['CRSPinfoPath']):
+    def __init__(self, ret_scaling_method = 'none',features_scaling_method = 'rank', crsp_ret_path=config.paths['CRSPretPath'], crsp_info_path=config.paths['CRSPinfoPath']):
         self.loadingTried = 0
         self.forcePreProcessing = config.ForcePreProcessing
         self.crspRetPath = crsp_ret_path
         self.crspInfoPath = crsp_info_path
         self.processedDatasetExists = None
         self.force_crsp_download = config.ForceCrspDownload
-
-        dataset_modes = ['none', 'train', 'test']
-        if mode not in dataset_modes:
-            raise ValueError("Invalid mode. Expected one of: %s" %dataset_modes)
-        
+        self.ret_scaling_method = ret_scaling_method
+        self.features_scaling_method = features_scaling_method        
         
         self.__load_dataset()
-
-        if mode == 'train':
-            self.df = self.one_month_ahead_returns(df=self.df)
-            print('One-month ahead returns generated...')
-        elif mode == 'test':
-            pass
 
     def __check_processed_df_exist(self):
         if os.path.exists(config.paths['finalDatasetPath']):
@@ -68,12 +59,13 @@ class BaseDataset:
         df = dp.calculate_excess_returns(df)
         df = dp.winsorize_returns(df)
         df = dp.de_mean_returns(df)
-        df = dp.scale_returns(df, method='rank')
+        if self.ret_scaling_method != 'none':
+            df = dp.scale_returns(df, method=self.ret_scaling_method) #standard, rank, [-1,1]
         print('Merging returns information with signals...')
         df, features = dp.merge_crsp_with_signals(df)    
         
         print('Scaling features...')
-        df = dp.scale_features(df, features, method='rank')
+        df = dp.scale_features(df, features, method=self.features_scaling_method)
         df = dp.drop_extra_columns(df)
         
         # Save dataset

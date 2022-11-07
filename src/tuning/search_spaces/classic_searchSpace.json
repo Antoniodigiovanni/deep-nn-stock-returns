@@ -1,7 +1,7 @@
 {
     "hidden_layer1" : {
         "_type": "choice",
-        "_value": [2048,1024,512,256,64,32]            
+        "_value": [4096,2048,1024,512,256,64,32]            
     },
     
     "hidden_layer2" : {
@@ -23,6 +23,31 @@
         "_type": "choice",
         "_value": [0,2,4,8,16,32,64,128,256]
     },  
+
+    "hidden_layer6" : {
+        "_type": "choice",
+        "_value": [0,2,4,8,16,32,64,128]
+    },
+
+    "hidden_layer7" : {
+        "_type": "choice",
+        "_value": [0,2,4,16,32,64]
+    },
+
+    "hidden_layer8" : {
+        "_type": "choice",
+        "_value": [0,2,4,16,32,64]
+    },
+
+    "hidden_layer9" : {
+        "_type": "choice",
+        "_value": [0,2,4,8,16,32]
+    },
+
+    "hidden_layer10" : {
+        "_type": "choice",
+        "_value": [0,2,4,16,32]
+    },
     
     "act_func":{ 
         "_type": "choice",
@@ -63,10 +88,5 @@
     "batch_size":{
         "_type": "randint",
         "_value": [100,10001]
-    },
-
-    "patience":{
-        "_type": "randint",
-        "_value": [10,30]
     }
 }

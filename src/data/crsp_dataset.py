@@ -11,8 +11,11 @@ class CrspDataset(Dataset):
         if self.df.empty == False:
             self.df = self.shift_ret_and_yyyymm(self.df)
             # self.df = self.shift_features(self.df)
-
+        
+        # To test with less features
+        # self.df = self.df.iloc[:,:50]
         self.X = self.df.drop(['ret','yyyymm','permno'] + ['me','prc','melag','me_nyse10','me_nyse20','me_nyse50'], axis=1, errors='ignore').values
+        
         if scale_target:
             self.X = dp.scale_returns(self.X)
             # X = StandardScaler().fit_transform(X)

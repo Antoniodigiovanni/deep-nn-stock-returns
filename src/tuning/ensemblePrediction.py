@@ -79,8 +79,8 @@ args, unknown = parser.parse_known_args() # Using this to avoid error with noteb
 
 
 # loss_fn = map_loss_func(params['loss'])
-# loss_fn = nn.L1Loss()
-loss_fn = nn.MSELoss()
+loss_fn = nn.L1Loss()
+# loss_fn = nn.MSELoss()
 if args.expandingTuning:
     method = 'expanding'
 elif args.normalTuning:

@@ -10,8 +10,6 @@ if torch.cuda.is_available():
 if os.path.exists(config.paths['resultsPath']) == False:
             os.makedirs(config.paths['resultsPath'])
         
-with open(config.paths['resultsPath'] + '/../readme.txt', 'w') as f:
-   f.write('readme')
 
 if config.args.expandingLearningRateTuning or config.args.expandingTuning \
     or config.args.guNetworkTuning or config.args.guSimpleTuning \

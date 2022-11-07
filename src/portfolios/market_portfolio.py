@@ -85,7 +85,12 @@ class MarketPortfolio():
 
     def calc_metrics(self):
         self.cum_log_market_ret = self.cumulative_mkt_ret()
+        T = self.mkt_returns.count()[1]
+        self.annualized_return = np.prod((self.mkt_returns.iloc[:,-1]/100+1)**(12/T))-1
+        self.annualized_return = self.annualized_return * 100
+        print(f'Annualized Market Returns {self.annualized_return:.2f}%')
         
+
 
     def cumulative_mkt_ret(self):
         cum_log_market_ret = self.mkt_returns.copy()

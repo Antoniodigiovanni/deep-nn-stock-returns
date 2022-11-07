@@ -2,6 +2,7 @@ import config
 import pandas as pd
 import nni
 import torch
+import torch.nn as nn
 import numpy as np
 from data.crsp_dataset import CrspDataset
 from torch.utils.data import DataLoader
@@ -26,7 +27,7 @@ class GeneralizedTrainer():
         self.loss_fn = loss_fn
         self.device = config.device
         self.best_val_loss = np.inf
-        self.patience = 10
+        self.patience = self.params['patience']
         print(f'Patience is {self.patience}')
         self.nni_experiment = nni_experiment
 
@@ -97,12 +98,12 @@ class GeneralizedTrainer():
         print(f'PATH is: {PATH}')
 
         # Saving non-trained model to re-load it every iteration
-        initial_path = config.saveDir + '/models/model_'+str(timeStamp)+'_not-trained.pt'
-        print(f'Initial model saved at: {initial_path}')
-        torch.save({
-                        'model_state_dict': self.model.state_dict(),
-                        'optimizer_state_dict': self.optimizer.state_dict(),
-                        }, initial_path)
+        # initial_path = config.saveDir + '/models/model_'+str(timeStamp)+'_not-trained.pt'
+        # print(f'Initial model saved at: {initial_path}')
+        # torch.save({
+        #                 'model_state_dict': self.model.state_dict(),
+        #                 'optimizer_state_dict': self.optimizer.state_dict(),
+        #                 }, initial_path)
 
         iteration_r2 = []
         cum_epoch = 0
@@ -121,8 +122,13 @@ class GeneralizedTrainer():
         else:
             keep_training = 1
 
-
+        # self.best_global_spearman = -np.inf #To delete when going back to normal epochs
+        # self.best_val_spearman = -np.inf
+        # self.best_val_r2 = -np.inf    
         while keep_training == 1:
+            # To re-initialize model weights each iteration
+            # self.model.apply(self.initialize_weights)
+
             print(f'\n\nTraining from {self.train_dates[0]} to {self.train_dates[-1]}')
             print(f'Validating from {self.val_dates[0]} to {self.val_dates[-1]}')
             print(f'Testing from {self.test_dates[0]} to {self.test_dates[-1]}')
@@ -138,30 +144,61 @@ class GeneralizedTrainer():
             j = 0
             self.best_val_loss = np.inf
             self.best_val_spearman = -np.inf
+            self.best_val_r2 = -np.inf
             epochs_train_spearman = []
             epochs_val_spearman = []
             val_epoch_losses = [] # Used to keep track of all the losses of the epoch (only the ones passing early stopping test)
-
+ 
             for epoch in range(config.epochs):
+            
                 start_time_epoch = time.time()
                 cum_epoch +=1 # Used for Tensorboard charts, in order to have all the epochs of all the iterations with different numbers.
                 
-                epoch_loss, epoch_train_spearman = self.__process_one_epoch('train')
-                val_loss, val_acc, epoch_val_spearman = self.__process_one_epoch('val')
+                epoch_loss, epoch_train_spearman, epoch_train_r2 = self.__process_one_epoch('train')    
+                val_loss, val_acc, epoch_val_spearman, epoch_val_r2 = self.__process_one_epoch('val')
                 for idx,_ in enumerate(epoch_train_spearman):
                     epoch_train_spearman[idx] = epoch_train_spearman[idx].item()
                 for idx,_ in enumerate(epoch_val_spearman):
                     epoch_val_spearman[idx] = epoch_val_spearman[idx].item()
+                for idx,_ in enumerate(epoch_train_r2):
+                    epoch_train_r2[idx] = epoch_train_r2[idx].item()
+                for idx,_ in enumerate(epoch_val_r2):
+                    epoch_val_r2[idx] = epoch_val_r2[idx].item()
+                
                 epoch_val_spearman = np.mean(epoch_val_spearman)
                 epoch_train_spearman = np.mean(epoch_train_spearman)
+                epoch_train_r2 = np.mean(epoch_train_r2)
+                epoch_val_r2 = np.mean(epoch_val_r2)
 
                 epochs_train_spearman.append(epoch_train_spearman)
                 epochs_val_spearman.append(epoch_val_spearman)
 
+                # Logic to re-load model next iteration: (new to delete when reverting to normal epochs)
+                # if epoch_train_spearman >= 0.16 and model_16_saved == False:
+                #     torch.save({
+                #         'epoch': epoch,
+                #         'model_state_dict': self.model.state_dict(),
+                #         'optimizer_state_dict': self.optimizer.state_dict(),
+                #         'epoch_loss': epoch_loss,
+                #         'val_loss': val_loss,
+                #         'val_acc': val_acc,
+                #         'train_spearman': epoch_train_spearman,
+                #         'val_spearman': epoch_val_spearman,
+                #         'params': self.params,
+                #         'n_inputs': self.n_inputs
+                #         }, config.saveDir + '/models/model_'+str(timeStamp)+'_model_for_next_iteration.pt')
+                #     model_16_saved = True
+                
                 
                 # Early stopping logic:
-                if (val_loss < self.best_val_loss):# and (epoch_val_spearman > self.best_val_spearman):
+                if (val_loss < self.best_val_loss) and (epoch_val_spearman > self.best_val_spearman) and (epoch_val_r2 >= self.best_val_r2):# and (epoch_train_spearman > self.best_global_spearman):
+                    # if epoch_train_spearman >= self.best_epoch_train_spearman and epoch_train_spearman > self.best_global_spearman:
+                    #     self.best_epoch_train_spearman = epoch_train_spearman
+                    #     self.best_global_spearman = epoch_train_spearman
+                
+                    
                     self.best_val_loss = val_loss
+                    self.best_val_r2 = epoch_val_r2
                     if epoch_val_spearman > self.best_val_spearman:
                         self.best_val_spearman = epoch_val_spearman
                     torch.save({
@@ -196,15 +233,20 @@ class GeneralizedTrainer():
 
                 # print(f'Last val loss: {val_loss:.4f}\tLast Val Spearman: {epoch_val_spearman:.4f}')
                 # print(f'Best Val loss: {self.best_val_loss}, Best Val spearman: {self.best_val_spearman}')
-                results = {'default': float(val_loss), 'val_acc': val_acc}
+
+                results = {
+                    'default': epoch_val_spearman,
+                    # 'default': float(val_loss), # For minimization problems
+                    'val_loss': float(val_loss),
+                    'val_acc': val_acc} 
                 if self.nni_experiment == True:
                     nni.report_intermediate_result(results)
 
                 if epoch%config.ep_log_interval == 0:
                     print(f'Epoch n. {epoch+1} [of #{config.epochs}]')
                     print(f'Training loss: {round(epoch_loss, 4)} | Val loss: {round(val_loss,4)}')
-                    print(f'Train spearman: {np.mean(epoch_train_spearman)}')
-                    print(f'Val spearman: {np.mean(epoch_val_spearman)}')
+                    print(f'Spearman:\tTrain: {np.mean(epoch_train_spearman)}\tVal:  {np.mean(epoch_val_spearman)}')
+                    print(f'R2:\tTrain: {(100*epoch_train_r2):.3f}%\tVal: {(100*epoch_val_r2):.3f}%')
                     print(f'Validation accuracy: {round(100*val_acc,2)}%')
                     try:
                         print(f'Elapsed time for last epoch is: {elapsed_epoch_time:.2f} seconds')
@@ -227,7 +269,7 @@ class GeneralizedTrainer():
 
                     break
                 elapsed_epoch_time = time.time() - start_time_epoch
-
+                # epoch+=1 # Logic to delete when going back to normal epochs
             mean_train_spearman = np.mean(epochs_train_spearman)
             mean_val_spearman = np.mean(epochs_val_spearman)
             iteration_val_spearman.append(mean_val_spearman)
@@ -241,8 +283,8 @@ class GeneralizedTrainer():
             r2_temp = metric.normal_r2_calculation(pred_df)
             oos_spearman_corr = metric.calc_spearman(torch.tensor(pred_df['predicted_ret'], device='cpu', dtype=torch.float32), torch.tensor(pred_df['ret'], device='cpu', dtype=torch.float32))
             oos_spearman_corr.to('cpu').item()
-
-            print(f'Out-of-sample stats for this last iteration:\nR2:{r2_temp}\tSpearman Correlation Coefficient:{oos_spearman_corr}')
+            mda = metric.mean_directional_accuracy(pred_df['predicted_ret'], pred_df['ret'])
+            print(f'Out-of-sample stats for this last iteration:\nR2:{(100*r2_temp):.3f}%\tSpearman Correlation Coefficient:{oos_spearman_corr:.3f}\tMean Directional Accuracy: {(100*mda):.3f}')
             iteration_r2.append(r2_temp)
             self.prediction_df = pd.concat([self.prediction_df, pred_df], ignore_index=True)
             
@@ -250,12 +292,9 @@ class GeneralizedTrainer():
             self.writer.flush()
 
 
-            #To delete this part until next #
-            # print(f'Check for  prediction df, min:{self.prediction_df.yyyymm.min()}, max: {self.prediction_df.yyyymm.max()}\n shape:{self.prediction_df.shape}')
-            # print(f'\n Tail:\n {self.prediction_df.tail()}')
-            #
-            # print('Validation epoch losses are:')
-            # print(val_epoch_losses)
+
+            print(f'Prediction df tail:\n {self.prediction_df.tail(5)}')
+            
             val_iteration_losses.append(np.mean(val_epoch_losses))
             if self.methodology == 'expanding':
                 self.__update_years()
@@ -269,6 +308,38 @@ class GeneralizedTrainer():
         # print(f'This is again the self.prediction_df columns on line 185: {self.prediction_df.columns}')
         
         print('Training is over...')
+        
+        print('Re-loading best model...')
+        checkpoint = torch.load(PATH)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        
+        # Generating folders for saving
+        predictedRetDir = config.saveDir + '/predicted_returns'
+        portfolioRetDir = config.saveDir + '/portfolio_returns'
+        trialInfoDir = config.saveDir + '/trial_info'
+        portfolioWeightsDir = config.saveDir + '/portfolio_weights'
+        cumulativeReturnsDir = config.saveDir + '/cumulative_log_returns'
+        plotsDir = config.saveDir + '/plots'
+
+        # Saving files
+        
+        if os.path.exists(predictedRetDir) == False:
+            os.makedirs(predictedRetDir)
+        if os.path.exists(portfolioRetDir) == False:
+            os.makedirs(portfolioRetDir)
+        if os.path.exists(trialInfoDir) == False:
+            os.makedirs(trialInfoDir)
+        if os.path.exists(portfolioWeightsDir) == False:
+            os.makedirs(portfolioWeightsDir)
+        if os.path.exists(cumulativeReturnsDir) == False:
+            os.makedirs(cumulativeReturnsDir)
+        if os.path.exists(plotsDir) == False:
+            os.makedirs(plotsDir)
+        
+
+        self.prediction_df.to_csv(predictedRetDir + '/' + str(timeStamp) + '_predicted_returns.csv')
+        print('\Prediction Dataframe Saved...\n')
 
         val_spearman_correlation = np.mean(iteration_val_spearman)
         train_spearman_correlation = np.mean(iteration_train_spearman)
@@ -327,32 +398,7 @@ class GeneralizedTrainer():
         print(sharpe_ratio)
         # print(type(sharpe_ratio))
 
-
-
-
-        # Modify folder structure for when not doing the nni_experiment.
-        predictedRetDir = config.saveDir + '/predicted_returns'
-        portfolioRetDir = config.saveDir + '/portfolio_returns'
-        trialInfoDir = config.saveDir + '/trial_info'
-        portfolioWeightsDir = config.saveDir + '/portfolio_weights'
-        cumulativeReturnsDir = config.saveDir + '/cumulative_log_returns'
-        plotsDir = config.saveDir + '/plots'
-
-        # Saving files
-        
-        if os.path.exists(predictedRetDir) == False:
-            os.makedirs(predictedRetDir)
-        if os.path.exists(portfolioRetDir) == False:
-            os.makedirs(portfolioRetDir)
-        if os.path.exists(trialInfoDir) == False:
-            os.makedirs(trialInfoDir)
-        if os.path.exists(portfolioWeightsDir) == False:
-            os.makedirs(portfolioWeightsDir)
-        if os.path.exists(cumulativeReturnsDir) == False:
-            os.makedirs(cumulativeReturnsDir)
-        if os.path.exists(plotsDir) == False:
-            os.makedirs(plotsDir)
-            
+    
  
 
         from csv import DictWriter, writer
@@ -388,7 +434,6 @@ class GeneralizedTrainer():
             dictwriter_object = DictWriter(fp, fieldnames=field_names)
             dictwriter_object.writerow(summary_dict)
   
-        self.prediction_df.to_csv(predictedRetDir + '/' + str(timeStamp) + '_predicted_returns.csv')
         returns.to_csv(portfolioRetDir + '/' + str(timeStamp) + '_portfolio_returns.csv')
         
         final_dict = {
@@ -427,11 +472,13 @@ class GeneralizedTrainer():
        
         best_val_loss = min(val_iteration_losses)
         results = {
-            'default': float(best_val_loss), 
+            'default': val_spearman_correlation,
+            # 'default': float(best_val_loss), # Standard nni reporting for minimization
+            'val_loss': float(best_val_loss), 
             'long_alpha_on_market': portfolio.alpha_market_long,
             'val_acc': val_acc,
             'Train Spearman': train_spearman_correlation,
-            'Val Spearman': val_spearman_correlation,
+            # 'Val Spearman': val_spearman_correlation,
             'alpha': float(alpha),
             'information_ratio': float(information_ratio_regression),
             'R2': r2['R2']}
@@ -463,6 +510,8 @@ class GeneralizedTrainer():
         num_batches = len(loader)
         epoch_train_spearman = []
         epoch_val_spearman = []
+        epoch_train_r2 = []
+        epoch_val_r2 = []
         if mode == 'train':
             # print(f'num_batches = len(dataloader): {len(loader)}')
             # print(f'Size = len(dataloader.dataset):{len(loader.dataset)}')
@@ -470,19 +519,21 @@ class GeneralizedTrainer():
                 
             for i, (inputs, target, labels) in enumerate(loader):
                 
-                loss, correct, train_spearman = self.__process_one_step(inputs, target, labels, mode)
+                loss, correct, train_spearman, train_r2 = self.__process_one_step(inputs, target, labels, mode)
                 total_loss += loss
                 train_spearman = train_spearman.to('cpu')
                 epoch_train_spearman.append(train_spearman)
+                epoch_train_r2.append(train_r2)
             total_loss /= num_batches
         
         # total_acc = total_acc / loader.batch_size * 100
         
         elif mode == 'val':
             for i, (inputs, target, labels) in enumerate(loader):
-                loss, correct, val_spearman = self.__process_one_step(inputs, target, labels, mode)
+                loss, correct, val_spearman, val_r2 = self.__process_one_step(inputs, target, labels, mode)
                 val_spearman = val_spearman.to('cpu')
                 epoch_val_spearman.append(val_spearman)
+                epoch_val_r2.append(val_r2)
                 val_loss += loss.item()
                 total_correct += correct
             # print(f'Total correct in validation:{total_correct}')              
@@ -491,9 +542,9 @@ class GeneralizedTrainer():
             # print(f"Validation Error: \n Accuracy: {(100*val_acc):>0.1f}%, Avg loss: {val_loss:>8f} \n")
 
         if mode == 'train':
-            return total_loss, epoch_train_spearman
+            return total_loss, epoch_train_spearman, epoch_train_r2
         else:
-            return val_loss, val_acc, epoch_val_spearman
+            return val_loss, val_acc, epoch_val_spearman, epoch_val_r2
 
 
     def __process_one_step(self, inputs, target, labels, mode):
@@ -515,6 +566,7 @@ class GeneralizedTrainer():
         
         loss = self.loss_fn(yhat, target.float().squeeze())
         
+        
         if self.l1_reg:
             l1_norm = sum(p.abs().sum()
                 for p in self.model.parameters())
@@ -534,15 +586,23 @@ class GeneralizedTrainer():
         spearman = metric.calc_spearman(yhat, target.float().squeeze())
         spearman.to('cpu')
 
+        r2 = metric.r2_in_training(yhat, target.float().squeeze())
+
 
         if mode == 'train':
             loss.backward()
             self.optimizer.step()
 
-        return loss, correct, spearman
+        return loss, correct, spearman, r2
 
 
     def __update_years(self):
+
+            print('Updating Train starting year for rolling window training')
+            self.train_starting_year = int((dt.datetime.strptime(
+                str(self.train_starting_year), '%Y%m') + DateOffset(
+                    years=1
+                )).strftime('%Y%m'))
 
             self.val_starting_year = int((dt.datetime.strptime(
                 str(self.val_starting_year), '%Y%m') + DateOffset(
@@ -568,7 +628,6 @@ class GeneralizedTrainer():
                 .strftime('%Y%m')
                 .astype(int)
                 )
-
 
         self.val_dates = list(
             pd.period_range(
@@ -619,6 +678,24 @@ class GeneralizedTrainer():
         self.n_inputs = self.train.get_inputs()
         # Modify batch size to make it trainable with higher values
         # Modify dataloader args
-        self.train_loader = DataLoader(self.train, batch_size=self.params['batch_size'], shuffle=True)
-        self.val_loader = DataLoader(self.validation, batch_size=self.params['batch_size'], shuffle=True)
+        try:
+            self.train_loader = DataLoader(self.train, batch_size=self.params['batch_size'], shuffle=True)
+            self.val_loader = DataLoader(self.validation, batch_size=self.params['batch_size'], shuffle=True)
+        except:
+            self.train_loader = DataLoader(self.train, batch_size=10000, shuffle=True)
+            self.val_loader = DataLoader(self.validation, batch_size=10000, shuffle=True)
         self.test_loader = DataLoader(self.test, batch_size=bs)
+
+    def initialize_weights(self, m):
+        if isinstance(m, nn.Linear):
+            if self.params['act_func'] == 'LeakyReLU':
+                # print('Activation Function is LeakyReLU')
+                nn.init.kaiming_uniform_(m.weight, a=0, mode='fan_in', nonlinearity='leaky_relu')
+            elif self.params['act_func'] == 'ReLU':
+                # print('Activation Function is ReLU')
+                nn.init.kaiming_uniform_(m.weight, a=0, mode='fan_in', nonlinearity='relu')
+            else:
+                # print('Xavier Uniform for other activation functions')
+                nn.init.xavier_uniform_(m.weight)
+            m.bias.data.fill_(0.01)
+    

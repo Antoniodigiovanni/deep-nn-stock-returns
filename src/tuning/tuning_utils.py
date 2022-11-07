@@ -44,7 +44,11 @@ def map_optimizer(params, net_params):
     return opt
 
 def map_loss_func(loss_name):
-    if loss_name == "MSELoss":
+    if loss_name == 'RMSE':
+        loss_func = torch.nn.MSELoss()
+    elif loss_name == 'L1':
+        loss_func = torch.nn.L1Loss()
+    elif loss_name == "MSELoss":
         loss_func = torch.nn.MSELoss()
     elif loss_name == "SmoothL1Loss":
         loss_func = torch.nn.SmoothL1Loss()

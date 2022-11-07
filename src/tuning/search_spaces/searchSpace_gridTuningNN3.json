@@ -83,5 +83,10 @@
     "dropout_prob":{
         "_type": "choice",
         "_value": [0.702337]
+    },
+    
+    "batch_size":{
+    	"_type": "choice",
+	"_value": [10000]
     }
 }

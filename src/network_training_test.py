@@ -11,37 +11,37 @@ from data.dataset import BaseDataset
 from models.neural_net.gu_et_al_NN4 import GuNN4
 import time
 import data.data_preprocessing as dp
-
+import numpy as np
 
 start_time = time.time()
 torch.manual_seed(21)
 #torch.use_deterministic_algorithms(True)
 params = {
-        'hidden_layer1':    64,
-        'hidden_layer2':    32,
-        'hidden_layer3':    16,
-        'hidden_layer4':    0,
-        'hidden_layer5':    0,
-        'hidden_layer6':    0,
-        'hidden_layer7':    0,
-        'hidden_layer8':    0,
-        'hidden_layer9':    0,
-        'hidden_layer10':   0,
-        'act_func':         "LeakyReLU",
-        'learning_rate':    0.0001,
-        'optimizer':        "Adam", #, "momentum": 0},
-        'batch_norm':       0,
-        'dropout_prob':     0.7,
-        'l1_lambda1':       0.5,
-        'l2_lambda':        0.4
+        "hidden_layer1": 2048,
+        "hidden_layer2": 1024,
+        "hidden_layer3": 256,
+        "hidden_layer4": 128,
+        "hidden_layer5": 4,
+        "hidden_layer6": 32,
+        "hidden_layer7": 32,
+        "hidden_layer8": 64,
+        "hidden_layer9": 32,
+        "hidden_layer10": 4,
+        "act_func": "LeakyReLU",
+        "learning_rate": 0.000004608666,
+        "optimizer": "Nadam",
+        "l1_lambda1": 0.00001,
+        "l2_lambda": 0,
+        "dropout_prob": 0.12,
+        'batch_norm':   1,
+        'patience':     10 
     }
 
 loss_fn = nn.MSELoss()
+# loss_fn = nn.HuberLoss(delta=1.35)
 dataset = BaseDataset()
 crsp = dataset.df
-
 crsp.drop(['melag','prc','me'], axis=1, inplace=True, errors='ignore')
-print(crsp.head())
 
 
 print('Time until the dataset is loaded')
@@ -59,6 +59,7 @@ else:
 
 trainer = GeneralizedTrainer(crsp, params, loss_fn, methodology='expanding', l1_reg=l1_reg, l2_reg=l2_reg, nni_experiment=False, train_window_years=config.n_train_years, val_window_years=config.n_val_years)
 n_inputs = trainer.n_inputs
+print(f'#Inputs: {n_inputs}')
 
 model = OptimizeNet(n_inputs, params).to(config.device)
 

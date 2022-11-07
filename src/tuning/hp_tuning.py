@@ -41,12 +41,16 @@ params = {
         'hidden_layer9':    0,
         'hidden_layer10':    0,
         'act_func':         "ReLU",
+        # 'loss_fn':          "L1",
         'learning_rate':    0.001,
         'optimizer':        "Adam",
         'l1_lambda1':       0,
         'l2_lambda':        0,
         'dropout_prob':     0.1,
-        "batch_norm":       0
+        "batch_norm":       0,
+        # 'huber_delta':      1,
+        # "log_returns":      "False",
+        "patience":         20
     }
 
 # Get optimized hyperparameters
@@ -97,14 +101,16 @@ invalid_params = validate_params(params)
 if invalid_params: 
     # for invalid param combinations, report the worst possible result
     print('Invalid Parameters set')
-    nni.report_final_result(np.inf)
+    nni.report_final_result(-np.inf)
 
 else:     
 
     # Load data
     dataset = BaseDataset()
     df = dataset.df
-        
+    
+    if params['log_returns'] == "True":
+        df['ret'] = np.log(df['ret']/100+1)
     df.drop(['melag', 'prc', 'me','me_nyse20'], axis=1, inplace=True, errors='ignore')
 
     parser = ArgumentParser()
@@ -116,10 +122,12 @@ else:
 
 
 
-    # loss_fn = map_loss_func(params['loss'])
+    # loss_fn = map_loss_func(params['loss_fn'])
+
+    # loss_fn = nn.L1Loss()
     # loss_fn = nn.MSELoss()
-    loss_fn = nn.L1Loss()
-    
+    loss_fn = nn.HuberLoss(delta=params['huber_delta'])
+
     if args.expandingTuning:
         method = 'expanding'
     elif args.normalTuning:
@@ -138,7 +146,7 @@ else:
     n_inputs = trainer.n_inputs
 
     model = OptimizeNet(n_inputs, params)#.to(config.device)
-    model= nn.DataParallel(model)
+    # model= nn.DataParallel(model)
     model.to(config.device)
     
     print(f'Device from config: {config.device}')

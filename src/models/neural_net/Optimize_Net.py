@@ -12,7 +12,13 @@ class OptimizeNet(nn.Module):
         self.hidden_size_2 = params['hidden_layer2']
         self.hidden_size_3 = params['hidden_layer3']
         self.hidden_size_4 = params['hidden_layer4']
-        self.hidden_size_5 = params['hidden_layer5']  
+        self.hidden_size_5 = params['hidden_layer5']
+        self.hidden_size_6 = params['hidden_layer6']
+        self.hidden_size_7 = params['hidden_layer7']
+        self.hidden_size_8 = params['hidden_layer8']
+        self.hidden_size_9 = params['hidden_layer9']
+        self.hidden_size_10 = params['hidden_layer10']
+          
         
 
         self.act_func = map_act_func(params['act_func'])
@@ -30,11 +36,26 @@ class OptimizeNet(nn.Module):
         if self.hidden_size_5 > 0:
             self.fc5 = self._fc_block(self.hidden_size_4, self.hidden_size_5, self.act_func)
             last_layer_size = self.hidden_size_5
+        if self.hidden_size_6 > 0:
+            self.fc6 = self._fc_block(self.hidden_size_5, self.hidden_size_6, self.act_func)
+            last_layer_size = self.hidden_size_6
+        if self.hidden_size_7 > 0:
+            self.fc7 = self._fc_block(self.hidden_size_6, self.hidden_size_7, self.act_func)
+            last_layer_size = self.hidden_size_7
+        if self.hidden_size_8 > 0:
+            self.fc8 = self._fc_block(self.hidden_size_7, self.hidden_size_8, self.act_func)
+            last_layer_size = self.hidden_size_8
+        if self.hidden_size_9 > 0:
+            self.fc9 = self._fc_block(self.hidden_size_8, self.hidden_size_9, self.act_func)
+            last_layer_size = self.hidden_size_9
+        if self.hidden_size_10 > 0:
+            self.fc10 = self._fc_block(self.hidden_size_9, self.hidden_size_10, self.act_func)
+            last_layer_size = self.hidden_size_10
         
 
         # self.out = self._fc_block(last_layer_size, 1, act_func)
         self.out = nn.Linear(last_layer_size, 1)
-
+        # self.tanh = nn.Tanh()
     def forward(self, x):
         x = self.fc1(x)
         if self.hidden_size_2:
@@ -45,6 +66,16 @@ class OptimizeNet(nn.Module):
             x = self.fc4(x)
         if self.hidden_size_5:
             x = self.fc5(x)
+        if self.hidden_size_6:
+            x = self.fc6(x)
+        if self.hidden_size_7:
+            x = self.fc7(x)
+        if self.hidden_size_8:
+            x = self.fc8(x)
+        if self.hidden_size_9:
+            x = self.fc9(x)
+        if self.hidden_size_10:
+            x = self.fc10(x)
         x = self.out(x)
         return x.squeeze()
     
@@ -79,7 +110,13 @@ class OptimizeNet_v2(nn.Module):
         self.hidden_size_2 = params['hidden_layer2']
         self.hidden_size_3 = params['hidden_layer3']
         self.hidden_size_4 = params['hidden_layer4']
-        self.hidden_size_5 = params['hidden_layer5']  
+        self.hidden_size_5 = params['hidden_layer5']
+        self.hidden_size_6 = params['hidden_layer6']
+        self.hidden_size_7 = params['hidden_layer7']
+        self.hidden_size_8 = params['hidden_layer8']
+        self.hidden_size_9 = params['hidden_layer9']
+        self.hidden_size_10 = params['hidden_layer10']
+          
         
         self.act_func = map_act_func(params['act_func'])
         # modules = []

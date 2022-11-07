@@ -14,7 +14,6 @@ experiment = Experiment('local')
 # self experiment afterwards)
 if config.args.expandingTuning:
     print('Tuning Experiment to discover an optimal architecture from scratch (expanding train)')
-    print('Minimising validation loss')
     experiment.config.experiment_name = 'Hyperparameter_optimization'
     experiment.config.trial_command = 'python hp_tuning.py --saveDirName ' + saveDir + ' --expandingTuning'
     experiment.config.search_space_file = (os.getcwd()+'/src/tuning/search_spaces/searchSpace.json')
@@ -25,14 +24,28 @@ if config.args.expandingTuning:
     # experiment.config.tuner.name = 'Anneal'
     # experiment.config.tuner.class_args['optimize_mode'] = 'minimize'
 
+    # experiment.config.tuner.name = 'Evolution'
+    # experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
+    # experiment.config.tuner.class_args['population_size'] = 5
 
     experiment.config.tuner.name = 'TPE'
-    experiment.config.tuner.class_args['optimize_mode'] = 'minimize'
+    experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
+    
+
+    # experiment.config.tuner.name = 'TPE'
+    # experiment.config.tuner.class_args['optimize_mode'] = 'minimize'
     
     experiment.config.assessor.name = 'Medianstop'
-    experiment.config.assessor.class_args['optimize_mode'] ='minimize'
-    experiment.config.assessor.class_args['start_step'] = 500
-    
+    experiment.config.assessor.class_args['optimize_mode'] ='maximize'
+    experiment.config.assessor.class_args['start_step'] = 100
+
+    try:
+        if experiment.config.tuner.class_args['optimize_mode'] == 'minimize':
+            print('Minimising validation loss')
+        elif experiment.config.tuner.class_args['optimize_mode'] == 'maximize':
+            print('Maximizing validation spearman rank correlation coefficient')
+    except:
+        pass
 
 if config.args.normalTuning:
     print('Tuning Experiment to discover an optimal architecture from scratch')

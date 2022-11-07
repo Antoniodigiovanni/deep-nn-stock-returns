@@ -1,11 +1,12 @@
 import pandas as pd
 import numpy as np
+from sklearn.decomposition import PCA
 from portfolios.FF5FM_Mom import FF5FM_Mom
 import config.config as config
 import os
 from pandas.tseries.offsets import *
 import datetime as dt
-
+import scipy.stats
 
 def load_crsp(crsp_ret_path=config.paths['CRSPretPath'], crsp_info_path=config.paths['CRSPinfoPath'], Startyyyymm = 197001, Endyyyymm = 202112):
     crspret = pd.read_csv(crsp_ret_path)
@@ -88,18 +89,56 @@ def merge_crsp_with_signals(df, signalspath=config.paths['SignalsPath']):
     
     return final_df, features
 
+def principal_component_analysis_on_features(df, n_components=110):
+    # if explained_variance > 1:
+    #     print('Explained variance must be between 0 and 1')
+    #     raise ValueError()
+    pca = PCA(n_components=n_components)
+    pca.fit(df.drop(['ret','permno','yyyymm','me','prc','melag','me_nyse10','me_nyse20','me_nyse50'], errors='ignore', axis=1))
+    pca_data = pca.transform(df.drop(['ret','permno','yyyymm','me','prc','melag','me_nyse10','me_nyse20','me_nyse50'], errors='ignore', axis=1))
+    print(f'Explained Variation: {np.sum(pca.explained_variance_ratio_*100)}%')
+
+    columns = ['PC'+str(x) for x in range(1,pca_data.shape[1]+1)]
+    pca_df = pd.DataFrame(pca_data, columns=columns)
+
+    pca_df['permno'] =  df['permno']
+    pca_df['yyyymm'] = df['yyyymm']
+    pca_df['ret'] = df['ret']
+
+    new_order_columns = ['permno','yyyymm','ret']
+    new_order_columns.extend(columns)
+    pca_df = pca_df[new_order_columns]
+
+    return pca_df
+    
+
 def rank_scale (x):
     return ((x.rank(method='max') / x.count()) - 0.5)
 
 def standard_scale (x):
     return (((x- x.mean()) / x.std()))
 
+def minus_one_to_one_scale(x):
+    return (2*((x-x.min())/(x.max()-x.min())))-1
+
+def invert_minus_one_to_one_scale(x, x_max, x_min):
+    return (x+1)*((x_max - x_min)/2)+x_min
+
+def boxcox_transform(x):
+    x, _ = scipy.stats.boxcox(x)
+    return x
 
 def scale_returns(df, method=None):
     if method == None or method == 'rank':
         df['ret'] = df.groupby('yyyymm')['ret'].transform(lambda x: rank_scale(x))
     elif method == 'standard':
         df['ret'] = df.groupby('yyyymm')['ret'].transform(lambda x: standard_scale(x))
+    elif method == '[-1,1]':
+        df['ret'] = df.groupby('yyyymm')['ret'].transform(lambda x: minus_one_to_one_scale(x))
+    elif method == 'boxcox':
+        print('Boxcox transformation to returns')
+        df['ret'] = (df['ret']/100+1)
+        df['ret'] = df.groupby('yyyymm')['ret'].transform(lambda x: boxcox_transform(x))
     return df
     
 def scale_features(df, features, method=None):
@@ -120,6 +159,11 @@ def scale_features(df, features, method=None):
                 df.groupby('yyyymm')[features]
                 .transform(lambda x: standard_scale(x))
                 )
+    elif method == '[-1,1]':
+        df[features] = (
+            df.groupby('yyyymm')[features]
+            .transform(lambda x: minus_one_to_one_scale(x))
+        )
     else:
         print('Scaling method should either be not passed as an argument, "rank" or "standard", other options are not available')
     
