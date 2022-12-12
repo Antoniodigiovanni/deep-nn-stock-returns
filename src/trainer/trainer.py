@@ -19,7 +19,7 @@ import time
 
 
 class GeneralizedTrainer():
-    def __init__(self, dataset, params, loss_fn, methodology = 'normal', l1_reg = False, l2_reg = False, train_window_years=15, val_window_years=10, nni_experiment=True) -> None:
+    def __init__(self, dataset, params, loss_fn, methodology = 'normal', l1_reg = False, l2_reg = False, train_window_years=15, val_window_years=10, epochs = 100, nni_experiment=True) -> None:
         self.dataset = dataset
         self.params = params
         self.model = None
@@ -27,11 +27,14 @@ class GeneralizedTrainer():
         self.loss_fn = loss_fn
         self.device = config.device
         self.best_val_loss = np.inf
-        self.patience = self.params['patience']
+        if 'patience' in self.params:
+            self.patience = self.params['patience']
+        else:
+            self.patience = 10
         print(f'Patience is {self.patience}')
         self.nni_experiment = nni_experiment
+        self.epochs = epochs
 
-        # print(f'Epochs in Training class: {config.epochs}')
         self.methodology = methodology
         if self.methodology == 'expanding':
             print('Expanding window training')
@@ -42,13 +45,17 @@ class GeneralizedTrainer():
         self.l1_reg = l1_reg
         self.l2_reg = l2_reg
         if self.l1_reg:
-            # print('Change Line 48 in trainer when using a nested search space')
-            # self.l1_lambda = self.params['use_l1_reg']['lambda']
+            if 'l1_lambda1' in self.params:
+                self.l1_lambda = self.params['l1_lambda1']
+            elif 'L1' in self.params:
+                self.l1_lambda = self.params['L1']['lambda']
 
-            self.l1_lambda = self.params['l1_lambda1']
         if self.l2_reg:
-            self.l2_lambda = self.params['l2_lambda']
-        
+            if 'l2_lambda' in self.params:
+                self.l2_lambda = self.params['l2_lambda']
+            elif 'L2' in self.params:
+                self.l2_lambda = self.params['L2']['lambda']
+      
         
         self.train_starting_year = dataset.yyyymm.min()
         self.df_end_date = dataset.yyyymm.max()
@@ -149,7 +156,7 @@ class GeneralizedTrainer():
             epochs_val_spearman = []
             val_epoch_losses = [] # Used to keep track of all the losses of the epoch (only the ones passing early stopping test)
  
-            for epoch in range(config.epochs):
+            for epoch in range(self.epochs):
             
                 start_time_epoch = time.time()
                 cum_epoch +=1 # Used for Tensorboard charts, in order to have all the epochs of all the iterations with different numbers.
@@ -172,31 +179,11 @@ class GeneralizedTrainer():
 
                 epochs_train_spearman.append(epoch_train_spearman)
                 epochs_val_spearman.append(epoch_val_spearman)
-
-                # Logic to re-load model next iteration: (new to delete when reverting to normal epochs)
-                # if epoch_train_spearman >= 0.16 and model_16_saved == False:
-                #     torch.save({
-                #         'epoch': epoch,
-                #         'model_state_dict': self.model.state_dict(),
-                #         'optimizer_state_dict': self.optimizer.state_dict(),
-                #         'epoch_loss': epoch_loss,
-                #         'val_loss': val_loss,
-                #         'val_acc': val_acc,
-                #         'train_spearman': epoch_train_spearman,
-                #         'val_spearman': epoch_val_spearman,
-                #         'params': self.params,
-                #         'n_inputs': self.n_inputs
-                #         }, config.saveDir + '/models/model_'+str(timeStamp)+'_model_for_next_iteration.pt')
-                #     model_16_saved = True
                 
                 
                 # Early stopping logic:
                 if (val_loss < self.best_val_loss) and (epoch_val_spearman > self.best_val_spearman) and (epoch_val_r2 >= self.best_val_r2):# and (epoch_train_spearman > self.best_global_spearman):
-                    # if epoch_train_spearman >= self.best_epoch_train_spearman and epoch_train_spearman > self.best_global_spearman:
-                    #     self.best_epoch_train_spearman = epoch_train_spearman
-                    #     self.best_global_spearman = epoch_train_spearman
-                
-                    
+                                        
                     self.best_val_loss = val_loss
                     self.best_val_r2 = epoch_val_r2
                     if epoch_val_spearman > self.best_val_spearman:
@@ -213,9 +200,6 @@ class GeneralizedTrainer():
                         'params': self.params,
                         'n_inputs': self.n_inputs
                         }, PATH)
-                    # print('Saved new best model')
-                    # if j != 0:
-                        #print(f'j set back to 0, best val_loss is: {self.best_val_loss}')
                     j = 0
                     val_epoch_losses.append(val_loss)
                     
@@ -243,7 +227,7 @@ class GeneralizedTrainer():
                     nni.report_intermediate_result(results)
 
                 if epoch%config.ep_log_interval == 0:
-                    print(f'Epoch n. {epoch+1} [of #{config.epochs}]')
+                    print(f'Epoch n. {epoch+1} [of #{self.epochs}]')
                     print(f'Training loss: {round(epoch_loss, 4)} | Val loss: {round(val_loss,4)}')
                     print(f'Spearman:\tTrain: {np.mean(epoch_train_spearman)}\tVal:  {np.mean(epoch_val_spearman)}')
                     print(f'R2:\tTrain: {(100*epoch_train_r2):.3f}%\tVal: {(100*epoch_val_r2):.3f}%')

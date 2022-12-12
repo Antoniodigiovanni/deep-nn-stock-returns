@@ -7,7 +7,7 @@ import datetime as dt
 
 
 class BaseDataset:
-    def __init__(self, ret_scaling_method = 'none',features_scaling_method = 'rank', crsp_ret_path=config.paths['CRSPretPath'], crsp_info_path=config.paths['CRSPinfoPath']):
+    def __init__(self, ret_scaling_method = 'none',features_scaling_method = 'rank', crsp_ret_path=config.paths['CRSPretPath'], crsp_info_path=config.paths['CRSPinfoPath'], verbose=0):
         self.loadingTried = 0
         self.forcePreProcessing = config.ForcePreProcessing
         self.crspRetPath = crsp_ret_path
@@ -15,8 +15,9 @@ class BaseDataset:
         self.processedDatasetExists = None
         self.force_crsp_download = config.ForceCrspDownload
         self.ret_scaling_method = ret_scaling_method
-        self.features_scaling_method = features_scaling_method        
-        
+        self.features_scaling_method = features_scaling_method
+        self.verbose = verbose       
+
         self.__load_dataset()
 
     def __check_processed_df_exist(self):
@@ -34,13 +35,19 @@ class BaseDataset:
             print('Impossible to load the dataframe, exiting')
             sys.exit()
         if (self.processedDatasetExists == 1) & (self.forcePreProcessing == False):
-            print('Loading the dataset...')
+            if self.verbose:
+                print('Loading the dataset...')
             self.df = pd.read_csv(config.paths['finalDatasetPath'], index_col=0)
-            AA_mean = round(self.df['AbnormalAccruals'].mean(),2)
-            AA_std = round(self.df['AbnormalAccruals'].std(),2)
-            AA_median = round(self.df['AbnormalAccruals'].median(),2)
-            print(f'Features stats:\nMean: {AA_mean}\tStd: {AA_std}\tMedian: {AA_median}')
-
+            print('Dataset loaded, the columns are:')
+            print(self.df.columns)
+            try:
+                P_mean = round(self.df['Price'].mean(),2)
+                P_std = round(self.df['Price'].std(),2)
+                P_median = round(self.df['Price'].median(),2)
+                if self.verbose:
+                    print(f'Features stats:\nMean: {P_mean}\tStd: {P_std}\tMedian: {P_median}')
+            except:
+                pass
             # Removing features for testing
             # self.df = self.df.drop(['STreversal', 'High52', 'MaxRet', 'Price'], axis=1)
         else:
@@ -51,8 +58,10 @@ class BaseDataset:
     def __create_dataset(self):
         if (os.path.exists(config.paths['CRSPretPath']) == False) | (os.path.exists(config.paths['CRSPinfoPath']) == False) | (self.force_crsp_download == True):
             df = dp.download_crsp()
-        print('Data pre-processing...')
+        if self.verbose:
+            print('Data pre-processing...')
         df = dp.load_crsp(crsp_ret_path = self.crspRetPath, crsp_info_path = self.crspInfoPath)
+        df = dp.calculate_market_beta(df)
         df = dp.remove_microcap_stocks(df)
         df = dp.filter_exchange_code(df)
         df = dp.filter_share_code(df)
@@ -60,11 +69,14 @@ class BaseDataset:
         df = dp.winsorize_returns(df)
         df = dp.de_mean_returns(df)
         if self.ret_scaling_method != 'none':
+            print('Scaling Returns...')
             df = dp.scale_returns(df, method=self.ret_scaling_method) #standard, rank, [-1,1]
-        print('Merging returns information with signals...')
+        if self.verbose:
+            print('Merging returns information with signals...')
         df, features = dp.merge_crsp_with_signals(df)    
         
-        print('Scaling features...')
+        if self.verbose:
+            print('Scaling features...')
         df = dp.scale_features(df, features, method=self.features_scaling_method)
         df = dp.drop_extra_columns(df)
         

@@ -68,5 +68,10 @@
     "patience":{
         "_type": "randint",
         "_value": [10,30]
+    },
+
+    "epochs":{
+        "_type": "randint",
+        "_value": [50,200]
     }
 }

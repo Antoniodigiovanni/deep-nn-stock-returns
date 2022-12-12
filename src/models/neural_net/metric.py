@@ -75,13 +75,13 @@ def calc_r2(df):
     r2 = 1-(num/den)
     
     return r2
+
 def alternative_r2(df):
   num = sum((df['ret'] - df['predicted_ret'])**2)
   den = sum((df['ret'] - np.mean(df['ret']))**2)
 
   r2 = 1-(num/den)
   return r2
-
 
 def r2_in_training(prediction, target):
   num = sum((target - prediction)**2)
@@ -159,3 +159,43 @@ def mean_directional_accuracy(preds, target):
   
   return mda
   # return np.mean((np.sign(actual[1:]-actual[:-1]) == np.sign(predicted[1:] - predicted[:-1])).astype(int))
+
+def max_drawdown_long_short(portfolio_returns):
+  cumulative_returns = (portfolio_returns.iloc[:,1:]/100+1).cumprod()-1
+  highwatermarks = cumulative_returns.cummax()
+
+  drawdowns = (1 + highwatermarks)/(1 + cumulative_returns) - 1
+
+  max_dd_long_short = drawdowns.iloc[:,-1].max()
+  #print(f'Max_DD: {max_dd_long_short}')
+  
+  return max_dd_long_short
+
+def turnover(weights_df):
+  df = weights_df[['permno', 'yyyymm','ret','decile','weight', 'weighted_ret']].copy()
+  df = df.sort_values(by=['permno','yyyymm'])
+  df['ret'] = df['ret']/100
+  turnover_long, turnover_short, turnover_ls = np.nan, np.nan, np.nan
+
+  # Select portfolio
+  df = df.loc[(df['decile'] == 10) | (df['decile'] == 1)]
+
+  # Calculate needed metrics
+  df['w_t+1'] = df.groupby('permno')['weight'].shift(-1)
+  df['ret_t+1'] = df.groupby('permno')['ret'].shift(-1)
+  df['w_t-times-r_t+1'] = df.groupby(['permno','decile'], as_index=False).apply(lambda x: x['weight']*x['ret_t+1']).reset_index(drop=True)
+
+  # Calculate the sum over all stocks in the denominator
+  sum_over_j = df.groupby('yyyymm', as_index=False)['w_t-times-r_t+1'].sum()
+  sum_over_j = sum_over_j.rename({'w_t-times-r_t+1': 'sum_over_j'}, axis=1)
+  df = df.merge(sum_over_j, on=['yyyymm'])
+  df['sum_over_j'] = df['sum_over_j'] + 1
+
+  long_df = df.loc[df['decile'] == 10].copy()
+  turnover_long = np.abs(long_df['w_t+1'] - ((long_df['weight'] * (1+long_df['ret_t+1'])/long_df['sum_over_j']))).sum() 
+  # Final calculation of turnover
+  short_df = df.loc[df['decile'] == 1].copy()
+  turnover_short = np.abs(short_df['w_t+1'] - ((short_df['weight'] * (1+short_df['ret_t+1'])/short_df['sum_over_j']))).sum() 
+  turnover_ls = turnover_long + turnover_short
+
+  return {'long': turnover_long, 'short': turnover_short, 'long-short': turnover_ls}

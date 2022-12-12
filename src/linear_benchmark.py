@@ -6,7 +6,7 @@ import pandas as pd
 
 dataset = BaseDataset(ret_scaling_method='standard')
 df = dataset.df
-start_factors_idx = df.columns.tolist().index('AbnormalAccruals')
+start_factors_idx = df.columns.tolist().index('Beta')
 x_list = df.columns.tolist()[start_factors_idx:]
 ols = PooledOLS(x_list=x_list, y='ret', df=df)
 
@@ -16,5 +16,5 @@ mda = metric.mean_directional_accuracy(ols.prediction_df['predicted_ret'], ols.p
 print(f'OOS Mean Directional Accuracy is: {mda}\n\n')
 
 portfolio = Portfolio(ols.prediction_df, weighting='VW')
-portfolio.plot_cumulative_returns('/home/ge65cuw/thesis/saved/linear/linear_plot.png')
-ols.prediction_df.to_csv('/home/ge65cuw/thesis/saved/linear/predicted_ret.csv')
+# portfolio.plot_cumulative_returns('/home/ge65cuw/thesis/saved/linear/linear_plot.png')
+# ols.prediction_df.to_csv('/home/ge65cuw/thesis/saved/linear/predicted_ret.csv')

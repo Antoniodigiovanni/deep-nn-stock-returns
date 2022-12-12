@@ -8,22 +8,42 @@ class OptimizeNet(nn.Module):
         if params['batch_norm'] in params:
             self.batch_norm = params['batch_norm']
         
+        if 'dropout_prob' in params:
+            self.dropout_prob = params['dropout_prob']
+        elif 'dropout' in params:
+            self.dropout_prob = params['dropout']['prob']
+
         self.hidden_size_1 = params['hidden_layer1']
         self.hidden_size_2 = params['hidden_layer2']
         self.hidden_size_3 = params['hidden_layer3']
         self.hidden_size_4 = params['hidden_layer4']
         self.hidden_size_5 = params['hidden_layer5']
-        self.hidden_size_6 = params['hidden_layer6']
-        self.hidden_size_7 = params['hidden_layer7']
-        self.hidden_size_8 = params['hidden_layer8']
-        self.hidden_size_9 = params['hidden_layer9']
-        self.hidden_size_10 = params['hidden_layer10']
-          
+        if 'hidden_layer6' in params:
+            self.hidden_size_6 = params['hidden_layer6']
+        else:
+            self.hidden_size_6 = 0
+        if 'hidden_layer7' in params:
+            self.hidden_size_7 = params['hidden_layer7']
+        else:
+            self.hidden_size_7 = 0
+        if 'hidden_layer8' in params:
+            self.hidden_size_8 = params['hidden_layer8']
+        else:
+            self.hidden_size_8 = 0
+        if 'hidden_layer9' in params:
+            self.hidden_size_9 = params['hidden_layer9']
+        else:
+            self.hidden_size_9 = 0
+        if 'hidden_layer10' in params:
+            self.hidden_size_10 = params['hidden_layer10']
+        else:
+            self.hidden_size_10 = 0
         
 
         self.act_func = map_act_func(params['act_func'])
 
         self.fc1 = self._fc_block(n_inputs, self.hidden_size_1, self.act_func)
+        last_layer_size = self.hidden_size_1
         if self.hidden_size_2 > 0:
             self.fc2 = self._fc_block(self.hidden_size_1, self.hidden_size_2, self.act_func)
             last_layer_size = self.hidden_size_2
@@ -85,15 +105,63 @@ class OptimizeNet(nn.Module):
                 nn.Linear(in_c, out_c),
                 nn.BatchNorm1d(out_c),
                 act_func,
+                nn.Dropout(self.dropout_prob)
             )
         else:
             block = nn.Sequential(
                 nn.Linear(in_c, out_c),
-                act_func
+                act_func,
+                nn.Dropout(self.dropout_prob)   
             )
             
         return block
 
+class AlternativeOptimizeNet(nn.Module):
+    def __init__(self, n_inputs, params):
+        super(NewOptimizeNet, self).__init__()
+        self.batch_norm = None
+        if 'batch_norm' in params:
+            self.batch_norm = params['batch_norm']
+        if 'dropout_prob' in params:
+            self.dropout_prob = params['dropout_prob']
+        elif 'dropout' in params:
+            self.dropout_prob = params['dropout']['prob']
+
+        self.act_func = map_act_func(params['act_func'])
+        self.n_layers = params['n_layers']
+        layers = []
+        
+        layers.extend(self.create_layer(n_inputs, params['hidden_neurons'])) 
+
+        for i in range(self.n_layers):
+            layers.extend(self.create_layer(params['hidden_neurons'], params['hidden_neurons']))
+        
+        # Last layer
+        layers.append(nn.Linear(self.last_layer, 1))
+        
+        self.fc = nn.Sequential(*layers)
+        print(self.fc)
+
+
+    def create_layer(self, size1, size2):
+        self.last_layer = size2
+        layers = []
+        # Linear layer
+        layers.append(nn.Linear(size1, size2))
+        # Batch Normalization
+        if self.batch_norm != 0:
+            layers.append(nn.BatchNorm1d(size2))
+        # Activation Function
+        layers.append(self.act_func)
+        # Dropout
+        layers.append(nn.Dropout(self.dropout_prob))
+
+        return layers
+        
+    # forward propagate input
+    def forward(self, features):
+        X = self.fc(features)
+        return X.squeeze()
 
 class OptimizeNet_v2(nn.Module):
     def __init__(self, n_inputs, params):

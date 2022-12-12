@@ -25,7 +25,6 @@ torch.manual_seed(21)
 logger = logging.getLogger('Tuning experiment')
 
 
-""" Nested PARAMETERS"""
 params = {
     
         # 'hidden_layer1':    {"_name": "linear", "size":2048},
@@ -45,24 +44,23 @@ params = {
         'learning_rate':    0.001,
         'optimizer':        "Adam",
         'l1_lambda1':       0,
+        # 'L1':               0,
         'l2_lambda':        0,
         'dropout_prob':     0.1,
         "batch_norm":       0,
         # 'huber_delta':      1,
         # "log_returns":      "False",
-        "patience":         20
+        "patience":         10
     }
-
 # Get optimized hyperparameters
 # -----------------------------
 # If run directly, :func:`nni.get_next_parameter` is a no-op and returns an empty dict.
 # But with an NNI *experiment*, it will receive optimized hyperparameters from tuning algorithm.
 optimized_params = nni.get_next_parameter()
 params.update(optimized_params)
-
-# params['epochs'] = int(params['epochs'])
+if 'epochs' in params:
+    params['epochs'] = int(params['epochs'])
 # params['batch_size'] = int(params['batch_size'])
-
 print(params)
 
 def validate_params(params):
@@ -97,7 +95,6 @@ def initialize_weights(m):
     
 invalid_params = validate_params(params)
 
-
 if invalid_params: 
     # for invalid param combinations, report the worst possible result
     print('Invalid Parameters set')
@@ -109,8 +106,6 @@ else:
     dataset = BaseDataset()
     df = dataset.df
     
-    if params['log_returns'] == "True":
-        df['ret'] = np.log(df['ret']/100+1)
     df.drop(['melag', 'prc', 'me','me_nyse20'], axis=1, inplace=True, errors='ignore')
 
     parser = ArgumentParser()
@@ -125,32 +120,60 @@ else:
     # loss_fn = map_loss_func(params['loss_fn'])
 
     # loss_fn = nn.L1Loss()
-    # loss_fn = nn.MSELoss()
-    loss_fn = nn.HuberLoss(delta=params['huber_delta'])
+    loss_fn = nn.MSELoss()
+    # loss_fn = nn.HuberLoss(delta=params['huber_delta'])
 
     if args.expandingTuning:
         method = 'expanding'
     elif args.normalTuning:
         method = 'normal'
-
-    if 'l1_lambda1' in params:
-        l1_reg= True
-    else:
-        l1_reg = False
+    try:
+        if params['L1']["_name"] == 1:
+            print('L1 Regularization is active!')
+            l1_reg = True
+        else:
+            l1_reg = False
         
-    if 'l2_lambda' in params:
-        l2_reg = True
+        if params['L2']["_name"] == 1:
+            print('L2 Regularization is active!')
+            l2_reg = True
+        else:
+            l2_reg = False
+        
+        if params['dropout']["_name"] == 1:
+            drop_prob = params['dropout']['prob']
+            print(f'Dropout is active! Prob is: {drop_prob}')
+            params['dropout_prob'] = params['dropout']['prob']
+            
+        else:
+            dropout = False
+    except:
+        print('Original Regularization detection method')
+        if 'l1_lambda1' in params:
+            l1_reg= True
+        else:
+            l1_reg = False
+            
+        if 'l2_lambda' in params:
+            l2_reg = True
+        else:
+            l2_reg = False
+    
+    print(f'Device from config: {config.device}')
+    if 'epochs' in params:
+        epochs = params['epochs']
+        print(f'Epochs from params set at: {epochs}')
     else:
-        l2_reg = False
-    trainer = GeneralizedTrainer(df, params, loss_fn, methodology=method, l1_reg=l1_reg, l2_reg=l2_reg, train_window_years=config.n_train_years, val_window_years=config.n_val_years)
+        epochs = config.epochs
+        print(f'N. of epochs from config set at {config.epochs}')
+
+    trainer = GeneralizedTrainer(df, params, loss_fn, methodology=method, l1_reg=l1_reg, l2_reg=l2_reg, train_window_years=config.n_train_years, val_window_years=config.n_val_years, epochs=epochs)
     n_inputs = trainer.n_inputs
 
     model = OptimizeNet(n_inputs, params)#.to(config.device)
     # model= nn.DataParallel(model)
     model.to(config.device)
     
-    print(f'Device from config: {config.device}')
-    print(f'N. of epochs set at {config.epochs}')
 
     print('Initializing weights')
     model.apply(initialize_weights)

@@ -70,8 +70,16 @@ def merge_crsp_with_signals(df, signalspath=config.paths['SignalsPath']):
     final_df = pd.DataFrame()
     i = 0
 
+    # Keeping good features only
+    signals_df = pd.read_excel('/home/ge65cuw/thesis/data/external/Signals Documentation - thesis.xlsx')
+    signals_df = signals_df.loc[(signals_df['Cat.Signal'] == 'Predictor') & (signals_df['Predictability in OP'] == '1_clear') & (signals_df['Signal Rep Quality'] == '1_good')]
+    signals = ['permno','yyyymm']
+    signals.extend(signals_df['Acronym'].tolist())
+    print(f'Signals len is: {len(signals)-2}')
+
     for chunk in pd.read_csv(signalspath, chunksize=100000):
         # chunk = scale_predictors(chunk)
+        chunk = chunk[signals].copy()
         temp = df.merge(chunk, how='inner', on=['permno','yyyymm'])
         if i == 0:
             final_df = final_df.reindex(columns=temp.columns.tolist())
@@ -83,8 +91,9 @@ def merge_crsp_with_signals(df, signalspath=config.paths['SignalsPath']):
 
     # Re-order cols_to_scale to have permno and yyyymm as first and second element and STreversal, price and size as the last ones
     features = cols_to_scale.drop(['permno', 'yyyymm'])
-    cols_to_scale = ['permno', 'yyyymm'] + features.tolist() + ['STreversal', 'Price', 'Size']
-
+    cols_to_scale = ['permno', 'yyyymm'] + features.tolist() + ['STreversal', 'Price', 'Size', 'Beta']
+    features = features.tolist()
+    features.append('Beta')
     final_df = final_df.astype({'yyyymm': int, 'permno':int})
     
     return final_df, features
@@ -143,7 +152,11 @@ def scale_returns(df, method=None):
     
 def scale_features(df, features, method=None):
     
-    reduced_cols = features[:-3]
+    print(f'Features are: {features}')
+    # reduced_cols = features.remove(['Size', 'Price', 'STreversal'])
+    to_remove = ['Size', 'Price', 'STreversal', 'Beta']
+    reduced_cols = [e for e in features if e not in to_remove]
+    print('Reduced cols:')
     print(reduced_cols[-5:])
     print(f'Shape of final_df before scaling: {df.shape[0]}')
 
@@ -228,6 +241,39 @@ def __calculate_stock_sizes(df):
     df = df.loc[df['StockSize'].notna()]
 
     return df
+
+def calculate_market_beta(df):
+    crsp = df.copy()
+    FF = FF5FM_Mom()
+    Mkt = FF.returns.iloc[:,:2]
+    RF = FF.RF
+
+    df = df.merge(Mkt, how='left', on='yyyymm')
+    df = df.merge(RF, how='left', on='yyyymm')
+    df['ret'] = df['ret'] - df['RF']
+    df = df.sort_values(by=['permno','yyyymm'])
+    df['CorrWithMkt'] = (
+        df.groupby('permno')[['ret','Mkt-RF']]
+        .rolling(min_periods=12, window=12*5,center=False)
+        .corr().groupby(level=[0,1]).last()['ret']
+        .reset_index(drop=True)
+        )
+
+    df['StockRollingStd'] = (
+        df.groupby('permno')['ret']
+        .rolling(min_periods=12, window=12*5,center=False)
+        .std().reset_index(drop=True)
+        )
+    
+    df['MktRollingStd'] = (df.groupby('permno')['Mkt-RF']
+    .rolling(min_periods=12, window=12*5,center=False)
+    .std().reset_index(drop=True)
+    )
+
+    df['Beta'] = (df['StockRollingStd']/df['MktRollingStd'])*df['CorrWithMkt']
+    df = df[['permno', 'yyyymm','Beta']]
+    crsp = crsp.merge(df, on=['permno','yyyymm'])
+    return crsp
 
 def download_crsp():
     import wrds

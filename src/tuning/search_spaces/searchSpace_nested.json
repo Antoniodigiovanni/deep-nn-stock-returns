@@ -1,0 +1,79 @@
+{
+    "n_layers":{
+        "_type": "randint",
+        "_value": [1,5]
+    },
+
+    "hidden_neurons" : {
+        "_type": "choice",
+        "_value": [512,256,64,32]            
+    },
+    
+    "act_func":{ 
+        "_type": "choice",
+        "_value": ["ReLU", "LeakyReLU"]
+    },
+
+    "learning_rate":{ 
+        "_type": "loguniform",
+        "_value": [0.000001, 0.001]
+    },
+
+    "optimizer" : {
+        "_type": "choice",
+        "_value": ["Adam", "Nadam", "Adagrad", "Adadelta"]
+    },
+
+    "L1": {
+        "_type": "choice",
+        "_value": [
+            {"_name": 0},
+            {
+                "_name": 1, "lambda":
+                {"_type": "loguniform", "_value": [1e-5, 0.1]}
+            }
+        ]
+    },
+
+    "L2":{
+        "_type": "choice",
+        "_value":[
+            {"_name": 0},
+            {
+                "_name":1, "lambda":
+                {"_type": "loguniform", "_value": [1e-5, 0.1]}
+            }
+        ]
+    },
+
+    "dropout":{
+        "_type": "choice",
+        "_value":[
+            {"_name": 0},
+            {
+                "_name":1, "prob":
+                {"_type": "uniform", "_value": [0, 0.7]}
+            }
+        ]
+    },
+
+    "batch_norm":{
+        "_type": "choice",
+        "_value": [0,1]
+    },
+
+    "batch_size":{
+        "_type": "randint",
+        "_value": [100,10001]
+    },
+
+    "patience":{
+        "_type": "randint",
+        "_value": [10,30]
+    },
+    
+    "epochs":{
+        "_type": "randint",
+        "_value": [50,200]
+    }
+}

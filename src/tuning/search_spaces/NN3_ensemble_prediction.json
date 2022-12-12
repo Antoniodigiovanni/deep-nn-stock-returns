@@ -61,7 +61,7 @@
 
     "learning_rate":{ 
         "_type": "choice",
-        "_value": [0.000058]
+        "_value": [0.0002]
     },
 
     "optimizer" : {
@@ -74,6 +74,11 @@
         "_value": [0.00001]
     },
 
+    "l2_lambda":{
+        "_type": "choice",
+        "_value": [0]
+    },
+
     "dropout_prob":{
         "_type": "choice",
         "_value": [0.702337]
@@ -81,6 +86,6 @@
 
     "batch_norm":{
         "_type":"choice",
-        "_value":[0]
+        "_value":[1]
     }
 }

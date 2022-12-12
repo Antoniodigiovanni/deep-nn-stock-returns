@@ -21,23 +21,23 @@ if config.args.expandingTuning:
     #experiment.config.trial_gpu_number = 2
     #experiment.config.training_service.use_active_gpu = True
    
-    # experiment.config.tuner.name = 'Anneal'
-    # experiment.config.tuner.class_args['optimize_mode'] = 'minimize'
+    experiment.config.tuner.name = 'Anneal'
+    experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
 
     # experiment.config.tuner.name = 'Evolution'
     # experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
     # experiment.config.tuner.class_args['population_size'] = 5
 
-    experiment.config.tuner.name = 'TPE'
-    experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
+    # experiment.config.tuner.name = 'TPE'
+    # experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
     
 
     # experiment.config.tuner.name = 'TPE'
     # experiment.config.tuner.class_args['optimize_mode'] = 'minimize'
     
-    experiment.config.assessor.name = 'Medianstop'
-    experiment.config.assessor.class_args['optimize_mode'] ='maximize'
-    experiment.config.assessor.class_args['start_step'] = 100
+    # experiment.config.assessor.name = 'Medianstop'
+    # experiment.config.assessor.class_args['optimize_mode'] ='maximize'
+    # experiment.config.assessor.class_args['start_step'] = 100
 
     try:
         if experiment.config.tuner.class_args['optimize_mode'] == 'minimize':

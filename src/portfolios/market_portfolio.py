@@ -6,9 +6,11 @@ from data.dataset import BaseDataset
 
 
 class MarketPortfolio():
-    def __init__(self, weighting = 'VW', keep_micro_stocks = False, keep_medium_stocks = True, keep_big_stocks = True) -> None:
+    def __init__(self, weighting = 'VW', keep_micro_stocks = False, keep_medium_stocks = True, keep_big_stocks = True, verbose=1) -> None:
         self.weighting = weighting
-        
+        self.verbose = verbose
+
+
         stocks_to_keep = []
         if keep_micro_stocks:
             stocks_to_keep.append('Micro')
@@ -17,7 +19,7 @@ class MarketPortfolio():
         if keep_big_stocks:
             stocks_to_keep.append('Big')
         self.stocks_to_keep = stocks_to_keep
-
+        
         self.__load_crsp()
         self.market_ret_calculation()
         
@@ -71,7 +73,7 @@ class MarketPortfolio():
 
         crsp = dp.load_crsp()
         
-        dataset = BaseDataset()
+        dataset = BaseDataset(verbose=self.verbose)
         df = dataset.df
         df = df[['permno','yyyymm']].copy()
         # df = dp.remove_microcap_stocks(df, self.stocks_to_keep)
@@ -88,7 +90,8 @@ class MarketPortfolio():
         T = self.mkt_returns.count()[1]
         self.annualized_return = np.prod((self.mkt_returns.iloc[:,-1]/100+1)**(12/T))-1
         self.annualized_return = self.annualized_return * 100
-        print(f'Annualized Market Returns {self.annualized_return:.2f}%')
+        if self.verbose:
+            print(f'Annualized Market Returns {self.annualized_return:.2f}%')
         
 
 
