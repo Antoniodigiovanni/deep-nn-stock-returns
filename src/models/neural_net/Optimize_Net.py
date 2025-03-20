@@ -166,13 +166,6 @@ class AlternativeOptimizeNet(nn.Module):
 class OptimizeNet_v2(nn.Module):
     def __init__(self, n_inputs, params):
         super(OptimizeNet_v2, self).__init__()
-        # self.hidden_sizes = []
-        # self.hidden_sizes.append(params['hidden_layer1'])
-        # self.hidden_sizes.append(params['hidden_layer2'])
-        # self.hidden_sizes.append(params['hidden_layer3'])
-        # self.hidden_sizes.append(params['hidden_layer4'])
-        # self.hidden_sizes.append(params['hidden_layer5'])
-
 
         self.hidden_size_1 = params['hidden_layer1']
         self.hidden_size_2 = params['hidden_layer2']
@@ -187,17 +180,7 @@ class OptimizeNet_v2(nn.Module):
           
         
         self.act_func = map_act_func(params['act_func'])
-        # modules = []
-        # for idx,layer in enumerate(self.hidden_sizes):
-        #     if layer>0:
-        #         if idx == 0:
-        #             modules.append(nn.Linear(n_inputs, layer))
-        #             modules.append(self.act_func)
-        #         else:
-        #             modules.append(nn.Linear(self.hidden_sizes[idx-1], layer))
-        #             modules.append(self.act_func)
-        # modules.append(nn.Linear(self.hidden_sizes[-1], 1))
-
+    
         self.fc = torch.nn.Sequential()
         
         if self.hidden_size_1 > 0: 
@@ -222,7 +205,6 @@ class OptimizeNet_v2(nn.Module):
             last_layer_size = self.hidden_size_5
 
         self.fc.add_module("last_layer", nn.Linear(last_layer_size, 1))
-        # Continue with conversion from module to NN.sequential
 
         
     def forward(self, x):

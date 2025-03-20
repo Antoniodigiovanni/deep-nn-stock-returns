@@ -27,7 +27,7 @@
 rm(list = ls())
 # ENTER PROJECT PATH HERE (i.e. this should be the path to your local repo folder & location of SignalDoc.csv)
 # if using Rstudio, pathProject = paste0(getwd(), '/') should work
-pathProject = paste0(getwd(), '/src/data/OpenAssetPricing_Code')
+pathProject = paste0(getwd(), '/src/data/OpenAssetPricing_Code/scripts')
 pathThesisData = paste0(getwd(), '/data/')
 
 quickrun =  T # use T if you want to run quickly for testing
