@@ -6,10 +6,6 @@ credentials.ini
 #!/saved
 
 # Notebooks
-#*.ipynb
-notebooks/
-#!FF_momentumReplicationTest_final.ipynb
-turnoverCalculation.ipynb
 
 # WRDS scripts folder
 wrdsJobScript/
