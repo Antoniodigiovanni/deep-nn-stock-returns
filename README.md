@@ -1,5 +1,14 @@
-# Thesis
-### Codebase for Antonio Di Giovanni's master thesis
+## Automated Architecture and Hyperparameter Optimization for Deep Neural Networks Applied in Forecasting the Cross-Section of Stock Returns
+### Description
+This repository contains the code to replicate research and experiments focused on forecasting stock returns using deep learning techniques. 
+
+A key contribution of this work is the exploration of neural network architecture design and hyperparameter optimization through Automated Machine Learning (AutoML) methods, aiming to enhance predictive performance and model robustness. 
+
+The repository includes implementations, data processing pipelines, and evaluations of models leveraging AutoML strategies such as the Tree-Structured Parzen Estimator (TPE).
+
+This project provides insights into advancing stock return prediction by combining financial theory with cutting-edge machine learning tools.
+
+### Setup
 
 1. Modify `src/data/credentials_template.ini` by typing the WRDS username and password
 2. Rename `credentials_template.ini` to `credentials.ini`
